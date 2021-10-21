@@ -1,0 +1,41 @@
+# Technical writers
+doc                                                           @fsancheziohk @nahern @olgahryniuk
+README.*                                                      @fsancheziohk @nahern @olgahryniuk
+bcc-cli/README.md                                         @fsancheziohk @nahern @olgahryniuk
+
+# Release manager added for notification on dependency updates
+cabal.project                                                 @LaurenceIO
+
+# General reviewers per PR
+#                       David          Duncan   Jordan     Erik   John      Nick Jared
+*                       @DavidEichmann @dcoutts @Jimbo4350 @erikd @newhoggy @nc6 @JaredCorduan
+
+# Specific reviewers for code pieces
+# NB - The last matching pattern takes precedence
+
+
+
+# /doc folder and README.* needs to be owned by @docs-access
+doc                                                           @docs-access
+README.*                                                      @docs-access
+
+bench/tx-generator                                            @deepfire @MarcFontaine
+bench                                                         @deepfire @denisshevchenko @jutaro @MarcFontaine
+nix/workbench                                                 @deepfire @denisshevchenko @jutaro @MarcFontaine
+nix/supervisord-cluster                                       @deepfire @denisshevchenko @jutaro @MarcFontaine
+trace-forward                                                 @deepfire @denisshevchenko @jutaro
+Makefile                                                      @deepfire
+
+.buildkite                                                    @devops
+.github                                                       @devops
+ci                                                            @devops
+configuration                                                 @devops
+nix                                                           @devops
+*.nix                                                         @devops
+flake.lock                                                    @devops
+bors.toml                                                     @devops
+docker-compose.yml                                            @devops
+bcc-node/src/Bcc/Tracing/OrphanInstances/Network.hs   @devops @coot @karknu
+bcc-node/src/Bcc/Node/Configuration/Logging.hs        @devops
+bcc-node/src/Bcc/Node/Configuration/Socket.hs         @devops
+bcc-node/src/Bcc/Node/Run.hs                          @devops
