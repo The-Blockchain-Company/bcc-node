@@ -227,7 +227,6 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/zerepoch
-  tag: 988f390969c2901b36ac0fbec6fd227b06b23f21
  
   subdir:
     zerepoch-core
