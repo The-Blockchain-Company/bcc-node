@@ -73,7 +73,7 @@ import           Shardagnostic.Consensus.Config.SupportsNode (ConfigSupportsNode
 import           Shardagnostic.Consensus.HardFork.Combinator.Degenerate
 import           Shardagnostic.Consensus.Node.ProtocolInfo
 import           Shardagnostic.Consensus.Sophie.Ledger.Ledger
-import qualified Bcc.Ledger.Sophie.API as SL
+import qualified Sophie.Spec.Ledger.API as SL
 
 import           Bcc.Api.Protocol.Types (BlockType (..), protocolInfo)
 import           Bcc.Config.Git.Rev (gitRev)
@@ -93,7 +93,7 @@ import           Paths_bcc_node (version)
 -- The good side of this is that _each function has it's own effects_
 -- and that is ideal for tracking the functions effects and constraining
 -- the user (programmer) of those function to use specific effects in them.
--- https://github.com/the-blockchain-company/bcc-sl/blob/develop/util/src/Pos/Util/Log/LogSafe.hs
+-- https://github.com/The-Blockchain-Company/bcc-sl/blob/develop/util/src/Pos/Util/Log/LogSafe.hs
 data LoggingLayer = LoggingLayer
   { llBasicTrace :: forall m. (MonadIO m) => Trace m Text
   , llLogDebug :: forall m a. (MonadIO m, Show a) => Trace m a -> a -> m ()

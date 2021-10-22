@@ -8,8 +8,8 @@ description:         This is intended to demonstrate how to write simple
                      using the bcc-api.
 license:             Apache-2.0
 license-file:        LICENSE
-author:              BCIO
-maintainer:          operations@iohk.io
+author:              TBCO
+maintainer:          operations@tbco.io
 license-files:
   LICENSE
   NOTICE
@@ -75,35 +75,11 @@ executable ledger-state
                        bcc-ledger-cole,
                        bcc-node,
                        bcc-slotting,
-                       iohk-monitoring,
+                       tbco-monitoring,
                        shardagnostic-network,
                        shardagnostic-consensus,
                        shardagnostic-consensus-bcc,
                        shardagnostic-consensus-cole,
                        shardagnostic-consensus-sophie,
-                       bcc-ledger-sophie,
+                       sophie-spec-ledger,
                        typed-protocols,
-
-executable stake-credential-history
-  import:               base, project-config
-  main-is:             StakeCredentialHistory.hs
-  ghc-options:        -Wall
-                      -Wcompat
-                      -Wincomplete-record-updates
-                      -Wincomplete-uni-patterns
-                      -Wpartial-fields
-                      -Wredundant-constraints
-                      -Wunused-packages
-  build-depends:       base16-bytestring,
-                       binary,
-                       bech32,
-                       bytestring,
-                       bcc-api,
-                       bcc-ledger-core,
-                       bcc-ledger-sophie,
-                       bcc-slotting,
-                       containers,
-                       optparse-applicative,
-                       shardagnostic-consensus-sophie,
-                       text,
-                       transformers,

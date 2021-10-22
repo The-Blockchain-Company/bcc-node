@@ -68,11 +68,11 @@ import qualified Bcc.Ledger.Core as Ledger
 import qualified Bcc.Ledger.Crypto as Ledger
 import qualified Bcc.Ledger.Era as Ledger.Era (Crypto)
 import qualified Bcc.Ledger.Keys as Ledger
-import qualified Bcc.Ledger.Sophie.API as Ledger (CLI, DCert, TxIn, Wdrl)
-import qualified Bcc.Ledger.Sophie.API.Wallet as Ledger (evaluateTransactionBalance,
+import qualified Sophie.Spec.Ledger.API as Ledger (CLI, DCert, TxIn, Wdrl)
+import qualified Sophie.Spec.Ledger.API.Wallet as Ledger (evaluateTransactionBalance,
                    evaluateTransactionFee)
 
-import           Bcc.Ledger.Sophie.PParams (PParams' (..))
+import           Sophie.Spec.Ledger.PParams (PParams' (..))
 
 import qualified Bcc.Ledger.Jen.Value as Jen
 
@@ -352,7 +352,7 @@ data ScriptExecutionError =
        -- the whole point of it is to discover how many execution units are
        -- needed).
        --
-     | ScriptErrorEvaluationFailed Zerepoch.EvaluationError [Text.Text]
+     | ScriptErrorEvaluationFailed Zerepoch.EvaluationError
 
        -- | The execution units overflowed a 64bit word. Congratulations if
        -- you encounter this error. With the current style of cost model this
@@ -364,9 +364,6 @@ data ScriptExecutionError =
        -- | An attempt was made to spend a key witnessed tx input
        -- with a script witness.
      | ScriptErrorNotZerepochWitnessedTxIn ScriptWitnessIndex
-
-       -- | A cost model was missing for a language which was used.
-     | ScriptErrorMissingCostModel Aurum.Language
   deriving Show
 
 instance Error ScriptExecutionError where
@@ -382,9 +379,8 @@ instance Error ScriptExecutionError where
       "The Zerepoch script witness has the wrong datum (according to the UTxO). "
    ++ "The expected datum value has hash " ++ show dh
 
-  displayError (ScriptErrorEvaluationFailed evalErr logs) =
-      "The Zerepoch script evaluation failed: " ++ pp evalErr ++
-      "\nScript debugging logs: " <> mconcat (map (\t -> Text.unpack $ t `Text.append` "\n") logs)
+  displayError (ScriptErrorEvaluationFailed evalErr) =
+      "The Zerepoch script evaluation failed: " ++ pp evalErr
     where
       pp :: PP.Pretty p => p -> String
       pp = PP.renderString
@@ -400,9 +396,6 @@ instance Error ScriptExecutionError where
   displayError (ScriptErrorNotZerepochWitnessedTxIn scriptWitness) =
       renderScriptWitnessIndex scriptWitness <> " is not a Zerepoch script \
       \witnessed tx input and cannot be spent using a Zerepoch script witness."
-
-  displayError (ScriptErrorMissingCostModel language) =
-      "No cost model was found for language " <> show language
 
 -- | The transaction validity interval is too far into the future.
 --
@@ -436,8 +429,8 @@ instance Error TransactionValidityIntervalError where
    ++ "numbers into UTC wall clock times.)"
     where
       timeHorizonSlots :: Consensus.PastHorizonException -> Word
-      timeHorizonSlots Consensus.PastHorizon{Consensus.pastHorizonSumjen}
-        | eraSummaries@(_:_) <- pastHorizonSumjen
+      timeHorizonSlots Consensus.PastHorizon{Consensus.pastHorizonSummary}
+        | eraSummaries@(_:_) <- pastHorizonSummary
         , Consensus.StandardSafeZone slots <-
             (Consensus.eraSafeZone . Consensus.eraParams . last) eraSummaries
         = fromIntegral slots
@@ -531,8 +524,7 @@ evaluateTransactionExecutionUnits _eraInMode systemstart history pparams utxo tx
         Aurum.InvalidTxIn     txin -> ScriptErrorTxInWithoutDatum txin'
                                          where txin' = fromSophieTxIn txin
         Aurum.MissingDatum      dh -> ScriptErrorWrongDatum (ScriptDataHash dh)
-        Aurum.ValidationFailedV1 err logs -> ScriptErrorEvaluationFailed err logs
-        Aurum.ValidationFailedV2 err logs -> ScriptErrorEvaluationFailed err logs
+        Aurum.ValidationFailed err -> ScriptErrorEvaluationFailed err
         Aurum.IncompatibleBudget _ -> ScriptErrorExecutionUnitsOverflow
 
         -- This is only possible for spending scripts and occurs when
@@ -544,7 +536,6 @@ evaluateTransactionExecutionUnits _eraInMode systemstart history pparams utxo tx
         -- build transactions in the API:
         Aurum.MissingScript rdmrPtr ->
           impossible ("MissingScript " ++ show (fromAurumRdmrPtr rdmrPtr))
-        Aurum.NoCostModel l -> ScriptErrorMissingCostModel l
 
     impossible detail = error $ "evaluateTransactionExecutionUnits: "
                              ++ "the impossible happened: " ++ detail
@@ -573,7 +564,7 @@ evaluateTransactionBalance _ _ _ (ColeTxBody _) =
 
 evaluateTransactionBalance pparams poolids utxo
                            (SophieTxBody era txbody _ _ _ _) =
-    withLedgerConstraints era evalDafiOnly evalMultiAsset
+    withLedgerConstraints era evalBccOnly evalMultiAsset
   where
     isNewPool :: Ledger.KeyHash Ledger.StakePool Ledger.StandardCrypto -> Bool
     isNewPool kh = StakePoolKeyHash kh `Set.notMember` poolids
@@ -592,14 +583,14 @@ evaluateTransactionBalance pparams poolids utxo
            isNewPool
            txbody
 
-    evalDafiOnly :: forall ledgerera.
+    evalBccOnly :: forall ledgerera.
                    SophieLedgerEra era ~ ledgerera
                 => LedgerEraConstraints ledgerera
-                => LedgerDafiOnlyConstraints ledgerera
-                => OnlyDafiSupportedInEra era
+                => LedgerBccOnlyConstraints ledgerera
+                => OnlyBccSupportedInEra era
                 -> TxOutValue era
-    evalDafiOnly evidence =
-     TxOutDafiOnly evidence . fromSophieEntropic
+    evalBccOnly evidence =
+     TxOutBccOnly evidence . fromSophieEntropic
        $ Ledger.evaluateTransactionBalance
            (toLedgerPParams era pparams)
            (toLedgerUTxO era utxo)
@@ -611,10 +602,10 @@ evaluateTransactionBalance pparams poolids utxo
       :: SophieLedgerEra era ~ ledgerera
       => SophieBasedEra era
       -> (   LedgerEraConstraints ledgerera
-          => LedgerDafiOnlyConstraints ledgerera
+          => LedgerBccOnlyConstraints ledgerera
           => LedgerPParamsConstraints ledgerera
           => LedgerTxBodyConstraints ledgerera
-          => OnlyDafiSupportedInEra era
+          => OnlyBccSupportedInEra era
           -> a)
       -> (   LedgerEraConstraints ledgerera
           => LedgerMultiAssetConstraints ledgerera
@@ -623,8 +614,8 @@ evaluateTransactionBalance pparams poolids utxo
           => MultiAssetSupportedInEra era
           -> a)
       -> a
-    withLedgerConstraints SophieBasedEraSophie f _ = f DafiOnlyInSophieEra
-    withLedgerConstraints SophieBasedEraEvie f _ = f DafiOnlyInEvieEra
+    withLedgerConstraints SophieBasedEraSophie f _ = f BccOnlyInSophieEra
+    withLedgerConstraints SophieBasedEraEvie f _ = f BccOnlyInEvieEra
     withLedgerConstraints SophieBasedEraJen    _ f = f MultiAssetInJenEra
     withLedgerConstraints SophieBasedEraAurum  _ f = f MultiAssetInAurumEra
 
@@ -633,7 +624,7 @@ type LedgerEraConstraints ledgerera =
        , Ledger.CLI ledgerera
        )
 
-type LedgerDafiOnlyConstraints ledgerera =
+type LedgerBccOnlyConstraints ledgerera =
          Ledger.Value ledgerera ~ Ledger.Coin
 
 type LedgerMultiAssetConstraints ledgerera =
@@ -674,23 +665,23 @@ data TxBodyErrorAutoBalance =
        -- | One or more of the scripts were expected to fail validation, but none did.
      | TxBodyScriptBadScriptValidity
 
-       -- | The balance of the non-dafi assets is not zero. The 'Value' here is
+       -- | The balance of the non-bcc assets is not zero. The 'Value' here is
        -- that residual non-zero balance. The 'makeTransactionBodyAutoBalance'
-       -- function only automatically balances dafi, not other assets.
+       -- function only automatically balances bcc, not other assets.
      | TxBodyErrorAssetBalanceWrong Value
 
-       -- | There is not enough dafi to cover both the outputs and the fees.
-       -- The transaction should be changed to provide more input dafi, or
+       -- | There is not enough bcc to cover both the outputs and the fees.
+       -- The transaction should be changed to provide more input bcc, or
        -- otherwise adjusted to need less (e.g. outputs, script etc).
        --
-     | TxBodyErrorDafiBalanceNegative Entropic
+     | TxBodyErrorBccBalanceNegative Entropic
 
-       -- | There is enough dafi to cover both the outputs and the fees, but the
+       -- | There is enough bcc to cover both the outputs and the fees, but the
        -- resulting change is too small: it is under the minimum value for
        -- new UTxO entries. The transaction should be changed to provide more
-       -- input dafi.
+       -- input bcc.
        --
-     | TxBodyErrorDafiBalanceTooSmall
+     | TxBodyErrorBccBalanceTooSmall
          -- ^ Offending TxOut
          TxOutInAnyEra
          -- ^ Minimum UTxO
@@ -720,7 +711,7 @@ data TxBodyErrorAutoBalance =
          -- ^ Minimum UTxO
          Entropic
      | TxBodyErrorMinUTxOMissingPParams MinimumUTxOError
-     | TxBodyErrorNonDafiAssetsUnbalanced Value
+     | TxBodyErrorNonBccAssetsUnbalanced Value
   deriving Show
 
 
@@ -737,24 +728,24 @@ instance Error TxBodyErrorAutoBalance where
       "One or more of the scripts were expected to fail validation, but none did."
 
   displayError (TxBodyErrorAssetBalanceWrong _value) =
-      "The transaction does not correctly balance in its non-dafi assets. "
+      "The transaction does not correctly balance in its non-bcc assets. "
    ++ "The balance between inputs and outputs should sum to zero. "
    ++ "The actual balance is: "
    ++ "TODO: move the Value renderer and parser from the CLI into the API and use them here"
    -- TODO: do this ^^
 
-  displayError (TxBodyErrorDafiBalanceNegative entropic) =
-      "The transaction does not balance in its use of dafi. The net balance "
+  displayError (TxBodyErrorBccBalanceNegative entropic) =
+      "The transaction does not balance in its use of bcc. The net balance "
    ++ "of the transaction is negative: " ++ show entropic ++ " entropic. "
-   ++ "The usual solution is to provide more inputs, or inputs with more dafi."
+   ++ "The usual solution is to provide more inputs, or inputs with more bcc."
 
-  displayError (TxBodyErrorDafiBalanceTooSmall changeOutput minUTxO balance) =
-      "The transaction does balance in its use of dafi, however the net "
+  displayError (TxBodyErrorBccBalanceTooSmall changeOutput minUTxO balance) =
+      "The transaction does balance in its use of bcc, however the net "
    ++ "balance does not meet the minimum UTxO threshold. \n"
    ++ "Balance: " ++ show balance ++ "\n"
    ++ "Offending output (change output): " ++ Text.unpack (prettyRenderTxOut changeOutput) ++ "\n"
    ++ "Minimum UTxO threshold: " ++ show minUTxO ++ "\n"
-   ++ "The usual solution is to provide more inputs, or inputs with more dafi to \
+   ++ "The usual solution is to provide more inputs, or inputs with more bcc to \
       \meet the minimum UTxO threshold"
 
   displayError TxBodyErrorColeEraNotSupported =
@@ -773,8 +764,8 @@ instance Error TxBodyErrorAutoBalance where
       "Minimum UTxO threshold not met for tx output: " <> Text.unpack (prettyRenderTxOut txout) <> "\n"
    <> "Minimum required UTxO: " <> show minUTxO
 
-  displayError (TxBodyErrorNonDafiAssetsUnbalanced val) =
-      "Non-Dafi assets are unbalanced: " <> Text.unpack (renderValue val)
+  displayError (TxBodyErrorNonBccAssetsUnbalanced val) =
+      "Non-Bcc assets are unbalanced: " <> Text.unpack (renderValue val)
 
   displayError (TxBodyErrorMinUTxOMissingPParams err) = displayError err
 
@@ -799,13 +790,13 @@ handleExUnitsErrors ScriptInvalid failuresMap exUnitsMap
         scriptFailures = filter isScriptErrorEvaluationFailed (Map.toList failuresMap)
         isScriptErrorEvaluationFailed :: (ScriptWitnessIndex, ScriptExecutionError) -> Bool
         isScriptErrorEvaluationFailed (_, e) = case e of
-            ScriptErrorEvaluationFailed _ _ -> True
+            ScriptErrorEvaluationFailed _ -> True
             _ -> True
 
 data BalancedTxBody era
   = BalancedTxBody
       (TxBody era)
-      (TxOut CtxTx era) -- ^ Transaction balance (change output)
+      (TxOut era) -- ^ Transaction balance (change output)
       Entropic    -- ^ Estimated transaction fee
 
 -- | This is much like 'makeTransactionBody' but with greater automation to
@@ -855,7 +846,7 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
     txbody0 <-
       first TxBodyError $ makeTransactionBody txbodycontent
         { txOuts =
-              TxOut changeaddr (entropicToTxOutValue 0) TxOutDatumNone
+              TxOut changeaddr (entropicToTxOutValue 0) TxOutDatumHashNone
             : txOuts txbodycontent
             --TODO: think about the size of the change output
             -- 1,2,4 or 8 bytes?
@@ -888,14 +879,14 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
     -- "big enough" values for the change output and set so that the CBOR
     -- encoding size of the tx will be big enough to cover the size of the final
     -- output and fee. Yes this means this current code will only work for
-    -- final fee of less than around 4000 dafi (2^32-1 entropic) and change output
-    -- of less than around 18 trillion dafi  (2^64-1 entropic).
+    -- final fee of less than around 4000 bcc (2^32-1 entropic) and change output
+    -- of less than around 18 trillion bcc  (2^64-1 entropic).
     txbody1 <- first TxBodyError $ -- TODO: impossible to fail now
                makeTransactionBody txbodycontent1 {
                  txFee  = TxFeeExplicit explicitTxFees $ Entropic (2^(32 :: Integer) - 1),
                  txOuts = TxOut changeaddr
                                 (entropicToTxOutValue $ Entropic (2^(64 :: Integer)) - 1)
-                                TxOutDatumNone
+                                TxOutDatumHashNone
                         : txOuts txbodycontent
                }
 
@@ -919,10 +910,10 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
     -- check if the balance is positive or negative
     -- in one case we can produce change, in the other the inputs are insufficient
     case balance of
-      TxOutDafiOnly _ _ -> balanceCheck balance
+      TxOutBccOnly _ _ -> balanceCheck balance
       TxOutValue _ v   ->
         case valueToEntropic v of
-          Nothing -> Left $ TxBodyErrorNonDafiAssetsUnbalanced v
+          Nothing -> Left $ TxBodyErrorNonBccAssetsUnbalanced v
           Just _ -> balanceCheck balance
 
     --TODO: we could add the extra fee for the CBOR encoding of the change,
@@ -938,10 +929,10 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
         makeTransactionBody txbodycontent1 {
           txFee  = TxFeeExplicit explicitTxFees fee,
           txOuts = accountForNoChange
-                     (TxOut changeaddr balance TxOutDatumNone)
+                     (TxOut changeaddr balance TxOutDatumHashNone)
                      (txOuts txbodycontent)
         }
-    return (BalancedTxBody txbody3 (TxOut changeaddr balance TxOutDatumNone) fee)
+    return (BalancedTxBody txbody3 (TxOut changeaddr balance TxOutDatumHashNone) fee)
  where
    era :: SophieBasedEra era
    era = sophieBasedEra
@@ -954,7 +945,7 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
    -- output. Note that this does not save any fees because by default
    -- the fee calculation includes a change address for simplicity and
    -- we make no attempt to recalculate the tx fee without a change address.
-   accountForNoChange :: TxOut CtxTx era -> [TxOut CtxTx era] -> [TxOut CtxTx era]
+   accountForNoChange :: TxOut era -> [TxOut era] -> [TxOut era]
    accountForNoChange change@(TxOut _ balance _) rest =
      case txOutValueToEntropic balance of
        Entropic 0 -> rest
@@ -964,16 +955,16 @@ makeTransactionBodyAutoBalance eraInMode systemstart history pparams
    balanceCheck balance
     | txOutValueToEntropic balance == 0 = return ()
     | txOutValueToEntropic balance < 0 =
-        Left . TxBodyErrorDafiBalanceNegative $ txOutValueToEntropic balance
+        Left . TxBodyErrorBccBalanceNegative $ txOutValueToEntropic balance
     | otherwise =
-        case checkMinUTxOValue (TxOut changeaddr balance TxOutDatumNone) pparams of
+        case checkMinUTxOValue (TxOut changeaddr balance TxOutDatumHashNone) pparams of
           Left (TxBodyErrorMinUTxONotMet txOutAny minUTxO) ->
-            Left $ TxBodyErrorDafiBalanceTooSmall txOutAny minUTxO (txOutValueToEntropic balance)
+            Left $ TxBodyErrorBccBalanceTooSmall txOutAny minUTxO (txOutValueToEntropic balance)
           Left err -> Left err
           Right _ -> Right ()
 
    checkMinUTxOValue
-     :: TxOut CtxTx era
+     :: TxOut era
      -> ProtocolParameters
      -> Either TxBodyErrorAutoBalance ()
    checkMinUTxOValue txout@(TxOut _ v _) pparams' = do
@@ -1003,7 +994,7 @@ substituteExecutionUnits exUnitsMap =
 
 calculateMinimumUTxO
   :: SophieBasedEra era
-  -> TxOut CtxTx era
+  -> TxOut era
   -> ProtocolParameters
   -> Either MinimumUTxOError Value
 calculateMinimumUTxO era txout@(TxOut _ v _) pparams' =
@@ -1015,7 +1006,7 @@ calculateMinimumUTxO era txout@(TxOut _ v _) pparams' =
       case protocolParamUTxOCostPerWord pparams' of
         Just (Entropic costPerWord) -> do
           Right . entropicToValue
-            $ Entropic (Aurum.utxoEntrySize (toSophieTxOutAny era txout) * costPerWord)
+            $ Entropic (Aurum.utxoEntrySize (toSophieTxOut era txout) * costPerWord)
         Nothing -> Left PParamsUTxOCostPerWordMissing
  where
    calcMinUTxOEvieJen :: Either MinimumUTxOError Value

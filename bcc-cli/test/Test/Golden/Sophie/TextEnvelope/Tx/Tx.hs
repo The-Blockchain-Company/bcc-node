@@ -55,7 +55,7 @@ golden_sophieTx = propertyOnce . H.moduleWorkspace "tmp" $ \tempDir -> do
     , "--out-file", transactionFile
     ]
 
-  let txType = textEnvelopeType (AsTx AsSophieEra)
+  let txType = textEnvelopeType AsSophieTx
 
   -- Check the newly created files have not deviated from the
   -- golden files

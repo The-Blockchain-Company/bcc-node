@@ -12,6 +12,7 @@ module Bcc.CLI.Sophie.Parsers
 
     -- * Field parser and renderers
   , parseTxIn
+  , renderTxIn
   ) where
 
 import           Bcc.Prelude hiding (All, Any, option)
@@ -20,6 +21,7 @@ import           Prelude (String)
 import           Bcc.Api
 import           Bcc.Api.Sophie
 
+import           Bcc.CLI.Jen.ValueParser (parseValue)
 import           Bcc.CLI.Sophie.Commands
 import           Bcc.CLI.Sophie.Key (InputFormat (..), PaymentVerifier (..),
                    StakeVerifier (..), VerificationKeyOrFile (..), VerificationKeyOrHashOrFile (..),
@@ -53,7 +55,7 @@ import qualified Text.Parsec.Language as Parsec
 import qualified Text.Parsec.String as Parsec
 import qualified Text.Parsec.Token as Parsec
 
-import qualified Bcc.Ledger.Sophie.TxBody as Sophie
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
 
 {- HLINT ignore "Use <$>" -}
 
@@ -259,17 +261,12 @@ pScriptWitnessFiles witctx autoBalanceExecUnits scriptFlagPrefix scriptFlagPrefi
     pScriptDatumOrFile =
       case witctx of
         WitCtxTxIn  -> ScriptDatumOrFileForTxIn <$>
-                         pScriptDataOrFile
-                           (scriptFlagPrefix ++ "-datum")
-                           "The script datum, in JSON syntax."
-                           "The script datum, in the given JSON file."
+                         pScriptDataOrFile (scriptFlagPrefix ++ "-datum")
         WitCtxMint  -> pure NoScriptDatumOrFileForMint
         WitCtxStake -> pure NoScriptDatumOrFileForStake
 
     pScriptRedeemerOrFile :: Parser ScriptDataOrFile
     pScriptRedeemerOrFile = pScriptDataOrFile (scriptFlagPrefix ++ "-redeemer")
-                           "The script redeemer, in JSON syntax."
-                           "The script redeemer, in the given JSON file."
 
     pExecutionUnits :: Parser ExecutionUnits
     pExecutionUnits =
@@ -281,8 +278,8 @@ pScriptWitnessFiles witctx autoBalanceExecUnits scriptFlagPrefix scriptFlagPrefi
           )
 
 
-pScriptDataOrFile :: String -> String -> String -> Parser ScriptDataOrFile
-pScriptDataOrFile dataFlagPrefix helpTextForValue helpTextForFile =
+pScriptDataOrFile :: String -> Parser ScriptDataOrFile
+pScriptDataOrFile dataFlagPrefix =
       ScriptDataFile  <$> pScriptDataFile
   <|> ScriptDataValue <$> pScriptDataValue
   where
@@ -290,17 +287,14 @@ pScriptDataOrFile dataFlagPrefix helpTextForValue helpTextForFile =
       Opt.strOption
         (  Opt.long (dataFlagPrefix ++ "-file")
         <> Opt.metavar "FILE"
-        <> Opt.help (helpTextForFile ++ " The file must follow the special \
-                                         \JSON schema for script data.")
+        <> Opt.help "The JSON file containing the script data."
         )
 
     pScriptDataValue =
       Opt.option readerScriptData
         (  Opt.long (dataFlagPrefix ++ "-value")
         <> Opt.metavar "JSON VALUE"
-        <> Opt.help (helpTextForValue ++ " There is no schema: (almost) any \
-                                         \JSON value is supported, including \
-                                         \top-level strings and numbers.")
+        <> Opt.help "The JSON value for the script data. Supported JSON data types: string, number, object & array."
         )
 
     readerScriptData = do
@@ -336,7 +330,7 @@ pStakeAddressCmd =
     pStakeAddressKeyHash = StakeAddressKeyHash <$> pStakeVerificationKeyOrFile <*> pMaybeOutputFile
 
     pStakeAddressBuild :: Parser StakeAddressCmd
-    pStakeAddressBuild = StakeAddressBuild <$> pStakeVerifier
+    pStakeAddressBuild = StakeAddressBuild <$> pStakeVerificationKeyOrFile
                                            <*> pNetworkId
                                            <*> pMaybeOutputFile
 
@@ -377,6 +371,11 @@ pKeyCmd =
         Opt.info pKeyConvertColeGenesisVKey $
           Opt.progDesc $ "Convert a Base64-encoded Cole genesis "
                       ++ "verification key to a Sophie genesis "
+                      ++ "verification key"
+    , subParser "convert-cole-vested-vkey" $
+        Opt.info pKeyConvertColeVestedVKey $
+          Opt.progDesc $ "Convert a Base64-encoded Cole vested "
+                      ++ "verification key to a Sophie vested "
                       ++ "verification key"
     , subParser "convert-itn-key" $
         Opt.info pKeyConvertITNKey $
@@ -444,6 +443,14 @@ pKeyCmd =
             (  Opt.long "legacy-cole-genesis-key-type"
             <> Opt.help "Use a Cole-era genesis key, in legacy SL format."
             )
+      <|> Opt.flag' (ColeVestedKey NonLegacyColeKeyFormat)
+            (  Opt.long "cole-vested-key-type"
+            <> Opt.help "Use a Cole-era vested key."
+            )
+      <|> Opt.flag' (ColeVestedKey LegacyColeKeyFormat)
+            (  Opt.long "legacy-cole-vested-key-type"
+            <> Opt.help "Use a Cole-era vested key, in legacy SL format."
+            )
       <|> Opt.flag' (ColeDelegateKey NonLegacyColeKeyFormat)
             (  Opt.long "cole-genesis-delegate-key-type"
             <> Opt.help "Use a Cole-era genesis delegate key."
@@ -452,7 +459,15 @@ pKeyCmd =
             (  Opt.long "legacy-cole-genesis-delegate-key-type"
             <> Opt.help "Use a Cole-era genesis delegate key, in legacy SL format."
             )
-
+      <|> Opt.flag' (ColeVestedDelegateKey NonLegacyColeKeyFormat)
+            (  Opt.long "cole-vested-delegate-key-type"
+            <> Opt.help "Use a Cole-era vested delegate key."
+            )
+      <|> Opt.flag' (ColeVestedDelegateKey LegacyColeKeyFormat)
+            (  Opt.long "legacy-cole-vested-delegate-key-type"
+            <> Opt.help "Use a Cole-era vested delegate key, in legacy SL format."
+            )
+    
     pColeKeyFile :: Parser SomeKeyFile
     pColeKeyFile =
           (ASigningKeyFile      <$> pColeSigningKeyFile)
@@ -491,6 +506,20 @@ pKeyCmd =
           (  Opt.long "cole-genesis-verification-key"
           <> Opt.metavar "BASE64"
           <> Opt.help "Base64 string for the Cole genesis verification key."
+          )
+    pKeyConvertColeVestedVKey :: Parser KeyCmd
+    pKeyConvertColeVestedVKey =
+      KeyConvertColeVestedVKey
+        <$> pColeVestedVKeyBase64
+        <*> pOutputFile
+
+    pColeVestedVKeyBase64 :: Parser VerificationKeyBase64
+    pColeVestedVKeyBase64 =
+      VerificationKeyBase64 <$>
+        Opt.strOption
+          (  Opt.long "cole-vested-verification-key"
+          <> Opt.metavar "BASE64"
+          <> Opt.help "Base64 string for the Cole vested verification key."
           )
 
     pKeyConvertITNKey :: Parser KeyCmd
@@ -686,7 +715,7 @@ pTransaction =
       Opt.option (readerFromParsecParser parseAddressAny)
         (  Opt.long "change-address"
         <> Opt.metavar "ADDRESS"
-        <> Opt.help "Address where DAFI in excess of the tx fee will go to."
+        <> Opt.help "Address where BCC in excess of the tx fee will go to."
         )
 
   pTransactionBuildRaw :: Parser TransactionCmd
@@ -766,11 +795,7 @@ pTransaction =
     ParamsFromFile <$> pProtocolParamsFile
 
   pTxHashScriptData :: Parser TransactionCmd
-  pTxHashScriptData = TxHashScriptData <$>
-                        pScriptDataOrFile
-                          "script-data"
-                          "The script data, in JSON syntax."
-                          "The script data, in the given JSON file."
+  pTxHashScriptData = TxHashScriptData <$> pScriptDataOrFile "script-data"
 
   pTransactionId  :: Parser TransactionCmd
   pTransactionId = TxGetTxId <$> pInputTxFile
@@ -969,6 +994,9 @@ pGovernanceCmd =
    , subParser "create-genesis-key-delegation-certificate"
        (Opt.info pGovernanceGenesisKeyDelegationCertificate $
          Opt.progDesc "Create a genesis key delegation certificate")
+  ,  subParser "create-vested-key-delegation-certificate"
+       (Opt.info pGovernanceVestedKeyDelegationCertificate $
+         Opt.progDesc "Create a vested key delegation certificate")
    , subParser "create-update-proposal"
        (Opt.info pUpdateProposal $
          Opt.progDesc "Create an update proposal")
@@ -1010,6 +1038,14 @@ pGovernanceCmd =
       GovernanceGenesisKeyDelegationCertificate
         <$> pGenesisVerificationKeyOrHashOrFile
         <*> pGenesisDelegateVerificationKeyOrHashOrFile
+        <*> pVrfVerificationKeyOrHashOrFile
+        <*> pOutputFile
+    
+    pGovernanceVestedKeyDelegationCertificate :: Parser GovernanceCmd
+    pGovernanceVestedKeyDelegationCertificate =
+      GovernanceVestedKeyDelegationCertificate
+        <$> pVestedVerificationKeyOrHashOrFile
+        <*> pVestedDelegateVerificationKeyOrHashOrFile
         <*> pVrfVerificationKeyOrHashOrFile
         <*> pOutputFile
 
@@ -1056,6 +1092,12 @@ pGenesisCmd =
     , subParser "key-gen-delegate"
         (Opt.info pGenesisDelegateKeyGen $
            Opt.progDesc "Create a Sophie genesis delegate key pair")
+    , subParser "key-gen-vested"
+        (Opt.info pGenesisVestedKeyGen $
+           Opt.progDesc "Create a Sophie vested key pair")
+    , subParser "key-gen-vesteddelegate"
+        (Opt.info pGenesisVestedDelegateKeyGen $
+           Opt.progDesc "Create a Sophie genesis vested delegate key pair")
     , subParser "key-gen-utxo"
         (Opt.info pGenesisUTxOKeyGen $
            Opt.progDesc "Create a Sophie genesis UTxO key pair")
@@ -1093,6 +1135,15 @@ pGenesisCmd =
       GenesisKeyGenDelegate <$> pVerificationKeyFile Output
                             <*> pSigningKeyFile Output
                             <*> pOperatorCertIssueCounterFile
+    pGenesisVestedKeyGen :: Parser GenesisCmd
+    pGenesisVestedKeyGen =
+      GenesisKeyGenVested <$> pVerificationKeyFile Output <*> pSigningKeyFile Output
+
+    pGenesisVestedDelegateKeyGen :: Parser GenesisCmd
+    pGenesisVestedDelegateKeyGen =
+      GenesisKeyGenVestedDelegate <$> pVerificationKeyFile Output
+                            <*> pSigningKeyFile Output
+                            <*> pOperatorCertIssueCounterFile
 
     pGenesisUTxOKeyGen :: Parser GenesisCmd
     pGenesisUTxOKeyGen =
@@ -1118,6 +1169,7 @@ pGenesisCmd =
     pGenesisCreate =
       GenesisCreate <$> pGenesisDir
                     <*> pGenesisNumGenesisKeys
+                    <*> pGenesisNumVestedKeys
                     <*> pGenesisNumUTxOKeys
                     <*> pMaybeSystemStart
                     <*> pInitialSupplyNonDelegated
@@ -1128,6 +1180,7 @@ pGenesisCmd =
       GenesisCreateStaked
         <$> pGenesisDir
         <*> pGenesisNumGenesisKeys
+        <*> pGenesisNumVestedKeys
         <*> pGenesisNumUTxOKeys
         <*> pGenesisNumPools
         <*> pGenesisNumStDelegs
@@ -1168,6 +1221,14 @@ pGenesisCmd =
           (  Opt.long "gen-genesis-keys"
           <> Opt.metavar "INT"
           <> Opt.help "The number of genesis keys to make [default is 0]."
+          <> Opt.value 0
+          )
+     pGenesisNumVestedKeys :: Parser Word
+    pGenesisNumVestedKeys =
+        Opt.option Opt.auto
+          (  Opt.long "gen-vested-keys"
+          <> Opt.metavar "INT"
+          <> Opt.help "The number of vested keys to make [default is 0]."
           <> Opt.value 0
           )
 
@@ -1577,6 +1638,7 @@ pColdVerificationKeyOrFile :: Parser ColdVerificationKeyOrFile
 pColdVerificationKeyOrFile =
   ColdStakePoolVerificationKey <$> pStakePoolVerificationKey
     <|> ColdGenesisDelegateVerificationKey <$> pGenesisDelegateVerificationKey
+    <|> ColdVestedDelegateVerificationKey <$> pVestedDelegateVerificationKey
     <|> ColdVerificationKeyFile <$> pColdVerificationKeyFile
 
 pColdVerificationKeyFile :: Parser VerificationKeyFile
@@ -1739,6 +1801,110 @@ pGenesisDelegateVerificationKeyOrHashOrFile =
   VerificationKeyOrFile <$> pGenesisDelegateVerificationKeyOrFile
     <|> VerificationKeyHash <$> pGenesisDelegateVerificationKeyHash
 
+pVestedVerificationKeyFile :: Parser VerificationKeyFile
+pVestedVerificationKeyFile =
+  VerificationKeyFile <$>
+    Opt.strOption
+      (  Opt.long "vested-verification-key-file"
+      <> Opt.metavar "FILE"
+      <> Opt.help "Filepath of the vested verification key."
+      <> Opt.completer (Opt.bashCompleter "file")
+      )
+
+pVestedVerificationKeyHash :: Parser (Hash VestedKey)
+pVestedVerificationKeyHash =
+    Opt.option
+      (Opt.eitherReader deserialiseFromHex)
+        (  Opt.long "vested-verification-key-hash"
+        <> Opt.metavar "STRING"
+        <> Opt.help "Vested verification key hash (hex-encoded)."
+        )
+  where
+    deserialiseFromHex :: String -> Either String (Hash VestedKey)
+    deserialiseFromHex =
+      maybe (Left "Invalid vested verification key hash.") Right
+        . deserialiseFromRawBytesHex (AsHash AsVestedKey)
+        . BSC.pack
+
+pVestedVerificationKey :: Parser (VerificationKey VestedKey)
+pVestedVerificationKey =
+    Opt.option
+      (Opt.eitherReader deserialiseFromHex)
+        (  Opt.long "vested-verification-key"
+        <> Opt.metavar "STRING"
+        <> Opt.help "Vested verification key (hex-encoded)."
+        )
+  where
+    deserialiseFromHex :: String -> Either String (VerificationKey VestedKey)
+    deserialiseFromHex =
+      maybe (Left "Invalid vested verification key.") Right
+        . deserialiseFromRawBytesHex (AsVerificationKey AsVestedKey)
+        . BSC.pack
+
+pVestedVerificationKeyOrFile :: Parser (VerificationKeyOrFile VestedKey)
+pVestedVerificationKeyOrFile =
+  VerificationKeyValue <$> pVestedVerificationKey
+    <|> VerificationKeyFilePath <$> pVestedVerificationKeyFile
+
+pVestedVerificationKeyOrHashOrFile :: Parser (VerificationKeyOrHashOrFile VestedKey)
+pVestedVerificationKeyOrHashOrFile =
+  VerificationKeyOrFile <$> pVestedVerificationKeyOrFile
+    <|> VerificationKeyHash <$> pVestedVerificationKeyHash
+
+pVestedDelegateVerificationKeyFile :: Parser VerificationKeyFile
+pVestedDelegateVerificationKeyFile =
+  VerificationKeyFile <$>
+    Opt.strOption
+      (  Opt.long "vested-delegate-verification-key-file"
+      <> Opt.metavar "FILE"
+      <> Opt.help "Filepath of the vested delegate verification key."
+      <> Opt.completer (Opt.bashCompleter "file")
+      )
+
+pVestedDelegateVerificationKeyHash :: Parser (Hash VestedDelegateKey)
+pVestedDelegateVerificationKeyHash =
+    Opt.option
+      (Opt.eitherReader deserialiseFromHex)
+        (  Opt.long "vested-delegate-verification-key-hash"
+        <> Opt.metavar "STRING"
+        <> Opt.help "Vested delegate verification key hash (hex-encoded)."
+        )
+  where
+    deserialiseFromHex :: String -> Either String (Hash VestedDelegateKey)
+    deserialiseFromHex =
+      maybe (Left "Invalid vested delegate verification key hash.") Right
+        . deserialiseFromRawBytesHex (AsHash AsVestedDelegateKey)
+        . BSC.pack
+
+pVestedDelegateVerificationKey :: Parser (VerificationKey VestedDelegateKey)
+pVestedDelegateVerificationKey =
+    Opt.option
+      (Opt.eitherReader deserialiseFromHex)
+        (  Opt.long "vested-delegate-verification-key"
+        <> Opt.metavar "STRING"
+        <> Opt.help "Vested delegate verification key (hex-encoded)."
+        )
+  where
+    deserialiseFromHex
+      :: String
+      -> Either String (VerificationKey VestedDelegateKey)
+    deserialiseFromHex =
+      maybe (Left "Invalid vested delegate verification key.") Right
+        . deserialiseFromRawBytesHex (AsVerificationKey AsVestedDelegateKey)
+        . BSC.pack
+
+pVestedDelegateVerificationKeyOrFile
+  :: Parser (VerificationKeyOrFile VestedDelegateKey)
+pVestedDelegateVerificationKeyOrFile =
+  VerificationKeyValue <$> pVestedDelegateVerificationKey
+    <|> VerificationKeyFilePath <$> pVestedDelegateVerificationKeyFile
+
+pVestedDelegateVerificationKeyOrHashOrFile
+  :: Parser (VerificationKeyOrHashOrFile VestedDelegateKey)
+pVestedDelegateVerificationKeyOrHashOrFile =
+  VerificationKeyOrFile <$> pVestedDelegateVerificationKeyOrFile
+    <|> VerificationKeyHash <$> pVestedDelegateVerificationKeyHash
+
 pKesVerificationKeyOrFile :: Parser (VerificationKeyOrFile KesKey)
 pKesVerificationKeyOrFile =
   VerificationKeyValue <$> pKesVerificationKey
@@ -1878,6 +2044,14 @@ pWitnessOverride = Opt.option Opt.auto
 parseTxIn :: Parsec.Parser TxIn
 parseTxIn = TxIn <$> parseTxId <*> (Parsec.char '#' *> parseTxIx)
 
+renderTxIn :: TxIn -> Text
+renderTxIn (TxIn txid (TxIx txix)) =
+  mconcat
+    [ serialiseToRawBytesHexText txid
+    , "#"
+    , Text.pack (show txix)
+    ]
+
 parseTxId :: Parsec.Parser TxId
 parseTxId = do
   str <- Parsec.many1 Parsec.hexDigit Parsec.<?> "transaction id (hexadecimal)"
@@ -1895,46 +2069,28 @@ pTxOut =
           (  Opt.long "tx-out"
           <> Opt.metavar "ADDRESS VALUE"
           -- TODO aurum: Update the help text to describe the new syntax as well.
-          <> Opt.help "The transaction output as ADDRESS VALUE where ADDRESS is \
-                      \the Bech32-encoded address followed by the value in \
-                      \the multi-asset syntax (including simply Entropic)."
+          <> Opt.help "The transaction output as Address+Entropic where Address is \
+                      \the Bech32-encoded address followed by the amount in \
+                      \Entropic."
           )
-    <*> pTxOutDatum
+    <*> optional pDatumHash
 
 
-pTxOutDatum :: Parser TxOutDatumAnyEra
-pTxOutDatum =
-      pTxOutDatumByHashOnly
-  <|> pTxOutDatumByHashOf
-  <|> pTxOutDatumByValue
-  <|> pure TxOutDatumByNone
+pDatumHash :: Parser (Hash ScriptData)
+pDatumHash  =
+  Opt.option (readerFromParsecParser parseHashScriptData)
+    (  Opt.long "tx-out-datum-hash"
+    <> Opt.metavar "HASH"
+    <> Opt.help "Required datum hash for tx inputs intended \
+               \to be utilizied by a Zerepoch script."
+    )
   where
-    pTxOutDatumByHashOnly =
-      TxOutDatumByHashOnly <$>
-        Opt.option (readerFromParsecParser parseHashScriptData)
-          (  Opt.long "tx-out-datum-hash"
-          <> Opt.metavar "HASH"
-          <> Opt.help "The script datum hash for this tx output, as \
-                     \the raw datum hash (in hex)."
-          )
-
-    pTxOutDatumByHashOf =
-      TxOutDatumByHashOf <$>
-        pScriptDataOrFile
-          "tx-out-datum-hash"
-          "The script datum hash for this tx output, by hashing the \
-          \script datum given here in JSON syntax."
-          "The script datum hash for this tx output, by hashing the \
-          \script datum in the given JSON file."
-
-    pTxOutDatumByValue =
-      TxOutDatumByValue <$>
-        pScriptDataOrFile
-          "tx-out-datum-embed"
-          "The script datum to embed in the tx for this output, \
-          \given here in JSON syntax."
-          "The script datum to embed in the tx for this output, \
-          \in the given JSON file."
+    parseHashScriptData :: Parsec.Parser (Hash ScriptData)
+    parseHashScriptData = do
+      str <- Parsec.many1 Parsec.hexDigit Parsec.<?> "script data hash"
+      case deserialiseFromRawBytesHex (AsHash AsScriptData) (BSC.pack str) of
+        Just sdh -> return sdh
+        Nothing  -> fail $ "Invalid datum hash: " ++ show str
 
 pMintMultiAsset
   :: BalanceTxExecUnits
@@ -2805,7 +2961,7 @@ pEpochSlots =
 
 pProtocolVersion :: Parser (Natural, Natural)
 pProtocolVersion =
-    (,) <$> pProtocolMajorVersion <*> pProtocolMinorVersion
+    (,) <$> pProtocolMajorVersion <*> pProtocolSealVersion
   where
     pProtocolMajorVersion =
       Opt.option Opt.auto
@@ -2813,11 +2969,11 @@ pProtocolVersion =
         <> Opt.metavar "NATURAL"
         <> Opt.help "Major protocol version. An increase indicates a hard fork."
         )
-    pProtocolMinorVersion =
+    pProtocolSealVersion =
       Opt.option Opt.auto
-        (  Opt.long "protocol-minor-version"
+        (  Opt.long "protocol-seal-version"
         <> Opt.metavar "NATURAL"
-        <> Opt.help "Minor protocol version. An increase indicates a soft fork\
+        <> Opt.help "Seal protocol version. An increase indicates a soft fork\
                     \ (old software canvalidate but not produce new blocks)."
         )
 
@@ -2832,6 +2988,12 @@ parseEntropic = do
   then fail $ show i <> " entropic exceeds the Word64 upper bound"
   else return $ Entropic i
 
+parseAddressAny :: Parsec.Parser AddressAny
+parseAddressAny = do
+    str <- lexPlausibleAddressString
+    case deserialiseAddress AsAddressAny str of
+      Nothing   -> fail "invalid address"
+      Just addr -> pure addr
 
 parseStakeAddress :: Parsec.Parser StakeAddress
 parseStakeAddress = do
@@ -2840,7 +3002,7 @@ parseStakeAddress = do
       Nothing   -> fail $ "invalid address: " <> Text.unpack str
       Just addr -> pure addr
 
-parseTxOutAnyEra :: Parsec.Parser (TxOutDatumAnyEra -> TxOutAnyEra)
+parseTxOutAnyEra :: Parsec.Parser (Maybe (Hash ScriptData) -> TxOutAnyEra)
 parseTxOutAnyEra = do
     addr <- parseAddressAny
     Parsec.spaces
@@ -2849,6 +3011,17 @@ parseTxOutAnyEra = do
     Parsec.option () (Parsec.char '+' >> Parsec.spaces)
     val <- parseValue
     return (TxOutAnyEra addr val)
+
+lexPlausibleAddressString :: Parsec.Parser Text
+lexPlausibleAddressString =
+    Text.pack <$> Parsec.many1 (Parsec.satisfy isPlausibleAddressChar)
+  where
+    -- Covers both base58 and bech32 (with constrained prefixes)
+    isPlausibleAddressChar c =
+         (c >= 'a' && c <= 'z')
+      || (c >= 'A' && c <= 'Z')
+      || (c >= '0' && c <= '9')
+      || c == '_'
 
 decimal :: Parsec.Parser Integer
 Parsec.TokenParser { Parsec.decimal = decimal } = Parsec.haskell

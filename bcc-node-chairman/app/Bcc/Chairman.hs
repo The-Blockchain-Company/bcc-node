@@ -297,7 +297,7 @@ createConnection
   chainsVar
   securityParam =
       connectTo
-        (localSnocket iomgr)
+        (localSnocket iomgr path)
         NetworkConnectTracers
           { nctMuxTracer       = nullTracer
           , nctHandshakeTracer = nullTracer

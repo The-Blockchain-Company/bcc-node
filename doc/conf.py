@@ -22,8 +22,8 @@ if rtd_version not in ["stable", "latest"]:
 # -- Project information -----------------------------------------------------
 
 project = 'bcc-node Documentation'
-copyright = '2021, BCIO'
-author = 'BCIO'
+copyright = '2021, TBCO'
+author = 'TBCO'
 
 # The full version, including alpha/beta/rc tags
 release = '1.0.0'
@@ -41,7 +41,7 @@ extensions = [
     'sphinx_markdown_tables',
     'sphinxemoji.sphinxemoji',
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosumjen",
+    "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
 ]
@@ -103,7 +103,7 @@ html_logo = ".sphinx/bcc-logo.png"
 
 html_context = {
   "display_github": True, # Add 'Edit on Github' link instead of 'View page source'
-  "github_user": "the-blockchain-company",
+  "github_user": "The-Blockchain-Company",
   "github_repo": "bcc-node",
   "github_version": "master",
   "conf_py_path": "/",

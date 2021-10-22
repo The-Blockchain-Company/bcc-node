@@ -22,13 +22,13 @@ import           Data.Aeson.Types
 import           Data.Aeson.Encode.Pretty
 import qualified Data.Attoparsec.ByteString as Atto
 
-import           Bcc.Api (AnyBccEra(..), BccEra(..), ScriptData, ScriptDataJsonSchema(..), scriptDataFromJson, scriptDataToJson)
+import           Bcc.Api (AnyBccEra(..), BccEra(..))
 import           Bcc.CLI.Types (SigningKeyFile(..))
 
+import           Bcc.Benchmarking.Script.Action
 import           Bcc.Benchmarking.Script.Env
 import           Bcc.Benchmarking.Script.Setters
 import           Bcc.Benchmarking.Script.Store
-import           Bcc.Benchmarking.Script.Types
 import           Bcc.Benchmarking.Types (NumberOfTxs(..), TPSRate(..))
 
 testJSONRoundTrip :: [Action] -> Maybe String
@@ -56,38 +56,10 @@ instance FromJSON AnyBccEra where
     "Aurum"    -> return $ AnyBccEra AurumEra
     era -> parseFail ("Error: Cannot parse JSON value '" <> Text.unpack era <> "' to AnyBccEra.")
 
-jsonOptionsUnTaggedSum :: Options
-jsonOptionsUnTaggedSum = defaultOptions { sumEncoding = ObjectWithSingleField }
-
--- Orphan instance used in the tx-generator
-instance ToJSON ScriptData where
-  toJSON = scriptDataToJson ScriptDataJsonNoSchema
-instance FromJSON ScriptData where
-  parseJSON v = case scriptDataFromJson ScriptDataJsonNoSchema v of
-    Right r -> return r
-    Left err -> fail $ show err
-
-instance ToJSON SubmitMode where
-  toJSON     = genericToJSON jsonOptionsUnTaggedSum
-  toEncoding = genericToEncoding jsonOptionsUnTaggedSum
-instance FromJSON SubmitMode where
-  parseJSON = genericParseJSON jsonOptionsUnTaggedSum
-
-instance ToJSON PayMode where
-  toJSON     = genericToJSON jsonOptionsUnTaggedSum
-  toEncoding = genericToEncoding jsonOptionsUnTaggedSum
-instance FromJSON PayMode where
-  parseJSON = genericParseJSON jsonOptionsUnTaggedSum
-
-instance ToJSON SpendMode where
-  toJSON     = genericToJSON jsonOptionsUnTaggedSum
-  toEncoding = genericToEncoding jsonOptionsUnTaggedSum
-instance FromJSON SpendMode where
-  parseJSON = genericParseJSON jsonOptionsUnTaggedSum
-
 instance ToJSON (DSum Tag Identity) where
   toEncoding = error "DSum Tag Identity"
   toJSON = error "DSum Tag Identity"
+
 instance FromJSON (DSum Tag Identity) where
   parseJSON = error "fromJSON"
 
@@ -113,12 +85,12 @@ actionToJSON a = case a of
     -> object ["prepareTxList" .= name, "newKey" .= key, "fundList" .= fund ]
   AsyncBenchmark (ThreadName t) (TxListName txs) (TPSRate tps) 
     -> object ["asyncBenchmark" .= t, "txList" .= txs, "tps" .= tps]
-  ImportGenesisFund submitMode (KeyName genesisKey) (KeyName fundKey)
-    -> object ["importGenesisFund" .= genesisKey, "submitMode" .= submitMode, "fundKey" .= fundKey ]
-  CreateChange submitMode payMode value count
-    -> object ["createChange" .= value, "payMode" .= payMode, "submitMode" .= submitMode, "count" .= count ]
-  RunBenchmark submitMode spendMode (ThreadName t) (NumberOfTxs txCount) (TPSRate tps)
-    -> object ["runBenchmark" .= t, "submitMode" .= submitMode, "spendMode" .= spendMode, "txCount" .= txCount, "tps" .= tps]
+  ImportGenesisFund (KeyName genesisKey) (KeyName fundKey)
+    -> object ["importGenesisFund" .= genesisKey, "fundKey" .= fundKey ]
+  CreateChange value count
+    -> object ["createChange" .= value, "count" .= count]
+  RunBenchmark (ThreadName t) (NumberOfTxs txCount) (TPSRate tps)
+    -> object ["runBenchmark" .= t, "txCount" .= txCount, "tps" .= tps]
   WaitBenchmark (ThreadName t) ->  singleton "waitBenchmark" t
   CancelBenchmark (ThreadName t) ->  singleton "cancelBenchmark" t
   WaitForEra era -> singleton "waitForEra" era
@@ -206,21 +178,16 @@ objectToAction obj = case obj of
     <*> ( TPSRate <$> parseField obj "tps" )   
 
   parseRunBenchmark v = RunBenchmark
-    <$> parseField obj "submitMode"
-    <*> parseField obj "spendMode"
-    <*> ( ThreadName <$> parseJSON v )
+    <$> ( ThreadName <$> parseJSON v )
     <*> ( NumberOfTxs <$> parseField obj "txCount" )
     <*> ( TPSRate <$> parseField obj "tps" )
 
   parseImportGenesisFund v = ImportGenesisFund
-    <$> parseField obj "submitMode"
-    <*> ( KeyName <$> parseJSON v )
+    <$> ( KeyName <$> parseJSON v )
     <*> parseKey "fundKey"
 
   parseCreateChange v = CreateChange
-    <$> parseField obj "submitMode"
-    <*> parseField obj "payMode"
-    <*> parseJSON v
+    <$> parseJSON v
     <*> parseField obj "count"
 
 parseScriptFile :: FilePath -> IO [Action]

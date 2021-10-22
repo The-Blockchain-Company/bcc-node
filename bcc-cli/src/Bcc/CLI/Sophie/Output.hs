@@ -2,33 +2,41 @@
 {-# LANGUAGE FlexibleInstances #-}
 
 module Bcc.CLI.Sophie.Output
-  ( QueryTipLocalState(..)
+  ( QueryTipOutput(..)
+  , QueryTipLocalState(..)
   , QueryTipLocalStateOutput(..)
   ) where
 
 import           Bcc.Api
 
 import           Bcc.CLI.Sophie.Orphans ()
-import           Bcc.Prelude (Text)
+import           Bcc.Prelude (Either, Text)
+import           Bcc.Slotting.EpochInfo (EpochInfo)
 import           Bcc.Slotting.Time (SystemStart (..))
+import           Control.Monad
 import           Data.Aeson (KeyValue, ToJSON (..), (.=))
 import           Data.Function (id, ($), (.))
-import           Data.Maybe ( Maybe(..) )
+import           Data.Maybe
 import           Data.Monoid (mconcat)
-import           Bcc.Ledger.Sophie.Scripts ()
+import           Sophie.Spec.Ledger.Scripts ()
 
 import qualified Data.Aeson as J
+import qualified Data.Aeson.Encoding as JE
 
-data QueryTipLocalState mode = QueryTipLocalState
+data QueryTipOutput localState = QueryTipOutput
+  { chainTip :: ChainTip
+  , mLocalState :: Maybe localState
+  }
+
+data QueryTipLocalState = QueryTipLocalState
   { era :: AnyBccEra
   , eraHistory :: EraHistory BccMode
   , mSystemStart :: Maybe SystemStart
-  , mChainTip :: Maybe ChainTip
+  , epochInfo :: EpochInfo (Either TransactionValidityIntervalError)
   }
 
 data QueryTipLocalStateOutput = QueryTipLocalStateOutput
-  { localStateChainTip :: ChainTip
-  , mEra :: Maybe AnyBccEra
+  { mEra :: Maybe AnyBccEra
   , mEpoch :: Maybe EpochNo
   , mSyncProgress :: Maybe Text
   }
@@ -43,36 +51,26 @@ data QueryTipLocalStateOutput = QueryTipLocalStateOutput
   Just v -> (n .= v:)
   Nothing -> id
 
-instance ToJSON QueryTipLocalStateOutput where
-  toJSON a = case localStateChainTip a of
-    ChainTipAtGenesis ->
+instance ToJSON (QueryTipOutput QueryTipLocalStateOutput) where
+  toJSON a = case chainTip a of
+    ChainTipAtGenesis -> J.Null
+    ChainTip slot headerHash (BlockNo bNum) ->
       J.object $
-        ( ("era" ..=? mEra a)
-        . ("epoch" ..=? mEpoch a)
-        . ("syncProgress" ..=? mSyncProgress a)
+        ( ("slot" ..= slot)
+        . ("hash" ..= serialiseToRawBytesHexText headerHash)
+        . ("block" ..= bNum)
+        . ("era" ..=? (mLocalState a >>= mEra))
+        . ("epoch" ..=? (mLocalState a >>= mEpoch))
+        . ("syncProgress" ..=? (mLocalState a >>= mSyncProgress))
         ) []
-    ChainTip slotNo blockHeader blockNo ->
-      J.object $
-        ( ("slot" ..= slotNo)
-        . ("hash" ..= serialiseToRawBytesHexText blockHeader)
-        . ("block" ..= blockNo)
-        . ("era" ..=? mEra a)
-        . ("epoch" ..=? mEpoch a)
-        . ("syncProgress" ..=? mSyncProgress a)
-        ) []
-  toEncoding a = case localStateChainTip a of
-    ChainTipAtGenesis ->
+  toEncoding a = case chainTip a of
+    ChainTipAtGenesis -> JE.null_
+    ChainTip slot headerHash (BlockNo bNum) ->
       J.pairs $ mconcat $
-        ( ("era" ..=? mEra a)
-        . ("epoch" ..=? mEpoch a)
-        . ("syncProgress" ..=? mSyncProgress a)
-        ) []
-    ChainTip slotNo blockHeader blockNo ->
-      J.pairs $ mconcat $
-        ( ("slot" ..= slotNo)
-        . ("hash" ..= serialiseToRawBytesHexText blockHeader)
-        . ("block" ..= blockNo)
-        . ("era" ..=? mEra a)
-        . ("epoch" ..=? mEpoch a)
-        . ("syncProgress" ..=? mSyncProgress a)
+        ( ("slot" ..= slot)
+        . ("hash" ..= serialiseToRawBytesHexText headerHash)
+        . ("block" ..= bNum)
+        . ("era" ..=? (mLocalState a >>= mEra))
+        . ("epoch" ..=? (mLocalState a >>= mEpoch))
+        . ("syncProgress" ..=? (mLocalState a >>= mSyncProgress))
         ) []

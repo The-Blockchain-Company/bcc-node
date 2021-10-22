@@ -21,7 +21,7 @@ import           Shardagnostic.Consensus.HardFork.Combinator
 import           Shardagnostic.Consensus.Sophie.Ledger.Block (SophieBlock)
 import           Shardagnostic.Consensus.Sophie.Ledger.Mempool (TxId (..))
 import           Shardagnostic.Consensus.TypeFamilyWrappers
-import qualified Bcc.Ledger.TxIn as Ledger
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
 
 -- | Convert a transaction ID to raw bytes.
 class ConvertTxId blk where
@@ -37,7 +37,7 @@ instance ConvertTxId ColeBlock where
 
 instance ConvertTxId (SophieBlock c) where
   txIdToRawBytes (SophieTxId txId) =
-    Crypto.hashToBytes . Ledger.extractHash . Ledger._unTxId $ txId
+    Crypto.hashToBytes . Ledger.extractHash . Sophie._unTxId $ txId
 
 instance All ConvertTxId xs
       => ConvertTxId (HardForkBlock xs) where

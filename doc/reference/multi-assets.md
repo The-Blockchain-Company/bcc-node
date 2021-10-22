@@ -1,6 +1,6 @@
 # Multi-asset support
 
-From the Jen ledger upgrade and onwards, Bcc supports [multi-assets](https://hydra.iohk.io/job/Bcc/bcc-ledger-specs/specs.sophie-ma/latest/download-by-type/doc-pdf/sophie-ma), also referred to as a *native tokens* feature. This feature extends the ledger’s accounting infrastructure (originally designed for processing dafi-only transactions) to accommodate transactions using a range of assets. These assets include dafi and a variety of user-defined token types, the mixture of which can be transacted in a single tx output.
+From the Jen ledger upgrade and onwards, Bcc supports [multi-assets](https://hydra.tbco.io/job/Bcc/bcc-ledger-specs/specs.sophie-ma/latest/download-by-type/doc-pdf/sophie-ma), also referred to as a *native tokens* feature. This feature extends the ledger’s accounting infrastructure (originally designed for processing bcc-only transactions) to accommodate transactions using a range of assets. These assets include bcc and a variety of user-defined token types, the mixture of which can be transacted in a single tx output.
 
 ## What is a multi-asset?
 
@@ -57,8 +57,8 @@ bcc-cli transaction build-raw \
             --jen-era \
             --fee 0 \
             --tx-in $TXIN \
-            --tx-out "$ADDR + 5 $POLICYID.couttscoin" \
-            --mint "5 $POLICYID.yourassetname" \
+            --tx-out $ADDR + 5 $POLICYID.couttscoin\
+            --mint 5 $POLICYID.yourassetname \
             --minting-script-file $SCRIPT \
             --out-file txbody
 ```

@@ -19,6 +19,7 @@ module Bcc.CLI.Sophie.Run.Query
   , runQueryCmd
   , percentage
   , executeQuery
+  , queryQueryTip
   ) where
 
 import           Bcc.Api
@@ -36,6 +37,7 @@ import           Bcc.Ledger.Coin
 import           Bcc.Ledger.Crypto (StandardCrypto)
 import           Bcc.Ledger.Keys (KeyHash (..), KeyRole (..))
 import           Bcc.Prelude hiding (atomically)
+import           Bcc.Slotting.EpochInfo (hoistEpochInfo)
 import           Control.Monad.Trans.Except (except)
 import           Control.Monad.Trans.Except.Extra (firstExceptT, handleIOExceptT, hoistMaybe, left)
 import           Data.Aeson (ToJSON (..), (.=))
@@ -46,12 +48,13 @@ import           Numeric (showEFloat)
 import           Shardagnostic.Consensus.BlockchainTime.WallClock.Types (RelativeTime (..),
                    SystemStart (..), toRelativeTime)
 import           Shardagnostic.Consensus.Bcc.Block as Consensus (EraMismatch (..))
+import qualified Shardagnostic.Consensus.HardFork.History as Consensus
 import           Shardagnostic.Network.Block (Serialised (..))
 import           Shardagnostic.Network.Protocol.LocalStateQuery.Type (AcquireFailure (..))
 import           Prelude (String, id)
-import           Bcc.Ledger.Sophie.EpochBoundary
-import           Bcc.Ledger.Sophie.LedgerState hiding (_delegations)
-import           Bcc.Ledger.Sophie.Scripts ()
+import           Sophie.Spec.Ledger.EpochBoundary
+import           Sophie.Spec.Ledger.LedgerState hiding (_delegations)
+import           Sophie.Spec.Ledger.Scripts ()
 import           Text.Printf (printf)
 
 import qualified Bcc.CLI.Sophie.Output as O
@@ -69,7 +72,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Vector as Vector
 import qualified Shardagnostic.Consensus.HardFork.History.Qry as Qry
 import qualified Shardagnostic.Network.Protocol.LocalStateQuery.Type as LocalStateQuery
-import qualified Bcc.Ledger.Sophie.API.Protocol as Ledger
+import qualified Sophie.Spec.Ledger.API.Protocol as Ledger
 import qualified System.IO as IO
 
 {- HLINT ignore "Reduce duplication" -}
@@ -198,15 +201,6 @@ percentage tolerance a b = Text.pack (printf "%.2f" pc)
 relativeTimeSeconds :: RelativeTime -> Integer
 relativeTimeSeconds (RelativeTime dt) = floor (nominalDiffTimeToSeconds dt)
 
--- | Query the chain tip via the chain sync protocol.
---
--- This is a fallback query to support older versions of node to client protocol.
-queryChainTipViaChainSync :: MonadIO m => LocalNodeConnectInfo mode -> m ChainTip
-queryChainTipViaChainSync localNodeConnInfo = do
-  liftIO . T.hPutStrLn IO.stderr $
-    "Warning: Local header state query unavailable. Falling back to chain sync query"
-  liftIO $ getLocalChainTip localNodeConnInfo
-
 runQueryTip
   :: AnyConsensusModeParams
   -> NetworkId
@@ -219,54 +213,21 @@ runQueryTip (AnyConsensusModeParams cModeParams) network mOutFile = do
     BccMode -> do
       let localNodeConnInfo = LocalNodeConnectInfo cModeParams network sockPath
 
-      eLocalState <- liftIO $ executeLocalStateQueryExpr localNodeConnInfo Nothing $ \ntcVersion -> do
-        era <- queryExpr (QueryCurrentEra BccModeIsMultiEra)
-        eraHistory <- queryExpr (QueryEraHistory BccModeIsMultiEra)
-        mChainBlockNo <- if ntcVersion >= NodeToClientV_10
-          then Just <$> queryExpr QueryChainBlockNo
-          else return Nothing
-        mChainPoint <- if ntcVersion >= NodeToClientV_10
-          then Just <$> queryExpr (QueryChainPoint BccMode)
-          else return Nothing
-        mSystemStart <- if ntcVersion >= NodeToClientV_9
-          then Just <$> queryExpr QuerySystemStart
-          else return Nothing
-
-        return O.QueryTipLocalState
-          { O.era = era
-          , O.eraHistory = eraHistory
-          , O.mSystemStart = mSystemStart
-          , O.mChainTip = makeChainTip <$> mChainBlockNo <*> mChainPoint
-          }
+      (chainTip, eLocalState) <- liftIO $ queryQueryTip localNodeConnInfo Nothing
 
       mLocalState <- hushM (first SophieQueryCmdAcquireFailure eLocalState) $ \e ->
         liftIO . T.hPutStrLn IO.stderr $ "Warning: Local state unavailable: " <> renderSophieQueryCmdError e
 
-      chainTip <- case mLocalState >>= O.mChainTip of
-        Just chainTip -> return chainTip
-
-        -- The chain tip is unavailable via local state query because we are connecting with an older
-        -- node to client protocol so we use chain sync instead which necessitates another connection.
-        -- At some point when we can stop supporting the older node to client protocols, this fallback
-        -- can be removed.
-        Nothing -> queryChainTipViaChainSync localNodeConnInfo
-
-      let tipSlotNo :: SlotNo = case chainTip of
+      let tipSlotNo = case chainTip of
             ChainTipAtGenesis -> 0
             ChainTip slotNo _ _ -> slotNo
 
-      localStateOutput <- forM mLocalState $ \localState -> do
+      mLocalStateOutput :: Maybe O.QueryTipLocalStateOutput <- fmap join . forM mLocalState $ \localState -> do
         case slotToEpoch tipSlotNo (O.eraHistory localState) of
           Left e -> do
             liftIO . T.hPutStrLn IO.stderr $
               "Warning: Epoch unavailable: " <> renderSophieQueryCmdError (SophieQueryCmdPastHorizon e)
-            return $ O.QueryTipLocalStateOutput
-              { O.localStateChainTip = chainTip
-              , O.mEra = Nothing
-              , O.mEpoch = Nothing
-              , O.mSyncProgress = Nothing
-              }
-
+            return Nothing
           Right (epochNo, _, _) -> do
             syncProgressResult <- runExceptT $ do
               systemStart <- fmap getSystemStart (O.mSystemStart localState) & hoistMaybe SophieQueryCmdSystemStartUnavailable
@@ -280,16 +241,21 @@ runQueryTip (AnyConsensusModeParams cModeParams) network mOutFile = do
             mSyncProgress <- hushM syncProgressResult $ \e -> do
               liftIO . T.hPutStrLn IO.stderr $ "Warning: Sync progress unavailable: " <> renderSophieQueryCmdError e
 
-            return $ O.QueryTipLocalStateOutput
-              { O.localStateChainTip = chainTip
-              , O.mEra = Just (O.era localState)
+            return $ Just $ O.QueryTipLocalStateOutput
+              { O.mEra = Just (O.era localState)
               , O.mEpoch = Just epochNo
               , O.mSyncProgress = mSyncProgress
               }
 
+
+      let jsonOutput = encodePretty $ O.QueryTipOutput
+            { O.chainTip = chainTip
+            , O.mLocalState = mLocalStateOutput
+            }
+
       case mOutFile of
-        Just (OutputFile fpath) -> liftIO $ LBS.writeFile fpath $ encodePretty localStateOutput
-        Nothing                 -> liftIO $ LBS.putStrLn        $ encodePretty localStateOutput
+        Just (OutputFile fpath) -> liftIO $ LBS.writeFile fpath jsonOutput
+        Nothing                 -> liftIO $ LBS.putStrLn        jsonOutput
 
     mode -> left (SophieQueryCmdUnsupportedMode (AnyConsensusMode mode))
 
@@ -646,7 +612,7 @@ printFilteredUTxOs sophieBasedEra' (UTxO utxo) = do
 
 printUtxo
   :: SophieBasedEra era
-  -> (TxIn, TxOut CtxUTxO era)
+  -> (TxIn, TxOut era)
   -> IO ()
 printUtxo sophieBasedEra' txInOutTuple =
   case sophieBasedEra' of
@@ -692,7 +658,7 @@ printUtxo sophieBasedEra' txInOutTuple =
 
   printableValue :: TxOutValue era -> Text
   printableValue (TxOutValue _ val) = renderValue val
-  printableValue (TxOutDafiOnly _ (Entropic i)) = Text.pack $ show i
+  printableValue (TxOutBccOnly _ (Entropic i)) = Text.pack $ show i
 
 runQueryStakePools
   :: AnyConsensusModeParams
@@ -893,3 +859,25 @@ obtainLedgerEraClassConstraints SophieBasedEraSophie f = f
 obtainLedgerEraClassConstraints SophieBasedEraEvie f = f
 obtainLedgerEraClassConstraints SophieBasedEraJen    f = f
 obtainLedgerEraClassConstraints SophieBasedEraAurum  f = f
+
+
+queryQueryTip
+  :: LocalNodeConnectInfo BccMode
+  -> Maybe ChainPoint
+  -> IO (ChainTip, Either AcquireFailure O.QueryTipLocalState)
+queryQueryTip connectInfo mpoint = do
+  liftIO $ executeLocalStateQueryExprWithChainSync connectInfo mpoint
+    $ \ntcVersion -> do
+        era <- queryExpr (QueryCurrentEra BccModeIsMultiEra)
+        eraHistory@(EraHistory _ interpreter)
+          <- queryExpr (QueryEraHistory BccModeIsMultiEra)
+        mSystemStart <- if ntcVersion >= NodeToClientV_9
+                        then Just <$> queryExpr QuerySystemStart
+                        else return Nothing
+        return O.QueryTipLocalState
+          { O.era = era
+          , O.eraHistory = eraHistory
+          , O.mSystemStart = mSystemStart
+          , O.epochInfo = hoistEpochInfo (first TransactionValidityIntervalError . runExcept)
+                            $ Consensus.interpreterToEpochInfo interpreter
+          }

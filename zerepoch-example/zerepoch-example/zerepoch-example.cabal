@@ -1,10 +1,10 @@
 cabal-version: 3.0
 
 name:                   zerepoch-example
-version:                1.30.0
+version:                1.29.0
 description:            End to end examples of creating and executing Zerepoch scripts.
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.io
 license:                Apache-2.0
 build-type:             Simple
 extra-source-files:     README.md
@@ -70,6 +70,7 @@ library
                       , bcc-protocol-toptimum
                       , bcc-slotting
                       , containers
+                      , filepath
                       , shardagnostic-consensus
                       , shardagnostic-network
                       , zerepoch-ledger
@@ -77,7 +78,7 @@ library
                       , zerepoch-tx
                       , zerepoch-tx-plugin
                       , serialise
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
                       , strict-containers
                       , transformers
                       , transformers-except
@@ -125,7 +126,7 @@ test-suite zerepoch-example-test
                       , zerepoch-example
                       , zerepoch-ledger
                       , zerepoch-ledger-api
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
 
 
   other-modules:        Test.ZerepochExample.Gen
@@ -133,3 +134,4 @@ test-suite zerepoch-example-test
                         Test.ZerepochExample.ScriptData
 
   ghc-options:          -threaded -rtsopts -with-rtsopts=-N -with-rtsopts=-T
+

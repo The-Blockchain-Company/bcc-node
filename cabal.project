@@ -1,4 +1,4 @@
-index-state: 2021-09-15T00:00:00Z
+index-state: 2021-08-14T00:00:00Z
 
 packages:
     bcc-api
@@ -13,9 +13,7 @@ packages:
     bench/locli
     bench/tx-generator
     zerepoch-example/zerepoch-example
-    trace-dispatcher
     trace-forward
-    trace-resources
 
 package bcc-api
   ghc-options: -Werror
@@ -33,15 +31,6 @@ package bcc-node-chairman
   ghc-options: -Werror
 
 package tx-generator
-  ghc-options: -Werror
-
-package trace-dispatcher
-  ghc-options: -Werror
-
-package trace-resources
-  ghc-options: -Werror
-
-package zerepoch-examples
   ghc-options: -Werror
 
 package cryptonite
@@ -76,15 +65,6 @@ package bcc-submit-api
 package bcc-testnet
   tests: True
 
-package zerepoch-examples
-  tests: True
-
-package trace-resources
-  tests: True
-
-package trace-dispatcher
-  tests: True
-
 package trace-forward
   tests: True
 
@@ -92,7 +72,7 @@ package trace-forward
 package cole-spec-ledger
   tests: False
 
-package iohk-monitoring
+package tbco-monitoring
   tests: False
 
 package shardagnostic-consensus-test
@@ -119,7 +99,7 @@ package small-steps
 package small-steps-test
   tests: False
 
-package goblins
+package shepards
   tests: False
 
 package io-classes
@@ -138,21 +118,20 @@ package bcc-ledger-aurum-test
 -- Using a fork until our patches can be merged upstream
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/optparse-applicative
+  location: https://github.com/input-output-hk/optparse-applicative
   tag: 7497a29cb998721a9068d5725d49461f2bba0e7a
   --sha256: 1gvsrg925vynwgqwplgjmp53vj953qyh3wbdf34pw21c8r47w35r
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/hedgehog-extras
-  tag: edf6945007177a638fbeb8802397f3a6f4e47c14
-  --sha256: 0wc7qzkc7j4ns2rz562h6qrx2f8xyq7yjcb7zidnj7f6j0pcd0i9
+  location: https://github.com/The-Blockchain-Company/hedgehog-extras
+  tag: 0bce8b7a9ddd4ac0acc4200c1fb51ca746e19409
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/bcc-base
-  tag: 654f5b7c76f7cc57900b4ddc664a82fc3b925fb0
-  --sha256: 0j4x9zbx5dkww82sqi086h39p456iq5xr476ylmrnpwcpfb4xai4
+  location: https://github.com/The-Blockchain-Company/bcc-base
+  tag: 027956bcb59f227e9b8c2032aacbb945394f4785
+ 
   subdir:
     base-deriving-via
     binary
@@ -167,61 +146,54 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/bcc-crypto
-  tag: f73079303f663e028288f9f4a9e08bcca39a923e
-  --sha256: 1n87i15x54s0cjkh3nsxs4r1x016cdw1fypwmr68936n3xxsjn6q
+  location: https://github.com/The-Blockchain-Company/bcc-crypto
+  tag: 3e03966459d94e6020364487f85451b641ee64a4
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/bcc-ledger-specs
-  tag: bf008ce028751cae9fb0b53c3bef20f07c06e333
-  --sha256: 0my3801w1vinc0kf5yh9lxl6saqxgwm6ccg0vvzi104pafcwwcqx
+  location: https://github.com/The-Blockchain-Company/bcc-ledger-specs
+  
   subdir:
-    eras/aurum/impl
-    eras/aurum/test-suite
-    eras/cole/chain/executable-spec
-    eras/cole/crypto
-    eras/cole/crypto/test
-    eras/cole/ledger/executable-spec
-    eras/cole/ledger/impl
-    eras/cole/ledger/impl/test
-    eras/sophie/impl
-    eras/sophie/test-suite
-    eras/sophie-ma/impl
-    eras/sophie-ma/test-suite
-    libs/bcc-ledger-core
-    libs/bcc-ledger-pretty
-    libs/bcc-protocol-toptimum
-    libs/small-steps
-    libs/small-steps-test
-    libs/non-integral
-    eras/sophie/chain-and-ledger/executable-spec
-    eras/sophie/chain-and-ledger/sophie-spec-ledger-test
-    eras/sophie/chain-and-ledger/dependencies/non-integer
+    aurum/impl
+    cole/chain/executable-spec
+    cole/crypto
+    cole/crypto/test
+    cole/ledger/executable-spec
+    cole/ledger/impl
+    cole/ledger/impl/test
+    bcc-ledger-core
+    bcc-protocol-toptimum
+    semantics/executable-spec
+    semantics/small-steps-test
+    sophie/chain-and-ledger/dependencies/non-integer
+    sophie/chain-and-ledger/executable-spec
+    sophie/chain-and-ledger/sophie-spec-ledger-test
+    sophie-ma/impl
+    sophie-ma/sophie-ma-test
+--TODO: disabled until it drops its dep on zerepoch-tx-plugin
+--  aurum/test
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/bcc-prelude
-  tag: bb4ed71ba8e587f672d06edf9d2e376f4b055555
-  --sha256: 00h10l5mmiza9819p9v5q5749nb9pzgi20vpzpy1d34zmh6gf1cj
+  location: https://github.com/The-Blockchain-Company/bcc-prelude
+  tag: 583f26698d2a46b06ea251a4b3f1762d909f9ecb  
   subdir:
     bcc-prelude
     bcc-prelude-test
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/goblins
-  tag: cde90a2b27f79187ca8310b6549331e59595e7ba
-  --sha256: 17c88rbva3iw82yg9srlxjv2ia5wjb9cyqw44hik565f5v9svnyg
+  location: https://github.com/The-Blockchain-Company/shepards
+  tag: f3f78f1f98060115122a23f38eaf2c9a42806b87
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/iohk-monitoring-framework
-  tag: 808724ff8a19a33d0ed06f9ef59fbd900b08553c
-  --sha256: 0298dpl29gxzs9as9ha6y0w18hqwc00ipa3hzkxv7nlfrjjz8hmz
+  location: https://github.com/The-Blockchain-Company/tbco-monitoring-framework
+  tag: 4d9367fd730a383a25049621dd442632c8316f50
+  
   subdir:
     contra-tracer
-    iohk-monitoring
+    tbco-monitoring
     plugins/backend-aggregation
     plugins/backend-ekg
     plugins/backend-monitoring
@@ -231,15 +203,13 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/Win32-network
-  tag: 3825d3abf75f83f406c1f7161883c438dac7277d
-  --sha256: 19wahfv726fa3mqajpqdqhnl9ica3xmf68i254q45iyjcpj1psqx
+  location: https://github.com/The-Blockchain-Company/Win32-network
+  tag: 16cadcfe30bae30e8e6362f5087cad9f5bc274d5
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/shardagnostic-network
-  tag: 94782e5ca52f234ff8eeddc6322a46cca0b69c0e
-  --sha256: 1da3pka4pn6sjf6w19d957aryjc9ip1a3g0vz7jz66pjri3v2n0j
+  location: https://github.com/The-Blockchain-Company/shardagnostic-network
+  
   subdir:
     io-sim
     io-classes
@@ -253,16 +223,14 @@ source-repository-package
     shardagnostic-network-framework
     shardagnostic-network-testing
     typed-protocols
-    typed-protocols-cborg
     typed-protocols-examples
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/zerepoch
-  tag: 1efbb276ef1a10ca6961d0fd32e6141e9798bd11
-  --sha256: 1jicyk4hr8p0xksj4048gdxndrb42jz4wsnkhc3ymxbm5v6snalf
+  location: https://github.com/The-Blockchain-Company/zerepoch
+  tag: 37c375ba16089fb9faf825ec356c8b1feb142f2c
+ 
   subdir:
-    freer-extras
     zerepoch-core
     zerepoch-ledger
     zerepoch-ledger-api
@@ -274,14 +242,7 @@ source-repository-package
 
 source-repository-package
   type: git
-  location: https://github.com/the-blockchain-company/ekg-forward
-  tag: d9e8fd302fa6ba41c07183d371e6777286d37bc2
-  --sha256: 0s8cblhq3i528jj7r7yd4v82nqzafj8vrgf0y80l7saxc3a5f2lk
-
--- Drops an instance breaking our code. Should be released to Hackage eventually.
-source-repository-package
-  type: git
-  location: https://github.com/the-blockchain-company/flat
+  location: https://github.com/michaelpj/flat.git
   tag: ee59880f47ab835dbd73bea0847dab7869fc20d8
   --sha256: 1lrzknw765pz2j97nvv9ip3l1mcpf2zr4n56hwlz0rk7wq7ls4cm
 

@@ -893,24 +893,24 @@ instance ( ConvertRawHash blk
                , "expectedPrevHash" .= String (renderChainHash (Text.decodeLatin1 . toRawHash (Proxy @blk)) expectPrevHash)
                , "actualPrevHash" .= String (renderChainHash (Text.decodeLatin1 . toRawHash (Proxy @blk)) actualPrevHash)
                ]
-    ImmDB.MissingPrijenIndex chunkNo ->
-      mkObject [ "kind" .= String "TraceImmutableDBEvent.MissingPrijenIndex"
+    ImmDB.MissingPrimaryIndex chunkNo ->
+      mkObject [ "kind" .= String "TraceImmutableDBEvent.MissingPrimaryIndex"
                , "chunkNo" .= String (renderChunkNo chunkNo)
                ]
     ImmDB.MissingSecondaryIndex chunkNo ->
       mkObject [ "kind" .= String "TraceImmutableDBEvent.MissingSecondaryIndex"
                , "chunkNo" .= String (renderChunkNo chunkNo)
                ]
-    ImmDB.InvalidPrijenIndex chunkNo ->
-      mkObject [ "kind" .= String "TraceImmutableDBEvent.InvalidPrijenIndex"
+    ImmDB.InvalidPrimaryIndex chunkNo ->
+      mkObject [ "kind" .= String "TraceImmutableDBEvent.InvalidPrimaryIndex"
                , "chunkNo" .= String (renderChunkNo chunkNo)
                ]
     ImmDB.InvalidSecondaryIndex chunkNo ->
       mkObject [ "kind" .= String "TraceImmutableDBEvent.InvalidSecondaryIndex"
                , "chunkNo" .= String (renderChunkNo chunkNo)
                ]
-    ImmDB.RewritePrijenIndex chunkNo ->
-      mkObject [ "kind" .= String "TraceImmutableDBEvent.RewritePrijenIndex"
+    ImmDB.RewritePrimaryIndex chunkNo ->
+      mkObject [ "kind" .= String "TraceImmutableDBEvent.RewritePrimaryIndex"
                , "chunkNo" .= String (renderChunkNo chunkNo)
                ]
     ImmDB.RewriteSecondaryIndex chunkNo ->

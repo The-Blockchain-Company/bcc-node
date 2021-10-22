@@ -5,12 +5,12 @@ module Bcc.Analysis.TopHandler
 -- The code in this module derives from multiple authors over many years.
 -- It is all under the BSD3 license below.
 --
--- Copyright (c) 2019 The Blockchain Co.  Ltd.
+-- Copyright (c) 2021 The-Blockchain-Company
 --               2017 Edward Z. Yang
 --               2015 Edsko de Vries
 --               2009 Duncan Coutts
 --               2007 Galois Inc.
---               2003 Isaac Jones, Simon Marlow
+--               2003 Entropic Jones, Simon Marlow
 --
 -- Copyright (c) 2003-2017, Cabal Development Team.
 -- See the AUTHORS file for the full list of copyright holders.
@@ -28,7 +28,7 @@ module Bcc.Analysis.TopHandler
 --       disclaimer in the documentation and/or other materials provided
 --       with the distribution.
 --
---     * Neither the name of Isaac Jones nor the names of other
+--     * Neither the name of Entropic Jones nor the names of other
 --       contributors may be used to endorse or promote products derived
 --       from this software without specific prior written permission.
 --

@@ -42,12 +42,12 @@ import           Shardagnostic.Consensus.Ledger.Basics (AuxLedgerEvent)
 import           Shardagnostic.Consensus.Sophie.Ledger (SophieBlock,
                    SophieLedgerEvent (SophieLedgerEventTICK))
 import           Shardagnostic.Consensus.TypeFamilyWrappers
-import           Bcc.Ledger.Sophie.API (InstantaneousRewards (InstantaneousRewards))
-import           Bcc.Ledger.Sophie.Rules.Epoch (EpochEvent (PoolReapEvent))
-import           Bcc.Ledger.Sophie.Rules.Mir (MirEvent (..))
-import           Bcc.Ledger.Sophie.Rules.NewEpoch (NewEpochEvent (EpochEvent, MirEvent, SumRewards))
-import           Bcc.Ledger.Sophie.Rules.PoolReap (PoolreapEvent (RetiredPools))
-import           Bcc.Ledger.Sophie.Rules.Tick (TickEvent (NewEpochEvent))
+import           Sophie.Spec.Ledger.API (InstantaneousRewards (InstantaneousRewards))
+import           Sophie.Spec.Ledger.STS.Epoch (EpochEvent (PoolReapEvent))
+import           Sophie.Spec.Ledger.STS.Mir (MirEvent (..))
+import           Sophie.Spec.Ledger.STS.NewEpoch (NewEpochEvent (EpochEvent, MirEvent, SumRewards))
+import           Sophie.Spec.Ledger.STS.PoolReap (PoolreapEvent (RetiredPools))
+import           Sophie.Spec.Ledger.STS.Tick (TickEvent (NewEpochEvent))
 
 data LedgerEvent
   = -- | The given pool is being registered for the first time on chain.
@@ -83,7 +83,7 @@ instance
       Just $
         MIRDistribution $
           MIRDistributionDetails rp rt rtt ttr
-    LERetiredPools r u e -> Just $ PoolReap $ PoolReapDetails e r u
+    LERetiredPools r u -> Just $ PoolReap $ PoolReapDetails r u
     _ -> Nothing
 
 instance All ConvertLedgerEvent xs => ConvertLedgerEvent (HardForkBlock xs) where
@@ -100,7 +100,7 @@ instance All ConvertLedgerEvent xs => ConvertLedgerEvent (HardForkBlock xs) wher
 -- | Details of fund transfers due to MIR certificates.
 --
 --   Note that the transfers from reserves to treasury and treasury to reserves
---   are inverse; a transfer of 100 DAFI in either direction will result in a net
+--   are inverse; a transfer of 100 BCC in either direction will result in a net
 --   movement of 0, but we include both directions for assistance in debugging.
 data MIRDistributionDetails = MIRDistributionDetails
   { reservePayouts :: Map StakeCredential Entropic,
@@ -110,8 +110,7 @@ data MIRDistributionDetails = MIRDistributionDetails
   }
 
 data PoolReapDetails = PoolReapDetails
-  { epochNo :: EpochNo,
-    -- | Refunded deposits. The pools referenced are now retired, and the
+  { -- | Refunded deposits. The pools referenced are now retired, and the
     --   'StakeCredential' accounts are credited with the deposits.
     refunded :: Map StakeCredential (Map (Hash StakePoolKey) Entropic),
     -- | Unclaimed deposits. The 'StakeCredential' referenced in this map is not
@@ -181,9 +180,8 @@ pattern LERetiredPools ::
   ) =>
   Map StakeCredential (Map (Hash StakePoolKey) Entropic) ->
   Map StakeCredential (Map (Hash StakePoolKey) Entropic) ->
-  EpochNo ->
   AuxLedgerEvent (LedgerState (SophieBlock ledgerera))
-pattern LERetiredPools r u e <-
+pattern LERetiredPools r u <-
   SophieLedgerEventTICK
     ( NewEpochEvent
         ( EpochEvent
@@ -191,7 +189,6 @@ pattern LERetiredPools r u e <-
                 ( RetiredPools
                     (convertRetiredPoolsMap -> r)
                     (convertRetiredPoolsMap -> u)
-                    e
                   )
               )
           )

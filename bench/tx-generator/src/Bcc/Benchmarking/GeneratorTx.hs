@@ -30,7 +30,7 @@ module Bcc.Benchmarking.GeneratorTx
   ) where
 
 import           Bcc.Prelude
-import           Prelude (String, error, id)
+import           Prelude (error, id, String)
 
 import qualified Control.Concurrent.STM as STM
 import           Control.Monad (fail)
@@ -42,7 +42,7 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Map.Strict as Map
 import           Data.Text (pack)
 import           Network.Socket (AddrInfo (..), AddrInfoFlag (..), Family (..), SocketType (Stream),
-                   addrFamily, addrFlags, addrSocketType, defaultHints, getAddrInfo)
+                                 addrFamily, addrFlags, addrSocketType, defaultHints, getAddrInfo)
 
 import           Bcc.CLI.Types (SigningKeyFile (..))
 import           Bcc.Node.Types
@@ -51,19 +51,19 @@ import           Shardagnostic.Consensus.Sophie.Eras (StandardSophie)
 
 import           Bcc.Api hiding (txFee)
 
-import qualified Bcc.Benchmarking.FundSet as FundSet
+import           Bcc.Benchmarking.Types
 import           Bcc.Benchmarking.GeneratorTx.Error
 import           Bcc.Benchmarking.GeneratorTx.Genesis
 import           Bcc.Benchmarking.GeneratorTx.NodeToNode
-import           Bcc.Benchmarking.GeneratorTx.SizedMetadata (mkMetadata)
 import           Bcc.Benchmarking.GeneratorTx.Submission
 import           Bcc.Benchmarking.GeneratorTx.SubmissionClient
 import           Bcc.Benchmarking.GeneratorTx.Tx
+import           Bcc.Benchmarking.GeneratorTx.SizedMetadata (mkMetadata)
 import           Bcc.Benchmarking.Tracer
-import           Bcc.Benchmarking.Types
 import           Bcc.Benchmarking.Wallet
+import qualified Bcc.Benchmarking.FundSet as FundSet
 
-import           Bcc.Ledger.Sophie.API (SophieGenesis)
+import           Sophie.Spec.Ledger.API (SophieGenesis)
 import           Shardagnostic.Network.Protocol.LocalTxSubmission.Type (SubmitResult (..))
 
 readSigningKey :: SigningKeyFile -> ExceptT TxGenError IO (SigningKey PaymentKey)
@@ -102,7 +102,7 @@ secureGenesisFund submitTracer localSubmitTx networkId genesis txFee ttl key out
       liftIO . traceWith submitTracer . TraceBenchTxSubDebug
       $ mconcat
       [ "******* Funding secured ("
-      , show $ fundTxIn fund, " -> ", show $ fundDafiValue fund
+      , show $ fundTxIn fund, " -> ", show $ fundBccValue fund
       , ")"]
     SubmitFail e -> fail $ show e
   return fund
@@ -130,7 +130,7 @@ splitFunds
     globalOutAddr
     fundsTxIO = do
   let -- The number of splitting txout entries (corresponds to the number of all inputs we will need).
-      (Quantity rawCoin) = entropicToQuantity $ fundDafiValue fundsTxIO
+      (Quantity rawCoin) = entropicToQuantity $ fundBccValue fundsTxIO
       (Quantity feeRaw) = entropicToQuantity fee
       numRequiredTxOuts = numTxs * fromIntegral txFanin
       splitFanout = 60 :: Word64 -- near the upper bound so as not to exceed the tx size limit
@@ -141,7 +141,7 @@ splitFunds
       -- a safe number for fees is numRequiredTxOuts' * feePerTx.
       outputSliceWithFees = rawCoin `div` fromIntegral numRequiredTxOuts
       outputSlice = outputSliceWithFees - feeRaw
-      splitValue = mkTxOutValueDafiOnly $ quantityToEntropic $ Quantity outputSlice
+      splitValue = mkTxOutValueBccOnly $ quantityToEntropic $ Quantity outputSlice
       -- The same output for all splitting transaction: send the same 'splitValue'
       -- to the same 'sourceAddress'.
       -- Create and sign splitting txs.
@@ -195,7 +195,7 @@ splitFunds
             -- same TxOut for all
             outs = zip [identityIndex ..
                         identityIndex + fromIntegral numOutsPerInitTx - 1]
-                       (repeat (TxOut globalOutAddr txOut TxOutDatumNone))
+                       (repeat (TxOut globalOutAddr txOut TxOutDatumHashNone))
             (mFunds, _fees, outIndices, splitTx) =
               mkTransactionGen sKey (initialFund :| []) globalOutAddr outs TxMetadataNone fee
             !splitTxId = getTxId $ getTxBody splitTx
@@ -208,7 +208,7 @@ splitFunds
             Nothing                 -> reverse $ (splitTx, txIOList) : acc
             Just (txInIndex, val) ->
               let !txInChange  = TxIn splitTxId txInIndex
-                  !txChangeValue = mkTxOutValueDafiOnly @ era val
+                  !txChangeValue = mkTxOutValueBccOnly @ era val
               in
                 -- from the change create the next tx with numOutsPerInitTx UTxO entries
                 createSplittingTxs sKey
@@ -254,12 +254,12 @@ runBenchmark
                        finalTransactions
     waitBenchmark traceSubmit ctl
 
-type AsyncBenchmarkControl = (Async (), [Async ()], IO SubmissionSumjen, IO ())
+type AsyncBenchmarkControl = (Async (), [Async ()], IO SubmissionSummary, IO ())
 
 waitBenchmark :: Tracer IO (TraceBenchTxSubmit TxId) -> AsyncBenchmarkControl -> ExceptT TxGenError IO ()
-waitBenchmark traceSubmit (feeder, workers, mkSumjen, _) = liftIO $ do
+waitBenchmark traceSubmit (feeder, workers, mkSummary, _) = liftIO $ do
   mapM_ waitCatch (feeder : workers)
-  traceWith traceSubmit =<< TraceBenchTxSubSumjen <$> mkSumjen
+  traceWith traceSubmit =<< TraceBenchTxSubSummary <$> mkSummary
 
 asyncBenchmark :: forall era. IsSophieBasedEra era
   => Tracer IO (TraceBenchTxSubmit TxId)
@@ -309,7 +309,7 @@ asyncBenchmark
         cancel tpsFeeder
         liftIO $ tpsLimitedTxFeederShutdown numTargets txSendQueue
 
-  return (tpsFeeder, allAsyncs, mkSubmissionSumjen threadName startTime reportRefs, tpsFeederShutdown)
+  return (tpsFeeder, allAsyncs, mkSubmissionSummary threadName startTime reportRefs, tpsFeederShutdown)
  where
   traceDebug :: String -> IO ()
   traceDebug =   traceWith traceSubmit . TraceBenchTxSubDebug
@@ -317,7 +317,7 @@ asyncBenchmark
 -- | At this moment 'sourceAddress' contains a huge amount of money (lets call it A).
 --   Now we have to split this amount to N equal parts, as a result we'll have
 --   N UTxO entries, and alltogether these entries will contain the same amount A.
---   E.g. (1 entry * 1000 DAFI) -> (10 entries * 100 DAFI).
+--   E.g. (1 entry * 1000 BCC) -> (10 entries * 100 BCC).
 --   Technically all splitting transactions will send money back to 'sourceAddress'.
 
 lookupNodeAddress ::
@@ -387,8 +387,8 @@ txGenerator
                    (repeat txOut)
   initRecipientIndex = 0 :: Int
   -- The same output for all transactions.
-  valueForRecipient = quantityToEntropic $ Quantity 1000000 -- 10 DAFI
-  !txOut = TxOut recipientAddress (mkTxOutValueDafiOnly valueForRecipient) TxOutDatumNone
+  valueForRecipient = quantityToEntropic $ Quantity 1000000 -- 10 BCC
+  !txOut = TxOut recipientAddress (mkTxOutValueBccOnly valueForRecipient) TxOutDatumHashNone
   totalValue = valueForRecipient + txFee
   -- Send possible change to the same 'recipientAddress'.
   addressForChange = recipientAddress
@@ -435,12 +435,12 @@ txGenerator
       (_, [])    ->
         left $ InsufficientFundsForRecipientTx
                  thresh
-                 (maximum $ map fundDafiValue funds)
+                 (maximum $ map fundBccValue funds)
       (toofews, found:rest) -> right (found, toofews <> rest)
 
   -- Find the first tx output that contains sufficient amount of money.
   predTxD :: Entropic -> Fund -> Bool
-  predTxD valueThreshold f = fundDafiValue f >= valueThreshold
+  predTxD valueThreshold f = fundBccValue f >= valueThreshold
 
 ---------------------------------------------------------------------------------------------------
 -- Txs for submission.
@@ -523,7 +523,7 @@ walletBenchmark
         cancel tpsFeeder
         liftIO $ tpsLimitedTxFeederShutdown numTargets txSendQueue
 
-  return (tpsFeeder, allAsyncs, mkSubmissionSumjen threadName startTime reportRefs, tpsFeederShutdown)
+  return (tpsFeeder, allAsyncs, mkSubmissionSummary threadName startTime reportRefs, tpsFeederShutdown)
  where
   traceDebug :: String -> IO ()
   traceDebug =   traceWith traceSubmit . TraceBenchTxSubDebug

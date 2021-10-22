@@ -288,7 +288,7 @@ timelineStep ci a@TimelineAccum{aSlotStats=cur:rSLs, ..} = \case
     a { aSlotStats      = cur { slRejectedTx = slRejectedTx cur + 1
                               } : rSLs
       }
-  LogObject{loBody=LOGeneratorSumjen _noFails sent elapsed threadwiseTps} ->
+  LogObject{loBody=LOGeneratorSummary _noFails sent elapsed threadwiseTps} ->
     a { aRunScalars       =
         aRunScalars
         { rsThreadwiseTps = Just threadwiseTps

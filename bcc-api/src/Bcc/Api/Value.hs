@@ -24,7 +24,7 @@ module Bcc.Api.Value
   , negateValue
   , calcMinimumDeposit
 
-    -- ** Dafi \/ Entropic specifically
+    -- ** Bcc \/ Entropic specifically
   , quantityToEntropic
   , entropicToQuantity
   , selectEntropic
@@ -159,7 +159,7 @@ scriptPolicyId = PolicyId . hashScript
 
 newtype AssetName = AssetName ByteString
     deriving stock (Eq, Ord)
-    deriving newtype (Show)
+    deriving newtype (Show)    
 
 instance IsString AssetName where
     fromString s
@@ -190,7 +190,7 @@ instance FromJSONKey AssetName where
   fromJSONKey = FromJSONKeyText (AssetName . Text.encodeUtf8)
 
 
-data AssetId = DafiAssetId
+data AssetId = BccAssetId
              | AssetId !PolicyId !AssetName
   deriving (Eq, Ord, Show)
 
@@ -252,10 +252,10 @@ filterValue :: (AssetId -> Bool) -> Value -> Value
 filterValue p (Value m) = Value (Map.filterWithKey (\k _v -> p k) m)
 
 selectEntropic :: Value -> Entropic
-selectEntropic = quantityToEntropic . flip selectAsset DafiAssetId
+selectEntropic = quantityToEntropic . flip selectAsset BccAssetId
 
 entropicToValue :: Entropic -> Value
-entropicToValue = Value . Map.singleton DafiAssetId . entropicToQuantity
+entropicToValue = Value . Map.singleton BccAssetId . entropicToQuantity
 
 -- | Check if the 'Value' consists of /only/ 'Entropic' and no other assets,
 -- and if so then return the Entropic.
@@ -267,14 +267,14 @@ valueToEntropic :: Value -> Maybe Entropic
 valueToEntropic v =
     case valueToList v of
       []                -> Just (Entropic 0)
-      [(DafiAssetId, q)] -> Just (quantityToEntropic q)
+      [(BccAssetId, q)] -> Just (quantityToEntropic q)
       _                 -> Nothing
 
 toJenValue :: Value -> Jen.Value StandardCrypto
 toJenValue v =
     Jen.Value entropic other
   where
-    Quantity entropic = selectAsset v DafiAssetId
+    Quantity entropic = selectAsset v BccAssetId
       --TODO: write QC tests to show it's ok to use Map.fromAscListWith here
     other = Map.fromListWith Map.union
               [ (toJenPolicyID pid, Map.singleton (toJenAssetName name) q)
@@ -292,7 +292,7 @@ fromJenValue (Jen.Value entropic other) =
     Value $
       --TODO: write QC tests to show it's ok to use Map.fromAscList here
       Map.fromList $
-        [ (DafiAssetId, Quantity entropic) | entropic /= 0 ]
+        [ (BccAssetId, Quantity entropic) | entropic /= 0 ]
      ++ [ (AssetId (fromJenPolicyID pid) (fromJenAssetName name), Quantity q)
         | (pid, as) <- Map.toList other
         , (name, q) <- Map.toList as ]
@@ -320,22 +320,22 @@ newtype ValueNestedRep = ValueNestedRep [ValueNestedBundle]
   deriving (Eq, Ord, Show)
 
 -- | A bundle within a 'ValueNestedRep' for a single 'PolicyId', or for the
--- special case of dafi.
+-- special case of bcc.
 --
-data ValueNestedBundle = ValueNestedBundleDafi Quantity
+data ValueNestedBundle = ValueNestedBundleBcc Quantity
                        | ValueNestedBundle PolicyId (Map AssetName Quantity)
   deriving (Eq, Ord, Show)
 
 
 valueToNestedRep :: Value -> ValueNestedRep
 valueToNestedRep v =
-    -- unflatten all the non-dafi assets, and add dafi separately
+    -- unflatten all the non-bcc assets, and add bcc separately
     ValueNestedRep $
-        [ ValueNestedBundleDafi q | let q = selectAsset v DafiAssetId, q /= 0 ]
-     ++ [ ValueNestedBundle pId qs | (pId, qs) <- Map.toList nonDafiAssets ]
+        [ ValueNestedBundleBcc q | let q = selectAsset v BccAssetId, q /= 0 ]
+     ++ [ ValueNestedBundle pId qs | (pId, qs) <- Map.toList nonBccAssets ]
   where
-    nonDafiAssets :: Map PolicyId (Map AssetName Quantity)
-    nonDafiAssets =
+    nonBccAssets :: Map PolicyId (Map AssetName Quantity)
+    nonBccAssets =
       Map.fromListWith (Map.unionWith (<>))
         [ (pId, Map.singleton aName q)
         | (AssetId pId aName, q) <- valueToList v ]
@@ -346,7 +346,7 @@ valueFromNestedRep (ValueNestedRep bundles) =
       [ (aId, q)
       | bundle   <- bundles
       , (aId, q) <- case bundle of
-                      ValueNestedBundleDafi  q  -> [ (DafiAssetId, q) ]
+                      ValueNestedBundleBcc  q  -> [ (BccAssetId, q) ]
                       ValueNestedBundle pId qs -> [ (AssetId pId aName, q)
                                                   | (aName, q) <- Map.toList qs ]
       ]
@@ -355,7 +355,7 @@ instance ToJSON ValueNestedRep where
   toJSON (ValueNestedRep bundles) = object $ map toPair bundles
     where
      toPair :: ValueNestedBundle -> (Text, Aeson.Value)
-     toPair (ValueNestedBundleDafi q) = ("entropic", toJSON q)
+     toPair (ValueNestedBundleBcc q) = ("entropic", toJSON q)
      toPair (ValueNestedBundle pid assets) = (renderPolicyId pid, toJSON assets)
 
 instance FromJSON ValueNestedRep where
@@ -365,7 +365,7 @@ instance FromJSON ValueNestedRep where
                                    | keyValTuple <- HashMap.toList obj ]
     where
       parsePid :: (Text, Aeson.Value) -> Parser ValueNestedBundle
-      parsePid ("entropic", q) = ValueNestedBundleDafi <$> parseJSON q
+      parsePid ("entropic", q) = ValueNestedBundleBcc <$> parseJSON q
       parsePid (pid, q) =
         case deserialiseFromRawBytesHex AsScriptHash (Text.encodeUtf8 pid) of
           Just sHash -> ValueNestedBundle (PolicyId sHash) <$> parseJSON q
@@ -405,7 +405,7 @@ renderPolicyId :: PolicyId -> Text
 renderPolicyId (PolicyId scriptHash) = serialiseToRawBytesHexText scriptHash
 
 renderAssetId :: AssetId -> Text
-renderAssetId DafiAssetId = "entropic"
+renderAssetId BccAssetId = "entropic"
 renderAssetId (AssetId polId (AssetName assetName))
   | BS.null assetName = renderPolicyId polId
   | otherwise         = renderPolicyId polId <> "." <> Text.decodeUtf8 assetName

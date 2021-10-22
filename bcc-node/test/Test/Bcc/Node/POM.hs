@@ -65,7 +65,6 @@ testPartialYamlConfig =
     , pncValidateDB = mempty
     , pncShutdownIPC = mempty
     , pncShutdownOnSlotSynced = mempty
-    , pncMaybeMempoolCapacityOverride = mempty
     }
 
 -- | Example partial configuration theoretically created
@@ -93,7 +92,6 @@ testPartialCliConfig =
     , pncLoggingSwitch = mempty
     , pncLogMetrics = mempty
     , pncTraceConfig = mempty
-    , pncMaybeMempoolCapacityOverride = mempty
     }
 
 -- | Expected final NodeConfiguration
@@ -122,7 +120,6 @@ expectedConfig =
     , ncLoggingSwitch = True
     , ncLogMetrics = True
     , ncTraceConfig = TracingOff
-    , ncMaybeMempoolCapacityOverride = Nothing
     }
 
 -- -----------------------------------------------------------------------------

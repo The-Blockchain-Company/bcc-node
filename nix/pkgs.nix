@@ -5,7 +5,9 @@ final: prev: with final;
   in {
   bccNodeProject = import ./haskell.nix {
     inherit compiler-nix-name
+      pkgs
       lib
+      stdenv
       haskell-nix
       buildPackages
       gitrev
@@ -14,29 +16,41 @@ final: prev: with final;
   bccNodeHaskellPackages = bccNodeProject.hsPkgs;
   bccNodeProfiledHaskellPackages = (import ./haskell.nix {
     inherit compiler-nix-name
+      pkgs
       lib
+      stdenv
       haskell-nix
       buildPackages
       gitrev
       ;
+    inherit (bccNodeProject) projectPackages;
+    inherit (bccNodeProject.projectModule) src cabalProjectLocal;
     profiling = true;
   }).hsPkgs;
   bccNodeEventlogHaskellPackages = (import ./haskell.nix {
     inherit compiler-nix-name
+      pkgs
       lib
+      stdenv
       haskell-nix
       buildPackages
       gitrev
       ;
+    inherit (bccNodeProject) projectPackages;
+    inherit (bccNodeProject.projectModule) src cabalProjectLocal;
     eventlog = true;
   }).hsPkgs;
   bccNodeAssertedHaskellPackages = (import ./haskell.nix {
     inherit compiler-nix-name
+      pkgs
       lib
+      stdenv
       haskell-nix
       buildPackages
       gitrev
       ;
+    inherit (bccNodeProject) projectPackages;
+    inherit (bccNodeProject.projectModule) src cabalProjectLocal;
     assertedPackages = [
       "shardagnostic-consensus"
       "shardagnostic-consensus-bcc"
@@ -59,8 +73,6 @@ final: prev: with final;
   bcc-node-eventlogged = bccNodeEventlogHaskellPackages.bcc-node.components.exes.bcc-node;
   bcc-node-asserted = bccNodeAssertedHaskellPackages.bcc-node.components.exes.bcc-node;
   tx-generator-profiled = bccNodeProfiledHaskellPackages.tx-generator.components.exes.tx-generator;
-  zerepoch-scripts = callPackage ./zerepoch-scripts.nix { zerepoch-builder = bccNodeHaskellPackages.zerepoch-example.components.exes.zerepoch-example; };
-
   locli-profiled = bccNodeProfiledHaskellPackages.locli.components.exes.locli;
 
   # expose the db-converter and bcc-ping from the shardagnostic-network we depend on
@@ -104,10 +116,9 @@ final: prev: with final;
 
   submitApiDockerImage = let
     defaultConfig = {
-      socketPath = "/node-ipc/node.socket";
-      listenAddress = "0.0.0.0";
+      socketPath = "/ipc/node.socket";
     };
-  in callPackage ./docker/submit-api.nix {
+  in callPackage ./docker {
     exe = "bcc-submit-api";
     scripts = import ./scripts-submit-api.nix {
       inherit pkgs;

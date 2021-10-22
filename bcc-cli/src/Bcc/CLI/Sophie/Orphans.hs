@@ -31,16 +31,16 @@ import           Shardagnostic.Network.Block (BlockNo (..), HeaderHash, Tip (..)
 
 import           Bcc.Ledger.AuxiliaryData (AuxiliaryDataHash (..))
 import qualified Bcc.Ledger.Crypto as CC (Crypto)
-import           Bcc.Ledger.PoolDistr (PoolDistr (..))
+import           Bcc.Protocol.TOptimum (PoolDistr (..))
 import           Bcc.Protocol.TOptimum.BHeader (HashHeader (..))
 
 import qualified Bcc.Ledger.Credential as Ledger
-import qualified Bcc.Ledger.Sophie.API.Protocol as Ledger
-import qualified Bcc.Ledger.Sophie.EpochBoundary as Ledger
-import qualified Bcc.Ledger.Sophie.Rewards as Ledger
+import qualified Sophie.Spec.Ledger.API.Protocol as Ledger
+import qualified Sophie.Spec.Ledger.EpochBoundary as Ledger
+import qualified Sophie.Spec.Ledger.Rewards as Ledger
 import qualified Bcc.Protocol.TOptimum.Rules.Prtcl as Ledger
-import qualified Bcc.Protocol.TOptimum.Rules.Tickn as Ledger
-import           Bcc.Ledger.TxIn (TxId (..))
+import qualified Sophie.Spec.Ledger.STS.Tickn as Ledger
+import           Sophie.Spec.Ledger.TxBody (TxId (..))
 
 import qualified Bcc.Ledger.Jen.Value as Ledger.Jen
 

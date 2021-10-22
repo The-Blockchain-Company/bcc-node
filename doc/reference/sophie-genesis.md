@@ -1135,7 +1135,7 @@ After that, you should see the nodes start to alternately create blocks and
 adopt each others blocks. Remember that we have configured slots to be 1 second
 long but only 1 in 20 slots will have a block in it.
 
-[Cole mainnet configuration]: https://github.com/the-blockchain-company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml
+[Cole mainnet configuration]: https://github.com/The-Blockchain-Company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml
 
 
 ## Querying the node

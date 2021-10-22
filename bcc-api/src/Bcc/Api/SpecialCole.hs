@@ -129,7 +129,7 @@ data ColeProtocolParametersUpdate =
       -- Fee for a transaction. Transactions with lesser fees won't be accepted.
     , bPpuUnlockStakeEpoch  :: !(Maybe EpochNumber)
       -- ^ This has been re-purposed for unlocking the ShardagnosticBFT logic in the software.
-      -- Relevant: [CDEC-610](https://iohk.myjetbrains.com/youtrack/issue/CDEC-610)
+      -- Relevant: [CDEC-610](https://tbco.myjetbrains.com/youtrack/issue/CDEC-610)
     } deriving Show
 
 makeProtocolParametersUpdate

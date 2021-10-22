@@ -38,7 +38,7 @@ import qualified Bcc.Binary as CBOR
 
 --TODO: following import needed for orphan Eq Script instance
 import           Bcc.Ledger.SophieMA.TxBody ()
-import           Bcc.Ledger.Sophie.Scripts ()
+import           Sophie.Spec.Ledger.Scripts ()
 
 import           Bcc.CLI.Environment (EnvSocketError, readEnvSocketPath, renderEnvSocketError)
 import           Bcc.CLI.Run.Friendly (friendlyTxBodyBS)
@@ -357,6 +357,7 @@ runTxBuildRaw (AnyBccEra era)
                  <*> validateTxValidityUpperBound era mUpperBound)
         <*> validateTxMetadataInEra  era metadataSchema metadataFiles
         <*> validateTxAuxScripts     era scriptFiles
+        <*> pure (BuildTxWith TxExtraScriptDataNone) --TODO aurum: support this
         <*> validateRequiredSigners  era reqSigners
         <*> validateProtocolParameters era mpparams
         <*> validateTxWithdrawals    era withdrawals
@@ -410,6 +411,7 @@ runTxBuild (AnyBccEra era) (AnyConsensusModeParams cModeParams) networkId mScrip
            metadataSchema scriptFiles metadataFiles mpparams mUpdatePropFile outBody@(TxBodyFile fpath)
            mOverrideWits = do
   SocketPath sockPath <- firstExceptT SophieTxCmdSocketEnvError readEnvSocketPath
+
   let localNodeConnInfo = LocalNodeConnectInfo cModeParams networkId sockPath
       consensusMode = consensusModeOnly cModeParams
       dummyFee = Just $ Entropic 0
@@ -427,6 +429,7 @@ runTxBuild (AnyBccEra era) (AnyConsensusModeParams cModeParams) networkId mScrip
                    <*> validateTxValidityUpperBound era mUpperBound)
           <*> validateTxMetadataInEra     era metadataSchema metadataFiles
           <*> validateTxAuxScripts        era scriptFiles
+          <*> pure (BuildTxWith TxExtraScriptDataNone) --TODO aurum: support this
           <*> validateRequiredSigners     era reqSigners
           <*> validateProtocolParameters  era mpparams
           <*> validateTxWithdrawals       era withdrawals
@@ -577,7 +580,7 @@ validateTxInsCollateral era txins =
 validateTxOuts :: forall era.
                   BccEra era
                -> [TxOutAnyEra]
-               -> ExceptT SophieTxCmdError IO [TxOut CtxTx era]
+               -> ExceptT SophieTxCmdError IO [TxOut era]
 validateTxOuts era = mapM (toTxOutInAnyEra era)
 
 toAddressInAnyEra
@@ -599,40 +602,26 @@ toTxOutValueInAnyEra
   -> ExceptT SophieTxCmdError IO (TxOutValue era)
 toTxOutValueInAnyEra era val =
   case multiAssetSupportedInEra era of
-    Left dafiOnlyInEra ->
+    Left adaOnlyInEra ->
       case valueToEntropic val of
-        Just l  -> return (TxOutDafiOnly dafiOnlyInEra l)
+        Just l  -> return (TxOutBccOnly adaOnlyInEra l)
         Nothing -> txFeatureMismatch era TxFeatureMultiAssetOutputs
     Right multiAssetInEra -> return (TxOutValue multiAssetInEra val)
 
 toTxOutInAnyEra :: BccEra era
                 -> TxOutAnyEra
-                -> ExceptT SophieTxCmdError IO (TxOut CtxTx era)
+                -> ExceptT SophieTxCmdError IO (TxOut era)
 toTxOutInAnyEra era (TxOutAnyEra addr val mDatumHash) =
   case (scriptDataSupportedInEra era, mDatumHash) of
-    (_, TxOutDatumByNone) ->
+    (_, Nothing) ->
       TxOut <$> toAddressInAnyEra era addr
             <*> toTxOutValueInAnyEra era val
-            <*> pure TxOutDatumNone
-
-    (Just supported, TxOutDatumByHashOnly dh) ->
+            <*> pure TxOutDatumHashNone
+    (Just supported, Just dh) ->
       TxOut <$> toAddressInAnyEra era addr
             <*> toTxOutValueInAnyEra era val
             <*> pure (TxOutDatumHash supported dh)
-
-    (Just supported, TxOutDatumByHashOf fileOrSdata) -> do
-      sData <- readScriptDataOrFile fileOrSdata
-      TxOut <$> toAddressInAnyEra era addr
-            <*> toTxOutValueInAnyEra era val
-            <*> pure (TxOutDatumHash supported $ hashScriptData sData)
-
-    (Just supported, TxOutDatumByValue fileOrSdata) -> do
-      sData <- readScriptDataOrFile fileOrSdata
-      TxOut <$> toAddressInAnyEra era addr
-            <*> toTxOutValueInAnyEra era val
-            <*> pure (TxOutDatum supported sData)
-
-    (Nothing, _) ->
+    (Nothing, Just _) ->
       txFeatureMismatch era TxFeatureTxOutDatum
 
 validateTxFee :: BccEra era
@@ -1120,6 +1109,12 @@ data SomeWitness
   | AGenesisDelegateExtendedSigningKey
                                (SigningKey GenesisDelegateExtendedKey)
   | AGenesisUTxOSigningKey     (SigningKey GenesisUTxOKey)
+  | AVestedSigningKey           (SigningKey VestedKey)
+  | AVestedExtendedSigningKey   (SigningKey VestedExtendedKey)
+  | AVestedDelegateSigningKey   (SigningKey VestedDelegateKey)
+  | AVestedDelegateExtendedSigningKey
+                               (SigningKey VestedDelegateExtendedKey)
+  | AVestedUTxOSigningKey       (SigningKey VestedUTxOKey)
 
 
 -- | Error reading the data required to construct a key witness.
@@ -1179,6 +1174,16 @@ readWitnessSigningData (KeyWitnessSigningData skFile mbColeAddr) = do
                           AGenesisDelegateExtendedSigningKey
       , FromSomeType (AsSigningKey AsGenesisUTxOKey)
                           AGenesisUTxOSigningKey
+      , FromSomeType (AsSigningKey AsVestedKey)
+                      AVestedSigningKey
+      , FromSomeType (AsSigningKey AsVestedExtendedKey)
+                      AVestedExtendedSigningKey
+      , FromSomeType (AsSigningKey AsVestedDelegateKey)
+                      AVestedDelegateSigningKey
+      , FromSomeType (AsSigningKey AsVestedDelegateExtendedKey)
+                      AVestedDelegateExtendedSigningKey
+      , FromSomeType (AsSigningKey AsVestedUTxOKey)
+                      AVestedUTxOSigningKey
       ]
 
     bech32FileTypes =
@@ -1220,19 +1225,24 @@ data ColeOrSophieWitness
 categoriseSomeWitness :: SomeWitness -> ColeOrSophieWitness
 categoriseSomeWitness swsk =
   case swsk of
-    AColeSigningKey           sk addr -> AColeWitness (SophieBootstrapWitnessSigningKeyData sk addr)
+    AColeSigningKey         sk addr -> AColeWitness (SophieBootstrapWitnessSigningKeyData sk addr)
     APaymentSigningKey         sk      -> ASophieKeyWitness (WitnessPaymentKey         sk)
     APaymentExtendedSigningKey sk      -> ASophieKeyWitness (WitnessPaymentExtendedKey sk)
     AStakeSigningKey           sk      -> ASophieKeyWitness (WitnessStakeKey           sk)
     AStakeExtendedSigningKey   sk      -> ASophieKeyWitness (WitnessStakeExtendedKey   sk)
     AStakePoolSigningKey       sk      -> ASophieKeyWitness (WitnessStakePoolKey       sk)
-    AGenesisSigningKey         sk      -> ASophieKeyWitness (WitnessGenesisKey sk)
+    AGenesisSigningKey         sk      -> ASophieKeyWitness (WitnessGenesisKey         sk)
     AGenesisExtendedSigningKey sk      -> ASophieKeyWitness (WitnessGenesisExtendedKey sk)
     AGenesisDelegateSigningKey sk      -> ASophieKeyWitness (WitnessGenesisDelegateKey sk)
     AGenesisDelegateExtendedSigningKey sk
                                        -> ASophieKeyWitness (WitnessGenesisDelegateExtendedKey sk)
-    AGenesisUTxOSigningKey     sk      -> ASophieKeyWitness (WitnessGenesisUTxOKey     sk)
-
+    AGenesisUTxOSigningKey     sk      -> ASophieKeyWitness (WitnessGenesisUTxOKey       sk)
+    AVestedSigningKey           sk      -> ASophieKeyWitness (WitnessVestedKey           sk)
+    AVestedExtendedSigningKey   sk      -> ASophieKeyWitness (WitnessVestedExtendedKey   sk)
+    AVestedDelegateSigningKey   sk      -> ASophieKeyWitness (WitnessVestedDelegateKey   sk)
+    AVestedDelegateExtendedSigningKey sk
+                                       -> ASophieKeyWitness (WitnessVestedDelegateExtendedKey sk)
+    AVestedUTxOSigningKey       sk      -> ASophieKeyWitness (WitnessVestedUTxOKey       sk)
 -- | Data required for constructing a Sophie bootstrap witness.
 data SophieBootstrapWitnessSigningKeyData
   = SophieBootstrapWitnessSigningKeyData

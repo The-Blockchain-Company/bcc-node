@@ -1,6 +1,5 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE TypeApplications #-}
 
 module Bcc.Node.Parsers
   ( nodeCLIParser
@@ -20,7 +19,6 @@ import           System.Posix.Types (Fd (..))
 
 import           Shardagnostic.Network.Block (MaxSlotNo (..), SlotNo (..))
 
-import           Shardagnostic.Consensus.Mempool.API (MempoolCapacityBytesOverride (..), MempoolCapacityBytes (..))
 import           Shardagnostic.Consensus.Storage.LedgerDB.DiskPolicy (SnapshotInterval (..))
 
 import           Bcc.Node.Configuration.POM (PartialNodeConfiguration (..), lastOption)
@@ -64,8 +62,6 @@ nodeRunParser = do
 
   shutdownOnSlotSynced <- lastOption parseShutdownOnSlotSynced
 
-  maybeMempoolCapacityOverride <- lastOption parseMempoolCapacityOverride
-
   pure $ PartialNodeConfiguration
            { pncNodeIPv4Addr = nIPv4Address
            , pncNodeIPv6Addr = nIPv6Address
@@ -94,7 +90,6 @@ nodeRunParser = do
            , pncLoggingSwitch = mempty
            , pncLogMetrics = mempty
            , pncTraceConfig = mempty
-           , pncMaybeMempoolCapacityOverride = maybeMempoolCapacityOverride
            }
 
 parseSocketPath :: Text -> Parser SocketPath
@@ -157,24 +152,6 @@ parseConfigFile =
     <> help "Configuration file for the bcc-node"
     <> completer (bashCompleter "file")
     )
-
-parseMempoolCapacityOverride :: Parser MempoolCapacityBytesOverride
-parseMempoolCapacityOverride = parseOverride <|> parseNoOverride
-  where
-    parseOverride :: Parser MempoolCapacityBytesOverride
-    parseOverride =
-      MempoolCapacityBytesOverride . MempoolCapacityBytes <$>
-      option (auto @Word32)
-        (  long "mempool-capacity-override"
-        <> metavar "BYTES"
-        <> help "The number of bytes"
-        )
-    parseNoOverride :: Parser MempoolCapacityBytesOverride
-    parseNoOverride =
-      flag' NoMempoolCapacityBytesOverride
-        (  long "no-mempool-capacity-override"
-        <> help "The port number"
-        )
 
 parseDbPath :: Parser FilePath
 parseDbPath =

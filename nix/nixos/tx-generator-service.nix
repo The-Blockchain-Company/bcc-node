@@ -24,60 +24,25 @@ let
       }
       { setLocalSocket    = localNodeSocketPath; }
       { readSigningKey    = "pass-partout"; filePath = sigKey; }
-      { importGenesisFund = "pass-partout"; fundKey  = "pass-partout"; submitMode.LocalSocket = []; }
+      { importGenesisFund = "pass-partout"; fundKey  = "pass-partout"; }
       { delay             = init_cooldown; }
     ]
     ++
-    ( let
-        ## hard-code mainnet cost model
-        scriptFees = executionMemory * 577 / 10000 + executionSteps  * 721 / 10000000;
-        collateralPercentage = 200;
-
-        totalFee = if zerepochMode
-                   then tx_fee + scriptFees * inputs_per_tx
-                   else tx_fee;
-        safeCollateral = max ((scriptFees + tx_fee) * collateralPercentage / 100) min_utxo_value;
-        minTotalValue = min_utxo_value * outputs_per_tx + totalFee;
-        minValuePerInput = minTotalValue / inputs_per_tx + 1;
-      in
-        if !zerepochMode
-          then createChangeRecursive cfg minValuePerInput (tx_count * inputs_per_tx)
-        else
-          [
-          { createChange = safeCollateral + tx_fee; count = 1;
-            submitMode.LocalSocket = []; payMode.PayToAddr = [];
-          }
-          { createChange = safeCollateral; count = 1;
-            submitMode.LocalSocket = []; payMode.PayToCollateral = [];
-          }
-          ]
-          ++ createChangeZerepoch cfg minValuePerInput (tx_count * inputs_per_tx)
+    (if continuousMode
+             ## WARNING: this could go over the genesis UTxO funds!
+     then createChangeScript cfg
+            (tx_count * tx_fee + min_utxo_value)
+            (length (__attrNames targetNodes) * 2 * inputs_per_tx)
+     else createChangeRecursive cfg
+            (min_utxo_value + tx_fee)
+            (tx_count * inputs_per_tx)
     )
     ++
     [
-      { runBenchmark = "tx-submit-benchmark";
-        txCount = tx_count;
-        tps = tps;
-        submitMode = if !debugMode
-                     then { NodeToNode = []; }
-                     else { LocalSocket = []; };
-        spendMode = if zerepochMode
-                    then { SpendScript = [
-                             (zerepochScript cfg)
-                             {memory = executionMemory; steps = executionSteps; }
-                             zerepochData
-                             zerepochRedeemer
-                           ]; }
-                    else { SpendOutput = []; };
-      }
-    ]
-    ++
-    (
-      if !debugMode
-      then [ { waitBenchmark = "tx-submit-benchmark"; } ]
-      else [ ]
-    )
-    ;
+      { runBenchmark      = "walletBasedBenchmark";
+                  txCount = tx_count; tps = tps; }
+      { waitBenchmark     = "walletBasedBenchmark"; }
+    ];
 
   defaultGeneratorScriptFn = basicValueTxWorkload;
 
@@ -95,20 +60,7 @@ let
   capitalise = x: (pkgs.lib.toUpper (__substring 0 1 x)) + __substring 1 99999 x;
 
   createChangeScript = cfg: value: count:
-    [ { createChange = value;
-        count = count;
-        submitMode.LocalSocket = [];
-        payMode.PayToAddr = [];
-      }
-      { delay = cfg.init_cooldown; }
-    ];
-
-  createChangeScriptZerepoch = cfg: value: count:
-    [ { createChange = value;
-        count = count;
-        submitMode.LocalSocket = [];
-        payMode = { PayToScript = [ (zerepochScript cfg) cfg.zerepochData ]; };
-      }
+    [ { createChange = value; count=count; }
       { delay = cfg.init_cooldown; }
     ];
 
@@ -116,12 +68,6 @@ let
     then createChangeScript cfg value count
     else createChangeRecursive cfg (value * 30 + cfg.tx_fee) (count / 30 + 1) ++ createChangeScript cfg value count;
 
-  createChangeZerepoch = cfg: value: count: if count <= 30
-    then createChangeScriptZerepoch cfg value count
-    else createChangeRecursive cfg (value * 30 + cfg.tx_fee) (count / 30 + 1) ++ createChangeScriptZerepoch cfg value count;
-
-  zerepochScript = cfg: "${pkgs.zerepoch-scripts}/generated-zerepoch-scripts/${cfg.zerepochScript}";
-  
 in pkgs.commonLib.defServiceModule
   (lib: with lib;
     { svcName = "tx-generator";
@@ -142,15 +88,6 @@ in pkgs.commonLib.defServiceModule
 
         ## TODO: the defaults should be externalised to a file.
         ##
-        zerepochMode      = opt bool false     "Whether to benchmark Zerepoch scripts";
-        zerepochScript    = opt str  "sum.zerepoch" "Path to the Zerepoch script";
-        zerepochData      = opt int          3 "Data passed to the Zerepoch script (for now only an int).";
-        zerepochRedeemer  = opt int          6 "Redeemer data passed to the Zerepoch script (for now only an int).";
-        executionMemory = opt int    1000000 "Max memory available for the Zerepoch script";
-        executionSteps  = opt int  700000000 "Max execution steps available for the Zerepoch script";
-
-        debugMode       = opt bool false     "Set debug mode: Redirect benchmarkting txs to localhost";
-
         tx_count        = opt int 1000       "How many Txs to send, total.";
         add_tx_size     = opt int 100        "Extra Tx payload, in bytes.";
         inputs_per_tx   = opt int 4          "Inputs per Tx.";

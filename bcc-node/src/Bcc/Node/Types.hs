@@ -65,7 +65,7 @@ import qualified Bcc.Chain.Update as Cole
 import           Bcc.Crypto (RequiresNetworkMagic (..))
 import qualified Bcc.Crypto.Hash as Crypto
 import           Bcc.Node.Protocol.Types (Protocol (..))
-import           Shardagnostic.Network.PeerSelection.RootPeersDNS (DomainAccessPoint (..))
+import           Shardagnostic.Network.PeerSelection.RootPeersDNS (DomainAddress (..))
 
 --TODO: things will probably be clearer if we don't use these newtype wrappers and instead
 -- use records with named fields in the CLI code.
@@ -139,9 +139,9 @@ nodeIPv4ToIPAddress = fmap nodeHostIPv4AddressToIPAddress
 nodeIPv6ToIPAddress :: NodeIPv6Address -> NodeIPAddress
 nodeIPv6ToIPAddress = fmap nodeHostIPv6AddressToIPAddress
 
-nodeDnsAddressToDomainAddress :: NodeDnsAddress -> DomainAccessPoint
+nodeDnsAddressToDomainAddress :: NodeDnsAddress -> DomainAddress
 nodeDnsAddressToDomainAddress NodeAddress { naHostAddress = NodeHostDnsAddress dns, naPort }
-  = DomainAccessPoint (Text.encodeUtf8 dns) naPort
+  = DomainAddress (Text.encodeUtf8 dns) naPort
 
 nodeAddressToSockAddr :: NodeIPAddress -> SockAddr
 nodeAddressToSockAddr (NodeAddress addr port) =
@@ -303,8 +303,7 @@ data NodeColeProtocolConfiguration =
        -- move to the next version.
        --
      , npcColeSupportedProtocolVersionMajor :: !Word16
-     , npcColeSupportedProtocolVersionMinor :: !Word16
-     , npcColeSupportedProtocolVersionAlt   :: !Word8
+     , npcColeSupportedProtocolVersionSeal  :: !Word16
      }
   deriving (Eq, Show)
 

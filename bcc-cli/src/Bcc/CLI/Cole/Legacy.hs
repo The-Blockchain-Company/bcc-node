@@ -23,7 +23,7 @@ import qualified Bcc.Crypto.Wallet as Wallet
 -- 2. the signing key must be present
 -- 3. the rest must be absent (Nothing)
 --
--- Legacy reference: https://github.com/the-blockchain-company/bcc-sl/blob/release/3.0.1/lib/src/Pos/Util/UserSecret.hs#L189
+-- Legacy reference: https://github.com/The-Blockchain-Company/bcc-sl/blob/release/3.0.1/lib/src/Pos/Util/UserSecret.hs#L189
 newtype LegacyDelegateKey =  LegacyDelegateKey { lrkSigningKey :: SigningKey}
 
 encodeXPrv :: Wallet.XPrv -> E.Encoding

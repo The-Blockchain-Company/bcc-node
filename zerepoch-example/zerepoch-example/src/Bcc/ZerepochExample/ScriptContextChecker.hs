@@ -33,6 +33,7 @@ import           Data.Maybe as M
 import qualified Data.Sequence.Strict as Seq
 import qualified Data.Set as Set
 import           GHC.Records (HasField (..))
+import           System.FilePath.Posix
 
 import           Bcc.CLI.Environment
 import           Bcc.CLI.Sophie.Run.Query
@@ -42,10 +43,8 @@ import qualified Bcc.Ledger.Aurum.ZerepochScriptApi as Aurum
 import qualified Bcc.Ledger.Aurum.Tx as Aurum
 import qualified Bcc.Ledger.Aurum.TxInfo as Aurum
 import qualified Bcc.Ledger.Aurum.TxWitness as Aurum
-import           Bcc.Ledger.BaseTypes (ProtVer)
-import qualified Bcc.Ledger.TxIn as Ledger
-
 import           Bcc.Ledger.Crypto (StandardCrypto)
+import           Bcc.Protocol.TOptimum (ProtVer)
 import           Bcc.Slotting.EpochInfo (EpochInfo, hoistEpochInfo)
 import           Bcc.Slotting.Time (SystemStart)
 import           Control.Monad.Trans.Except
@@ -58,8 +57,9 @@ import qualified Zerepoch.V1.Ledger.DCert as Zerepoch
 import qualified ZerepochTx
 import qualified ZerepochTx.AssocMap as AMap
 import           ZerepochTx.IsData.Class
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 import qualified ZerepochTx.Prelude as P
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
 
 -- Description
 -- MyCustomRedeemer mimics the ScriptContext. MyCustomRedeemer is built via reading
@@ -254,13 +254,13 @@ txToCustomRedeemer _ _ _ _ _ (ColeTx _) = Left NoScriptsInColeEra
 txToCustomRedeemer sbe pparams utxo eInfo sStart (SophieTx SophieBasedEraAurum ledgerTx) = do
   let txBody = Aurum.body ledgerTx
       witness = Aurum.wits ledgerTx
-      Aurum.TxWitness _ _ _ _ _rdmrs = witness
-      _redeemerPtrs = Map.toList $ Aurum.unRedeemers _rdmrs
+      Aurum.TxWitness _ _ _ _ rdmrs = witness
+      redeemerPtrs = Map.toList $ Aurum.unRedeemers rdmrs
       ledgerUTxO = toLedgerUTxO SophieBasedEraAurum utxo
       scriptsNeeded = Aurum.scriptsNeeded ledgerUTxO ledgerTx
       sPurpose = case scriptsNeeded of
                    [(p ,_)] -> Aurum.transScriptPurpose p
-                   needed -> Prelude.error $ "More than one redeemer ptr: " <> show needed
+                   _ -> Prelude.error $ "More than one redeemer ptr: " <> show redeemerPtrs
       mTxIns = Prelude.map (Aurum.txInfoIn ledgerUTxO) . Set.toList $ Aurum.inputs txBody
       mTouts = Prelude.map Aurum.txInfoOut $ seqToList $ Aurum.outputs txBody
       minted = Aurum.transValue $ Aurum.mint txBody
@@ -360,11 +360,14 @@ txToRedeemer
   :: FilePath
   -> AnyConsensusModeParams
   -> NetworkId
-  -> ExceptT ScriptContextError IO LB.ByteString
+  -> ExceptT ScriptContextError IO ()
 txToRedeemer txFp anyCmodeParams nid = do
   testScrContext <- readCustomRedeemerFromTx txFp anyCmodeParams nid
-  return . Aeson.encode . scriptDataToJson ScriptDataJsonDetailedSchema
-                        $ testScriptContextToScriptData testScrContext
+  let redeemer = Aeson.encode . scriptDataToJson ScriptDataJsonDetailedSchema
+                   $ testScriptContextToScriptData testScrContext
+      outFp = dropFileName txFp </> "script-context.redeemer"
+  liftIO . print $ "Tx generated redeemer: " <> show redeemer
+  liftIO $ LB.writeFile outFp redeemer
 
 getSbe :: BccEraStyle era -> ExceptT ScriptContextError IO (SophieBasedEra era)
 getSbe LegacyColeEra = left ScriptContextErrorColeEra
@@ -373,7 +376,7 @@ getSbe (SophieBasedEra sbe) = return sbe
 
 -- Used in roundtrip testing
 
-fromZerepochTxId :: Zerepoch.TxId -> Ledger.TxId StandardCrypto
+fromZerepochTxId :: Zerepoch.TxId -> Sophie.TxId StandardCrypto
 fromZerepochTxId (Zerepoch.TxId builtInBs) =
   case deserialiseFromRawBytes AsTxId $ fromBuiltin builtInBs of
     Just txidHash -> toSophieTxId txidHash

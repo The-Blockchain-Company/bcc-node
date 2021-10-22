@@ -18,7 +18,6 @@ module Bcc.Api.LedgerState
       , LedgerStateSophie
       , LedgerStateEvie
       , LedgerStateJen
-      , LedgerStateAurum
       )
   , initialLedgerState
   , applyBlock
@@ -67,12 +66,12 @@ import           System.FilePath
 
 import           Bcc.Api.Block
 import           Bcc.Api.Eras
-import           Bcc.Api.IPC (ConsensusModeParams (..),
+import           Bcc.Api.IPC (ConsensusModeParams,
                    LocalChainSyncClient (LocalChainSyncClientPipelined),
                    LocalNodeClientProtocols (..), LocalNodeClientProtocolsInMode,
                    LocalNodeConnectInfo (..), connectToLocalNode)
 import           Bcc.Api.LedgerEvent (LedgerEvent, toLedgerEvent)
-import           Bcc.Api.Modes (BccMode, EpochSlots (..))
+import           Bcc.Api.Modes (BccMode)
 import           Bcc.Api.NetworkId (NetworkId (..), NetworkMagic (NetworkMagic))
 import qualified Bcc.Chain.Genesis
 import qualified Bcc.Chain.Update
@@ -111,7 +110,8 @@ import qualified Shardagnostic.Network.Block
 import qualified Shardagnostic.Network.Protocol.ChainSync.Client as CS
 import qualified Shardagnostic.Network.Protocol.ChainSync.ClientPipelined as CSP
 import           Shardagnostic.Network.Protocol.ChainSync.PipelineDecision
-import qualified Bcc.Ledger.Sophie.Genesis as Sophie.Spec
+import qualified Sophie.Spec.Ledger.Genesis as Sophie.Spec
+import qualified Sophie.Spec.Ledger.PParams as Sophie.Spec
 import Data.Maybe (mapMaybe)
 import Shardagnostic.Consensus.TypeFamilyWrappers (WrapLedgerEvent(WrapLedgerEvent))
 
@@ -191,16 +191,10 @@ pattern LedgerStateJen
   -> LedgerState
 pattern LedgerStateJen st <- LedgerState  (Consensus.LedgerStateJen st)
 
-pattern LedgerStateAurum
-  :: Ledger.LedgerState (Sophie.SophieBlock (Sophie.AurumEra Sophie.StandardCrypto))
-  -> LedgerState
-pattern LedgerStateAurum st <- LedgerState  (Consensus.LedgerStateAurum st)
-
 {-# COMPLETE LedgerStateCole
            , LedgerStateSophie
            , LedgerStateEvie
-           , LedgerStateJen
-           , LedgerStateAurum #-}
+           , LedgerStateJen #-}
 
 data FoldBlocksError
   = FoldBlocksInitialLedgerStateError InitialLedgerStateError
@@ -217,6 +211,9 @@ foldBlocks
   :: forall a.
   FilePath
   -- ^ Path to the bcc-node config file (e.g. <path to bcc-node project>/configuration/bcc/mainnet-config.json)
+  -> ConsensusModeParams BccMode
+  -- ^ This is needed for the number of slots per epoch for the Cole era (on
+  -- mainnet that should be 21600).
   -> FilePath
   -- ^ Path to local bcc-node socket. This is the path specified by the @--socket-path@ command line option when running the node.
   -> ValidationMode
@@ -241,7 +238,7 @@ foldBlocks
   -- truncating the last k blocks before the node's tip.
   -> ExceptT FoldBlocksError IO a
   -- ^ The final state
-foldBlocks nodeConfigFilePath socketPath validationMode state0 accumulate = do
+foldBlocks nodeConfigFilePath bccModeParams socketPath validationMode state0 accumulate = do
   -- NOTE this was originally implemented with a non-pipelined client then
   -- changed to a pipelined client for a modest speedup:
   --  * Non-pipelined: 1h  0m  19s
@@ -272,8 +269,6 @@ foldBlocks nodeConfigFilePath socketPath validationMode state0 accumulate = do
       networkId = case Bcc.Chain.Genesis.configReqNetMagic coleConfig of
         RequiresNoMagic -> Mainnet
         RequiresMagic -> Testnet networkMagic
-
-      bccModeParams = BccModeParams . EpochSlots $ 10 * envSecurityParam env
 
   -- Connect to the node.
   let connectInfo :: LocalNodeConnectInfo BccMode
@@ -673,8 +668,7 @@ instance FromJSON NodeConfig where
       parseColeProtocolVersion o =
         Bcc.Chain.Update.ProtocolVersion
           <$> o .: "LastKnownBlockVersion-Major"
-          <*> o .: "LastKnownBlockVersion-Minor"
-          <*> o .: "LastKnownBlockVersion-Alt"
+          <*> o .: "LastKnownBlockVersion-Seal"
 
       parseColeSoftwareVersion :: Object -> Data.Aeson.Types.Internal.Parser Bcc.Chain.Update.SoftwareVersion
       parseColeSoftwareVersion o =
@@ -783,6 +777,7 @@ newtype GenesisFile = GenesisFile
   { unGenesisFile :: FilePath
   } deriving Show
 
+
 newtype GenesisHashCole = GenesisHashCole
   { unGenesisHashCole :: Text
   } deriving newtype (Eq, Show)
@@ -793,6 +788,22 @@ newtype GenesisHashSophie = GenesisHashSophie
 
 newtype GenesisHashAurum = GenesisHashAurum
   { unGenesisHashAurum :: Bcc.Crypto.Hash.Class.Hash Bcc.Crypto.Hash.Blake2b.Blake2b_256 ByteString
+  } deriving newtype (Eq, Show)
+
+newtype VestedFile = VestedFile
+  { unVestedFile :: FilePath
+  } deriving Show
+
+newtype VestedHashCole = VestedHashCole
+  { _unVestedHashCole :: Text
+  } deriving newtype (Eq, Show)
+
+newtype VestedHashSophie = VestedHashSophie
+  { _unVestedHashSophie :: Bcc.Crypto.Hash.Class.Hash Bcc.Crypto.Hash.Blake2b.Blake2b_256 ByteString
+  } deriving newtype (Eq, Show)
+
+newtype VestedHashAurum = VestedHashAurum
+  { _unVestedHashAurum :: Bcc.Crypto.Hash.Class.Hash Bcc.Crypto.Hash.Blake2b.Blake2b_256 ByteString
   } deriving newtype (Eq, Show)
 
 newtype LedgerStateDir = LedgerStateDir
@@ -861,7 +872,7 @@ sophieProtVer dnc =
   let bver = ncColeProtocolVersion dnc in
   Sophie.Spec.ProtVer
     (fromIntegral $ Bcc.Chain.Update.pvMajor bver)
-    (fromIntegral $ Bcc.Chain.Update.pvMinor bver)
+    (fromIntegral $ Bcc.Chain.Update.pvSeal bver)
 
 readBccGenesisConfig
         :: NodeConfig

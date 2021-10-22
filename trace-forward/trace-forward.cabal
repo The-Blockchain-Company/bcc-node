@@ -5,9 +5,9 @@ synopsis:            See README for more info
 description:         See README for more info
 license:             Apache-2.0
 license-file:        LICENSE
-copyright:           2021 The Blockchain Co.  Ltd.
-author:              BCIO
-maintainer:          operations@iohk.io
+copyright:           2021 The-Blockchain-Company
+author:              TBCO
+maintainer:          operations@tbco.io
 build-type:          Simple
 extra-doc-files:     README.md
                      CHANGELOG.md
@@ -57,7 +57,6 @@ library
                        , text
                        , time
                        , typed-protocols
-                       , typed-protocols-cborg
 
 test-suite test
   import:              base, project-config
@@ -83,6 +82,7 @@ test-suite test
                        , tasty
                        , tasty-quickcheck
                        , typed-protocols
+                       , typed-protocols-examples
                        , text
                        , time
 

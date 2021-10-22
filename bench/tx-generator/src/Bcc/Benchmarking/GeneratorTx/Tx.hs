@@ -8,13 +8,13 @@
 module Bcc.Benchmarking.GeneratorTx.Tx
   ( Fund
   , fundTxIn
-  , fundDafiValue
+  , fundBccValue
   , keyAddress
   , mkGenesisTransaction
   , mkFund
   , mkFee
   , mkTransactionGen
-  , mkTxOutValueDafiOnly
+  , mkTxOutValueBccOnly
   , mkValidityUpperBound
   , txOutValueToEntropic
   , txInModeBcc
@@ -23,14 +23,14 @@ where
 
 import           Prelude
 
-import           Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.List.NonEmpty as NonEmpty
-import           Data.Map.Strict (Map)
+import           Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.Map.Strict as Map
+import           Data.Map.Strict (Map)
 
-import           Bcc.Benchmarking.Types (TxAdditionalSize (..))
+import           Bcc.Benchmarking.Types (TxAdditionalSize(..))
 
-import           Bcc.Api hiding (txOutValueToEntropic)
+import           Bcc.Api
 
 type Fund = (TxIn, InAnyBccEra TxOutValue)
 
@@ -40,8 +40,8 @@ mkFund txIn val = (txIn, InAnyBccEra bccEra val)
 fundTxIn :: Fund -> TxIn
 fundTxIn (x,_) = x
 
-fundDafiValue :: Fund -> Entropic
-fundDafiValue (_, InAnyBccEra _ txOut) = txOutValueToEntropic txOut
+fundBccValue :: Fund -> Entropic
+fundBccValue (_, InAnyBccEra _ txOut) = txOutValueToEntropic txOut
 
 keyAddress :: forall era. IsSophieBasedEra era => NetworkId -> SigningKey PaymentKey -> AddressInEra era
 keyAddress networkId k
@@ -58,7 +58,7 @@ mkGenesisTransaction :: forall era .
   -> SlotNo
   -> Entropic
   -> [TxIn]
-  -> [TxOut CtxTx era]
+  -> [TxOut era]
   -> Tx era
 mkGenesisTransaction key _payloadSize ttl fee txins txouts
   = case makeTransactionBody txBodyContent of
@@ -73,6 +73,7 @@ mkGenesisTransaction key _payloadSize ttl fee txins txouts
     , txValidityRange = (TxValidityNoLowerBound, validityUpperBound)
     , txMetadata = TxMetadataNone
     , txAuxScripts = TxAuxScriptsNone
+    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txExtraKeyWits = TxExtraKeyWitnessesNone
     , txProtocolParams = BuildTxWith Nothing
     , txWithdrawals = TxWithdrawalsNone
@@ -99,7 +100,7 @@ mkTransaction :: forall era .
   -> SlotNo
   -> Entropic
   -> [TxIn]
-  -> [TxOut CtxTx era]
+  -> [TxOut era]
   -> Tx era
 mkTransaction key metadata ttl fee txins txouts
   = case makeTransactionBody txBodyContent of
@@ -114,6 +115,7 @@ mkTransaction key metadata ttl fee txins txouts
     , txValidityRange = (TxValidityNoLowerBound, mkValidityUpperBound ttl)
     , txMetadata = metadata
     , txAuxScripts = TxAuxScriptsNone
+    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txExtraKeyWits = TxExtraKeyWitnessesNone
     , txProtocolParams = BuildTxWith Nothing
     , txWithdrawals = TxWithdrawalsNone
@@ -148,7 +150,7 @@ mkTransactionGen :: forall era .
   => SigningKey PaymentKey
   -> NonEmpty Fund
   -> AddressInEra era
-  -> [(Int, TxOut CtxTx era)]
+  -> [(Int, TxOut era)]
   -- ^ Each recipient and their payment details
   -> TxMetadataInEra era
   -- ^ Optional size of additional binary blob in transaction (as 'txAttributes')
@@ -169,14 +171,14 @@ mkTransactionGen signingKey inputs address payments metadata fee =
 
   payTxOuts     = map snd payments
 
-  totalInpValue = sum $ fundDafiValue <$> inputs
+  totalInpValue = sum $ fundBccValue <$> inputs
   totalOutValue = txOutSum payTxOuts
   changeValue = totalInpValue - totalOutValue - fee
       -- change the order of comparisons first check emptyness of txouts AND remove appendr after
 
   (txOutputs, mChange) = case compare changeValue 0 of
     GT ->
-      let changeTxOut   = TxOut address (mkTxOutValueDafiOnly changeValue) TxOutDatumNone
+      let changeTxOut   = TxOut address (mkTxOutValueBccOnly changeValue) TxOutDatumHashNone
           changeIndex   = TxIx $ fromIntegral $ length payTxOuts -- 0-based index
       in
           (appendr payTxOuts (changeTxOut :| []), Just (changeIndex, changeValue))
@@ -190,7 +192,7 @@ mkTransactionGen signingKey inputs address payments metadata fee =
   offsetMap = Map.fromList $ zipWith (\payment index -> (fst payment, TxIx index))
                                      payments
                                      [0..]
-  txOutSum :: [ TxOut CtxTx era ] -> Entropic
+  txOutSum :: [ TxOut era ] -> Entropic
   txOutSum l = sum $ map toVal l
 
   toVal (TxOut _ val _) = txOutValueToEntropic val
@@ -200,21 +202,21 @@ mkTransactionGen signingKey inputs address payments metadata fee =
   appendr :: [a] -> NonEmpty a -> NonEmpty a
   appendr l nel = foldr NonEmpty.cons nel l
 
-mkTxOutValueDafiOnly :: forall era . IsSophieBasedEra era => Entropic -> TxOutValue era
-mkTxOutValueDafiOnly l = case sophieBasedEra @ era of
-  SophieBasedEraSophie -> TxOutDafiOnly DafiOnlyInSophieEra l
-  SophieBasedEraEvie -> TxOutDafiOnly DafiOnlyInEvieEra l
+mkTxOutValueBccOnly :: forall era . IsSophieBasedEra era => Entropic -> TxOutValue era
+mkTxOutValueBccOnly l = case sophieBasedEra @ era of
+  SophieBasedEraSophie -> TxOutBccOnly BccOnlyInSophieEra l
+  SophieBasedEraEvie -> TxOutBccOnly BccOnlyInEvieEra l
   SophieBasedEraJen    -> TxOutValue MultiAssetInJenEra $ entropicToValue l
   SophieBasedEraAurum  -> TxOutValue MultiAssetInAurumEra $ entropicToValue l
 
 txOutValueToEntropic :: TxOutValue era -> Entropic
 txOutValueToEntropic = \case
-  TxOutDafiOnly DafiOnlyInColeEra   x -> x
-  TxOutDafiOnly DafiOnlyInSophieEra x -> x
-  TxOutDafiOnly DafiOnlyInEvieEra x -> x
+  TxOutBccOnly BccOnlyInColeEra   x -> x
+  TxOutBccOnly BccOnlyInSophieEra x -> x
+  TxOutBccOnly BccOnlyInEvieEra x -> x
   TxOutValue _ v -> case valueToEntropic v of
     Just c -> c
-    Nothing -> error "txOutValueEntropic  TxOut contains no DAFI"
+    Nothing -> error "txOutValueEntropic  TxOut contains no BCC"
 
 txInModeBcc :: forall era . IsSophieBasedEra era => Tx era -> TxInMode BccMode
 txInModeBcc tx = case sophieBasedEra @ era of

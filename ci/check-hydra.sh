@@ -4,7 +4,7 @@
  echo '~~~ Evaluating release.nix'
 command time --format '%e' -o eval-time.txt \
     hydra-eval-jobs \
-    --option allowed-uris "https://github.com/NixOS https://github.com/the-blockchain-company" \
+    --option allowed-uris "https://github.com/NixOS https://github.com/The-Blockchain-Company" \
     -I . release.nix \
     --arg supportedSystems '["x86_64-linux"]' > eval.json
 EVAL_EXIT_CODE="$?"

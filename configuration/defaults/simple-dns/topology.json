@@ -8,12 +8,12 @@
         },
         "producers":[
            {
-              "addr":"local.iohk.io",
+              "addr":"local.tbco.io",
               "port":3001,
               "valency":1
            },
            {
-              "addr":"local6.iohk.io",
+              "addr":"local6.tbco.io",
               "port":3002,
               "valency":1
            }
@@ -27,12 +27,12 @@
         },
         "producers":[
            {
-              "addr":"local6.iohk.io",
+              "addr":"local6.tbco.io",
               "port":3000,
               "valency":1
            },
            {
-              "addr":"local6.iohk.io",
+              "addr":"local6.tbco.io",
               "port":3002,
               "valency":1
            }
@@ -46,7 +46,7 @@
         },
         "producers":[
            {
-              "addr":"local6.iohk.io",
+              "addr":"local6.tbco.io",
               "port":3000,
               "valency":1
            },

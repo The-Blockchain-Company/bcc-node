@@ -26,7 +26,7 @@ module Bcc.Benchmarking.GeneratorTx.Submission
   , ReportRef
   , legacyTxSource
   , walletTxSource
-  , mkSubmissionSumjen
+  , mkSubmissionSummary
   , submitThreadReport
   , submitSubmissionThreadStats
   , simpleTxFeeder
@@ -105,12 +105,12 @@ submitSubmissionThreadStats reportRef strStats = do
   Results
 -------------------------------------------------------------------------------}
 
-mkSubmissionSumjen ::
+mkSubmissionSummary ::
      String
   -> UTCTime
   -> [ReportRef]
-  -> IO SubmissionSumjen
-mkSubmissionSumjen ssThreadName startTime reportsRefs
+  -> IO SubmissionSummary
+mkSubmissionSummary ssThreadName startTime reportsRefs
  = do
   results <- sequence (STM.atomically . STM.readTMVar <$> reportsRefs)
   let (failures, reports) = partitionEithers results
@@ -121,7 +121,7 @@ mkSubmissionSumjen ssThreadName startTime reportsRefs
       ssEffectiveTps = txDiffTimeTPS sent ssElapsed
       ssThreadwiseTps = threadReportTps <$> reports
       ssFailures = failures
-  pure SubmissionSumjen{..}
+  pure SubmissionSummary{..}
  where
   txDiffTimeTPS :: Int -> NominalDiffTime -> TPSRate
   txDiffTimeTPS n delta =

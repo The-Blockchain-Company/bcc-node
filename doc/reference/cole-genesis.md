@@ -1,6 +1,6 @@
 # Cole genesis data format
 
-Please see [the cole ledger spec](https://hydra.iohk.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec) which will describe the changes and deviations of these values in more detail while moving from the Cole era to the OBFT era.
+Please see [the cole ledger spec](https://hydra.tbco.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec) which will describe the changes and deviations of these values in more detail while moving from the Cole era to the OBFT era.
 
 Let's start with an example:
 
@@ -74,7 +74,7 @@ Let's start with an example:
 - What is an issuer? An issuer is a stakeholder/delegator that delegates their stake to a delegatee.
 
 ## avvmDistr
-The key `avvmDistr` contains AVVM addresses with corresponding balances (entropics). People who purchased Dafi at a pre-sale were issued a certificate at the Dafi Voucher Vending Machine (AVVM) during the pre-sale period. AVVM addresses can be converted to Cole addresses and initially each address has this amount of DAFI (as balance, not stake).
+The key `avvmDistr` contains AVVM addresses with corresponding balances (entropics). People who purchased Bcc at a pre-sale were issued a certificate at the Bcc Voucher Vending Machine (AVVM) during the pre-sale period. AVVM addresses can be converted to Cole addresses and initially each address has this amount of BCC (as balance, not stake).
 
 ## blockVersionData
 
@@ -101,7 +101,7 @@ slot duration, in milliseconds.
 #### softforkRule
 Values defining softfork resolution rule. When the stake belonging to block issuers, issuing a given block version, is greater than the current softfork resolution threshold, this block version is adopted. The current softfork resolution threshold is determined as follows: If a proposal is confirmed at the `c`-th epoch, softfork resolution threshold at a later `t`-th epoch will be `max minThd (spInitThd - (t - c) * spThdDecrement)`.
 
-The proportion of DAFI that these threshold values (`initThd`,`minThd`,`thdDecrement`) represent is calculated by dividing by 10<sup>15</sup>. This is an artitifact of the old implementation as it would make more sense if the proportion was calculated by the total amount of circulating DAFI which is 45 x 10<sup>15</sup>. Note that in the specification we only make use of the `minThd`. See [here](https://hydra.iohk.io/build/1084792/download/1/ledger-spec.pdf) in section 6.5.4 Adoption threshold.
+The proportion of BCC that these threshold values (`initThd`,`minThd`,`thdDecrement`) represent is calculated by dividing by 10<sup>15</sup>. This is an artitifact of the old implementation as it would make more sense if the proportion was calculated by the total amount of circulating BCC which is 45 x 10<sup>15</sup>. Note that in the specification we only make use of the `minThd`. See [here](https://hydra.tbco.io/build/1084792/download/1/ledger-spec.pdf) in section 6.5.4 Adoption threshold.
 
 - `initThd` - Initial threshold (right after proposal is confirmed).
 - `minThd` - minimal threshold (i.e. threshold can't become less than this one).
@@ -112,7 +112,7 @@ Transaction fee policy represents a formula to compute the minimal allowed Fee f
     - `summand`
     - `multipler`
 #### unlockStakeEpoch
-This has been re-purposed for unlocking the ShardagnosticBFT logic in the software. Relevant: [CDEC-610](https://iohk.myjetbrains.com/youtrack/issue/CDEC-610)
+This has been re-purposed for unlocking the ShardagnosticBFT logic in the software. Relevant: [CDEC-610](https://tbco.myjetbrains.com/youtrack/issue/CDEC-610)
 #### updateImplicit
 Time to live for a protocol update proposal. The number of slots a proposal has to gather a majority of votes. If a majority of votes has not been reached before this period, then the proposal is rejected.
 #### updateProposalThd
@@ -146,8 +146,8 @@ The key `protocolMagic` defines the protocol magic number. When the protocol mag
 The `protocolMagic` value can either be an object with the two fields described above, or just a plain integer. In the latter case, `requiresNetworkMagic` will take the default value of `RequiresMagic`.
 
 Relevant:
-- [bcc-ledger - Genesis test](https://github.com/the-blockchain-company/bcc-ledger/blob/master/bcc-ledger/test/Test/Bcc/Chain/Genesis/Json.hs#L69)
-- [bcc-ledger - ProtocolMagic](https://github.com/the-blockchain-company/bcc-ledger/blob/master/crypto/src/Bcc/Crypto/ProtocolMagic.hs)
+- [bcc-ledger - Genesis test](https://github.com/The-Blockchain-Company/bcc-ledger/blob/master/bcc-ledger/test/Test/Bcc/Chain/Genesis/Json.hs#L69)
+- [bcc-ledger - ProtocolMagic](https://github.com/The-Blockchain-Company/bcc-ledger/blob/master/crypto/src/Bcc/Crypto/ProtocolMagic.hs)
 
 ## heavyDelegation
 The key `heavyDelegation` contains an information about heavyweight delegation:

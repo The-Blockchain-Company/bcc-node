@@ -234,7 +234,6 @@ runNodeIssueOpCert kesVerKeyOrFile
       , FromSomeType (AsSigningKey AsGenesisDelegateKey) (Left . castSigningKey)
       , FromSomeType (AsSigningKey AsGenesisDelegateExtendedKey) Right
       ]
-
     bech32PossibleBlockIssuers
       :: [FromSomeType SerialiseAsBech32
                        (Either (SigningKey StakePoolKey)
@@ -252,12 +251,13 @@ readColdVerificationKeyOrFile
 readColdVerificationKeyOrFile coldVerKeyOrFile =
   case coldVerKeyOrFile of
     ColdStakePoolVerificationKey vk -> pure (Right vk)
-    ColdGenesisDelegateVerificationKey vk ->
-      pure $ Right (castVerificationKey vk)
+    ColdGenesisDelegateVerificationKey vk -> pure $ Right (castVerificationKey vk)
+    ColdVestedDelegateVerificationKey vk -> pure $ Right (castVerificationKey vk)
     ColdVerificationKeyFile (VerificationKeyFile fp) ->
       readFileTextEnvelopeAnyOf
         [ FromSomeType (AsVerificationKey AsStakePoolKey) id
         , FromSomeType (AsVerificationKey AsGenesisDelegateKey) castVerificationKey
+        , FromSomeType (AsVerificationKey AsVestedDelegateKey) castVerificationKey
         ]
         fp
-
+        

@@ -148,10 +148,11 @@ EOF
 
         supervisorctl stop all
 
-        if test -f "${dir}/supervisor/supervisord.pid"
-        then kill $(<${dir}/supervisor/supervisord.pid) $(<${dir}/supervisor/bcc-node.pids) 2>/dev/null
+        if test -f "${dir}/supervisor/bcc-node.pids"
+        then kill $(<${dir}/supervisor/supervisord.pid) $(<${dir}/supervisor/bcc-node.pids)
         else pkill supervisord
         fi
+        rm -f ${dir}/supervisor/supervisord.pid ${dir}/supervisor/bcc-node.pids
         ;;
 
     save-pids )
@@ -162,16 +163,16 @@ EOF
         pstree -Ap "$(cat "$svpid")" > "$pstree"
 
         local pidsfile="$dir"/supervisor/bcc-node.pids
-        { grep -e '-[{]\?bcc-node[}]\?([0-9]*)-' "$pstree" || fail 'save-pids: pattern not found';
-        } | sed -e 's/^.*[+`|]-[{]\?bcc-node[}]\?(\([0-9]*\))-.*$/\1/' \
+        { fgrep '+-{bcc-node}' "$pstree" || fail 'save-pids: pattern not found';
+        } | sed -e 's/^.*-+-bcc-node(\([0-9]*\))-.*$/\1/' \
                 > "$pidsfile"
 
         local mapn2p="$dir"/supervisor/node2pid.map; echo '{}' > "$mapn2p"
         local mapp2n="$dir"/supervisor/pid2node.map; echo '{}' > "$mapp2n"
         for node in $(jq_tolist keys "$dir"/node-specs.json)
-        do local service_pid=$(supervisorctl pid $node)
-           local pid=$(fgrep -e "($service_pid)-" "$pstree" |
-                       sed -e 's/^.*-bcc-node(\([0-9]*\))-.*$/\1/')
+        do local cabalpid=$(supervisorctl pid $node)
+           local pid=$(fgrep -e "-cabal($cabalpid)-" "$pstree" |
+                       sed -e 's/^.*-+-bcc-node(\([0-9]*\))-.*$/\1/')
            jq_fmutate "$mapn2p" '. * { "'$node'": '$pid' }'
            jq_fmutate "$mapp2n" '. * { "'$pid'": "'$node'" }'
         done

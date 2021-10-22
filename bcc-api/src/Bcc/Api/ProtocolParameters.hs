@@ -77,18 +77,18 @@ import qualified Bcc.Binary as CBOR
 import qualified Bcc.Crypto.Hash.Class as Crypto
 import           Bcc.Slotting.Slot (EpochNo)
 
-import           Bcc.Ledger.BaseTypes (strictMaybeToMaybe)
+import           Bcc.Ledger.BaseTypes (maybeToStrictMaybe, strictMaybeToMaybe)
 import qualified Bcc.Ledger.BaseTypes as Ledger
 import qualified Bcc.Ledger.Core as Ledger
 import           Bcc.Ledger.Crypto (StandardCrypto)
 import qualified Bcc.Ledger.Era as Ledger
 import qualified Bcc.Ledger.Keys as Ledger
-
-import qualified Bcc.Ledger.Sophie.PParams as Ledger (ProposedPPUpdates (..), Update (..))
--- Some of the things from Bcc.Ledger.Sophie.PParams are generic across all
+import qualified Sophie.Spec.Ledger.PParams as Ledger (ProposedPPUpdates (..), ProtVer (..),
+                   Update (..))
+-- Some of the things from Sophie.Spec.Ledger.PParams are generic across all
 -- eras, and some are specific to the Sophie era (and other pre-Aurum eras).
 -- So we import in twice under different names.
-import qualified Bcc.Ledger.Sophie.PParams as Sophie (PParams, PParams' (..), PParamsUpdate)
+import qualified Sophie.Spec.Ledger.PParams as Sophie (PParams, PParams' (..), PParamsUpdate)
 
 import qualified Bcc.Ledger.Aurum.Language as Aurum
 import qualified Bcc.Ledger.Aurum.PParams as Aurum
@@ -108,7 +108,6 @@ import           Bcc.Api.SerialiseTextEnvelope
 import           Bcc.Api.SerialiseUsing
 import           Bcc.Api.StakePoolMetadata
 import           Bcc.Api.TxMetadata
-import           Bcc.Api.Utils
 import           Bcc.Api.Value
 
 
@@ -236,7 +235,7 @@ data ProtocolParameters =
        --
        protocolParamTreasuryCut :: Rational,
 
-       -- | Cost in dafi per word of UTxO storage.
+       -- | Cost in bcc per word of UTxO storage.
        --
        -- /Introduced in Aurum/
        protocolParamUTxOCostPerWord :: Maybe Entropic,
@@ -284,7 +283,7 @@ instance FromJSON ProtocolParameters where
     withObject "ProtocolParameters" $ \o -> do
       v <- o .: "protocolVersion"
       ProtocolParameters
-        <$> ((,) <$> v .: "major" <*> v .: "minor")
+        <$> ((,) <$> v .: "major" <*> v .: "seal")
         <*> o .: "decentralization"
         <*> o .: "extraOptimumEntropy"
         <*> o .: "maxBlockHeaderSize"
@@ -327,8 +326,8 @@ instance ToJSON ProtocolParameters where
       , "monetaryExpansion"   .= toRationalJSON protocolParamMonetaryExpansion
       , "stakeAddressDeposit" .= protocolParamStakeAddressDeposit
       , "poolPledgeInfluence" .= toRationalJSON protocolParamPoolPledgeInfluence
-      , "protocolVersion"     .= let (major, minor) = protocolParamProtocolVersion
-                                  in object ["major" .= major, "minor" .= minor]
+      , "protocolVersion"     .= let (major, seal) = protocolParamProtocolVersion
+                                  in object ["major" .= major, "seal" .= seal]
       , "txFeeFixed"          .= protocolParamTxFeeFixed
       , "txFeePerByte"        .= protocolParamTxFeePerByte
       -- Aurum era:
@@ -352,7 +351,7 @@ instance ToJSON ProtocolParameters where
 data ProtocolParametersUpdate =
      ProtocolParametersUpdate {
 
-       -- | Protocol version, major and minor. Updating the major version is
+       -- | Protocol version, major and current open Seal. Updating the major version is
        -- used to trigger hard forks.
        --
        protocolUpdateProtocolVersion :: Maybe (Natural, Natural),
@@ -464,7 +463,7 @@ data ProtocolParametersUpdate =
 
        -- Introduced in Aurum
 
-       -- | Cost in dafi per word of UTxO storage.
+       -- | Cost in bcc per word of UTxO storage.
        --
        -- /Introduced in Aurum/
        protocolUpdateUTxOCostPerWord :: Maybe Entropic,
@@ -748,9 +747,6 @@ validateCostModel :: ZerepochScriptVersion lang
 validateCostModel ZerepochScriptV1 (CostModel m)
   | Aurum.validateCostModelParams m = Right ()
   | otherwise                        = Left (InvalidCostModel (CostModel m))
-validateCostModel ZerepochScriptV2 (CostModel m)
-  | Aurum.validateCostModelParams m = Right ()
-  | otherwise                        = Left (InvalidCostModel (CostModel m))
 
 -- TODO aurum: it'd be nice if the library told us what was wrong
 newtype InvalidCostModel = InvalidCostModel CostModel
@@ -779,11 +775,9 @@ fromAurumCostModels =
 
 toAurumScriptLanguage :: AnyZerepochScriptVersion -> Aurum.Language
 toAurumScriptLanguage (AnyZerepochScriptVersion ZerepochScriptV1) = Aurum.ZerepochV1
-toAurumScriptLanguage (AnyZerepochScriptVersion ZerepochScriptV2) = Aurum.ZerepochV2
 
 fromAurumScriptLanguage :: Aurum.Language -> AnyZerepochScriptVersion
 fromAurumScriptLanguage Aurum.ZerepochV1 = AnyZerepochScriptVersion ZerepochScriptV1
-fromAurumScriptLanguage Aurum.ZerepochV2 = AnyZerepochScriptVersion ZerepochScriptV2
 
 toAurumCostModel :: CostModel -> Aurum.CostModel
 toAurumCostModel (CostModel m) = Aurum.CostModel m
@@ -894,33 +888,33 @@ toSophiePParamsUpdate
     , protocolUpdateTreasuryCut
     } =
     Sophie.PParams {
-      Sophie._minfeeA     = noInlineMaybeToStrictMaybe protocolUpdateTxFeePerByte
-    , Sophie._minfeeB     = noInlineMaybeToStrictMaybe protocolUpdateTxFeeFixed
-    , Sophie._maxBBSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxBlockBodySize
-    , Sophie._maxTxSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxTxSize
-    , Sophie._maxBHSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxBlockHeaderSize
+      Sophie._minfeeA     = maybeToStrictMaybe protocolUpdateTxFeePerByte
+    , Sophie._minfeeB     = maybeToStrictMaybe protocolUpdateTxFeeFixed
+    , Sophie._maxBBSize   = maybeToStrictMaybe protocolUpdateMaxBlockBodySize
+    , Sophie._maxTxSize   = maybeToStrictMaybe protocolUpdateMaxTxSize
+    , Sophie._maxBHSize   = maybeToStrictMaybe protocolUpdateMaxBlockHeaderSize
     , Sophie._keyDeposit  = toSophieEntropic <$>
-                               noInlineMaybeToStrictMaybe protocolUpdateStakeAddressDeposit
+                               maybeToStrictMaybe protocolUpdateStakeAddressDeposit
     , Sophie._poolDeposit = toSophieEntropic <$>
-                               noInlineMaybeToStrictMaybe protocolUpdateStakePoolDeposit
-    , Sophie._eMax        = noInlineMaybeToStrictMaybe protocolUpdatePoolRetireMaxEpoch
-    , Sophie._nOpt        = noInlineMaybeToStrictMaybe protocolUpdateStakePoolTargetNum
-    , Sophie._a0          = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+                               maybeToStrictMaybe protocolUpdateStakePoolDeposit
+    , Sophie._eMax        = maybeToStrictMaybe protocolUpdatePoolRetireMaxEpoch
+    , Sophie._nOpt        = maybeToStrictMaybe protocolUpdateStakePoolTargetNum
+    , Sophie._a0          = maybeToStrictMaybe $ Ledger.boundRational =<<
                               protocolUpdatePoolPledgeInfluence
-    , Sophie._rho         = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Sophie._rho         = maybeToStrictMaybe $ Ledger.boundRational =<<
                                 protocolUpdateMonetaryExpansion
-    , Sophie._tau         = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Sophie._tau         = maybeToStrictMaybe $ Ledger.boundRational =<<
                                 protocolUpdateTreasuryCut
-    , Sophie._d           = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Sophie._d           = maybeToStrictMaybe $ Ledger.boundRational =<<
                                 protocolUpdateDecentralization
     , Sophie._extraEntropy    = toLedgerNonce <$>
-                                   noInlineMaybeToStrictMaybe protocolUpdateExtraOptimumEntropy
+                                   maybeToStrictMaybe protocolUpdateExtraOptimumEntropy
     , Sophie._protocolVersion = uncurry Ledger.ProtVer <$>
-                                   noInlineMaybeToStrictMaybe protocolUpdateProtocolVersion
+                                   maybeToStrictMaybe protocolUpdateProtocolVersion
     , Sophie._minUTxOValue    = toSophieEntropic <$>
-                                   noInlineMaybeToStrictMaybe protocolUpdateMinUTxOValue
+                                   maybeToStrictMaybe protocolUpdateMinUTxOValue
     , Sophie._minPoolCost     = toSophieEntropic <$>
-                                   noInlineMaybeToStrictMaybe protocolUpdateMinPoolCost
+                                   maybeToStrictMaybe protocolUpdateMinPoolCost
     }
 
 
@@ -954,46 +948,46 @@ toAurumPParamsUpdate
     , protocolUpdateMaxCollateralInputs
     } =
     Aurum.PParams {
-      Aurum._minfeeA     = noInlineMaybeToStrictMaybe protocolUpdateTxFeePerByte
-    , Aurum._minfeeB     = noInlineMaybeToStrictMaybe protocolUpdateTxFeeFixed
-    , Aurum._maxBBSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxBlockBodySize
-    , Aurum._maxTxSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxTxSize
-    , Aurum._maxBHSize   = noInlineMaybeToStrictMaybe protocolUpdateMaxBlockHeaderSize
+      Aurum._minfeeA     = maybeToStrictMaybe protocolUpdateTxFeePerByte
+    , Aurum._minfeeB     = maybeToStrictMaybe protocolUpdateTxFeeFixed
+    , Aurum._maxBBSize   = maybeToStrictMaybe protocolUpdateMaxBlockBodySize
+    , Aurum._maxTxSize   = maybeToStrictMaybe protocolUpdateMaxTxSize
+    , Aurum._maxBHSize   = maybeToStrictMaybe protocolUpdateMaxBlockHeaderSize
     , Aurum._keyDeposit  = toSophieEntropic <$>
-                              noInlineMaybeToStrictMaybe protocolUpdateStakeAddressDeposit
+                              maybeToStrictMaybe protocolUpdateStakeAddressDeposit
     , Aurum._poolDeposit = toSophieEntropic <$>
-                              noInlineMaybeToStrictMaybe protocolUpdateStakePoolDeposit
-    , Aurum._eMax        = noInlineMaybeToStrictMaybe protocolUpdatePoolRetireMaxEpoch
-    , Aurum._nOpt        = noInlineMaybeToStrictMaybe protocolUpdateStakePoolTargetNum
-    , Aurum._a0          = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+                              maybeToStrictMaybe protocolUpdateStakePoolDeposit
+    , Aurum._eMax        = maybeToStrictMaybe protocolUpdatePoolRetireMaxEpoch
+    , Aurum._nOpt        = maybeToStrictMaybe protocolUpdateStakePoolTargetNum
+    , Aurum._a0          = maybeToStrictMaybe $ Ledger.boundRational =<<
                               protocolUpdatePoolPledgeInfluence
-    , Aurum._rho         = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Aurum._rho         = maybeToStrictMaybe $ Ledger.boundRational =<<
                                protocolUpdateMonetaryExpansion
-    , Aurum._tau         = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Aurum._tau         = maybeToStrictMaybe $ Ledger.boundRational =<<
                                protocolUpdateTreasuryCut
-    , Aurum._d           = noInlineMaybeToStrictMaybe $ Ledger.boundRational =<<
+    , Aurum._d           = maybeToStrictMaybe $ Ledger.boundRational =<<
                                protocolUpdateDecentralization
     , Aurum._extraEntropy    = toLedgerNonce <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateExtraOptimumEntropy
+                                  maybeToStrictMaybe protocolUpdateExtraOptimumEntropy
     , Aurum._protocolVersion = uncurry Ledger.ProtVer <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateProtocolVersion
+                                  maybeToStrictMaybe protocolUpdateProtocolVersion
     , Aurum._minPoolCost     = toSophieEntropic <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateMinPoolCost
+                                  maybeToStrictMaybe protocolUpdateMinPoolCost
     , Aurum._coinsPerUTxOWord  = toSophieEntropic <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateUTxOCostPerWord
+                                  maybeToStrictMaybe protocolUpdateUTxOCostPerWord
     , Aurum._costmdls        = if Map.null protocolUpdateCostModels
                                   then Ledger.SNothing
                                   else Ledger.SJust
                                          (toAurumCostModels protocolUpdateCostModels)
-    , Aurum._prices          = noInlineMaybeToStrictMaybe $
+    , Aurum._prices          = maybeToStrictMaybe $
                                   toAurumPrices =<< protocolUpdatePrices
     , Aurum._maxTxExUnits    = toAurumExUnits  <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateMaxTxExUnits
+                                  maybeToStrictMaybe protocolUpdateMaxTxExUnits
     , Aurum._maxBlockExUnits = toAurumExUnits  <$>
-                                  noInlineMaybeToStrictMaybe protocolUpdateMaxBlockExUnits
-    , Aurum._maxValSize      = noInlineMaybeToStrictMaybe protocolUpdateMaxValueSize
-    , Aurum._collateralPercentage = noInlineMaybeToStrictMaybe protocolUpdateCollateralPercent
-    , Aurum._maxCollateralInputs  = noInlineMaybeToStrictMaybe protocolUpdateMaxCollateralInputs
+                                  maybeToStrictMaybe protocolUpdateMaxBlockExUnits
+    , Aurum._maxValSize      = maybeToStrictMaybe protocolUpdateMaxValueSize
+    , Aurum._collateralPercentage = maybeToStrictMaybe protocolUpdateCollateralPercent
+    , Aurum._maxCollateralInputs  = maybeToStrictMaybe protocolUpdateMaxCollateralInputs
     }
 
 
@@ -1202,8 +1196,8 @@ toSophiePParams ProtocolParameters {
                  } =
    Sophie.PParams
      { Sophie._protocolVersion
-                             = let (maj, minor) = protocolParamProtocolVersion
-                                in Ledger.ProtVer maj minor
+                             = let (maj, seal) = protocolParamProtocolVersion
+                                in Ledger.ProtVer maj seal
      , Sophie._d            = fromMaybe
                                  (error "toAurumPParams: invalid Decentralization value")
                                  (Ledger.boundRational protocolParamDecentralization)
@@ -1261,8 +1255,8 @@ toAurumPParams ProtocolParameters {
                  } =
     Aurum.PParams {
       Aurum._protocolVersion
-                           = let (maj, minor) = protocolParamProtocolVersion
-                              in Ledger.ProtVer maj minor
+                           = let (maj, seal) = protocolParamProtocolVersion
+                              in Aurum.ProtVer maj seal 
     , Aurum._d            = fromMaybe
                                (error "toAurumPParams: invalid Decentralization value")
                                (Ledger.boundRational protocolParamDecentralization)

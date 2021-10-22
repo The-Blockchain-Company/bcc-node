@@ -5,12 +5,12 @@
     # IMPORTANT: report any change to nixpkgs channel in nix/default.nix:
     nixpkgs.follows = "haskellNix/nixpkgs-2105";
     haskellNix = {
-      url = "github:the-blockchain-company/haskell.nix";
+      url = "github:The-Blockchain-Company/haskell.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     utils.url = "github:numtide/flake-utils";
-    iohkNix = {
-      url = "github:the-blockchain-company/iohk-nix";
+    tbcoNix = {
+      url = "github:The-Blockchain-Company/tbco-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
     # Custom user config (default: empty), eg.:
@@ -20,33 +20,32 @@
     #     services.bcc-node.port = 3002;
     #   };
     # };
-    customConfig.url = "github:the-blockchain-company/empty-flake";
+    customConfig.url = "github:The-Blockchain-Company/empty-flake";
   };
 
-  outputs = { self, nixpkgs, utils, haskellNix, iohkNix, customConfig }:
+  outputs = { self, nixpkgs, utils, haskellNix, tbcoNix, customConfig }:
     let
       inherit (nixpkgs) lib;
       inherit (lib) head systems mapAttrs recursiveUpdate mkDefault
         getAttrs optionalAttrs nameValuePair attrNames;
       inherit (utils.lib) eachSystem mkApp flattenTree;
-      inherit (iohkNix.lib) prefixNamesWith collectExes;
+      inherit (tbcoNix.lib) prefixNamesWith collectExes;
 
       supportedSystems = import ./supported-systems.nix;
       defaultSystem = head supportedSystems;
 
       overlays = [
-        haskellNix.overlay
-        iohkNix.overlays.haskell-nix-extra
-        iohkNix.overlays.crypto
-        iohkNix.overlays.bcc-lib
-        iohkNix.overlays.utils
+        tbcoNix.overlays.haskell-nix-extra
+        tbcoNix.overlays.crypto
+        tbcoNix.overlays.bcc-lib
+        tbcoNix.overlays.utils
         (final: prev: {
           customConfig = recursiveUpdate
             (import ./nix/custom-config.nix final.customConfig)
             customConfig.outputs;
           gitrev = self.rev or "dirty";
           commonLib = lib
-            // iohkNix.lib
+            // tbcoNix.lib
             // final.bccLib
             // import ./nix/svclib.nix { inherit (final) pkgs; };
         })
@@ -55,28 +54,30 @@
 
     in eachSystem supportedSystems (system:
       let
-        pkgs = import nixpkgs {
-          inherit system overlays;
-          inherit (haskellNix) config;
-        };
+        pkgs = haskellNix.legacyPackages.${system}.appendOverlays overlays;
 
         inherit (pkgs.commonLib) eachEnv environments;
 
         devShell = import ./shell.nix { inherit pkgs; };
 
-        flake = pkgs.bccNodeProject.flake {
-          crossPlatforms = p: with p; [
-            mingwW64
-            musl64
-          ];
-        };
+        flake = pkgs.bccNodeProject.flake {};
+
+        staticFlake = pkgs.pkgsStatic.bccNodeProject.flake {};
+
+        windowsFlake = pkgs.pkgsCross.${systems.examples.mingwW64}.bccNodeProject.flake {};
 
         scripts = flattenTree pkgs.scripts;
+
+        checkNames = attrNames flake.checks;
 
         checks =
           # Linux only checks:
           optionalAttrs (system == "x86_64-linux") (
-            prefixNamesWith "nixosTests/" (mapAttrs (_: v: v.${system} or v) pkgs.nixosTests)
+            prefixNamesWith "windows/" (removeAttrs
+              (getAttrs checkNames windowsFlake.checks)
+              ["bcc-node-chairman:test:chairman-tests"]
+            )
+            // (prefixNamesWith "nixosTests/" (mapAttrs (_: v: v.${system} or v) pkgs.nixosTests))
           )
           # checks run on default system only;
           // optionalAttrs (system == defaultSystem) {
@@ -85,9 +86,9 @@
             };
           };
 
-        exes = collectExes
-           flake.packages;
-
+        exes = collectExes flake.packages;
+        exeNames = attrNames exes;
+        lazyCollectExe = p: getAttrs exeNames (collectExes p);
 
         packages = {
           inherit (devShell) devops;
@@ -95,12 +96,16 @@
         }
         // scripts
         // exes
+        // (prefixNamesWith "static/"
+              (mapAttrs pkgs.rewriteStatic (lazyCollectExe staticFlake.packages)))
         # Linux only packages:
-        // optionalAttrs (system == "x86_64-linux") {
-          "dockerImage/node" = pkgs.dockerImage;
-          "dockerImage/submit-api" = pkgs.submitApiDockerImage;
-        }
-
+        // optionalAttrs (system == "x86_64-linux") (
+          prefixNamesWith "windows/" (lazyCollectExe windowsFlake.packages)
+          // {
+            "dockerImage/node" = pkgs.dockerImage;
+            "dockerImage/submit-api" = pkgs.submitApiDockerImage;
+          }
+        )
         # Add checks to be able to build them individually
         // (prefixNamesWith "checks/" checks);
 

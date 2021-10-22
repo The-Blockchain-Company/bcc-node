@@ -29,11 +29,8 @@ data FundInEra era = FundInEra {
 
 data Variant
   = PlainOldFund
-  -- maybe better use the script itself instead of the filePath
-  | ZerepochScriptFund !FilePath !ScriptData
-  -- A collateralFund is just a regular (PlainOldFund) on the chain,
-  -- but tagged in the wallet so that it is not selected for spending.
-  | CollateralFund
+  | ZerepochScriptFund
+-- | DedicatedCollateral
   deriving  (Show, Eq, Ord)
 
 data Validity
@@ -63,7 +60,7 @@ getFundValidity (Fund (InAnyBccEra _ a)) = _fundValidity a
 
 getFundEntropic :: Fund -> Entropic
 getFundEntropic (Fund (InAnyBccEra _ a)) = case _fundVal a of
-  TxOutDafiOnly _era l -> l
+  TxOutBccOnly _era l -> l
   TxOutValue _era v -> selectEntropic v
 
 data IsConfirmed = IsConfirmed | IsNotConfirmed
@@ -77,7 +74,7 @@ isConfirmed f = case getFundValidity f of
 instance Show Fund where
   show (Fund (InAnyBccEra _ f)) = show f
 
--- TxIn/fundTxOut is the prijen key.
+-- TxIn/fundTxOut is the primary key.
 -- There must be no two entries for the same TxIn !.
 
 instance Eq Fund where
@@ -125,6 +122,18 @@ type FundSelector = FundSet -> Either String [Fund]
 type FundSource = IO (Either String [Fund])
 type FundToStore = [Fund] -> IO ()
 
+-- Select a number of confirmed Fund that where send to a specific Target node.
+-- TODO: dont ignore target.
+selectCountTarget :: Int -> Target -> FundSet -> Either String [Fund]
+selectCountTarget count _target fs =
+  if length funds == count
+    then Right funds
+    else Left "could not find enough input coins"
+  where
+    -- Just take confirmed coins.
+    -- TODO: extend this to unconfimed coins to the same target node
+    funds = take count $ toAscList ( Proxy :: Proxy Entropic) (fs @=PlainOldFund @= IsConfirmed)
+
 -- Select Funds to cover a minimum value.
 -- TODO:
 -- This fails unless there is a single fund with the required value
@@ -135,12 +144,18 @@ selectMinValue minValue fs = case coins of
     (c:_) -> Right [c]
     where coins = toAscList ( Proxy :: Proxy Entropic) (fs @=PlainOldFund @= IsConfirmed @>= minValue)
 
+selectZerepochFund :: FundSet -> Either String [Fund]
+selectZerepochFund fs = case coins of
+    [] -> Left "no Zerepoch fund found"
+    (c:_) -> Right [c]
+    where coins = toAscList ( Proxy :: Proxy Entropic) (fs @=ZerepochScriptFund @= IsConfirmed )
+
 selectCollateral :: FundSet -> Either String [Fund]
 selectCollateral fs = case coins of
   [] -> Left "no matching none-Zerepoch fund found"
   (c:_) -> Right [c]
  where
-  coins = toAscList ( Proxy :: Proxy Entropic) (fs @=CollateralFund @= IsConfirmed )
+  coins = toAscList ( Proxy :: Proxy Entropic) (fs @=PlainOldFund @= IsConfirmed @= (1492000000 :: Entropic) )
 
 data AllowRecycle
   = UseConfirmedOnly
@@ -222,23 +237,6 @@ selectInputs allowRecycle count minTotalValue variant targetNode fs
     where
       -- inFlightCoins and confirmedCoins are disjoint
       inFlightCoins = toAscList (Proxy :: Proxy SeqNumber) (variantIxSet @=IsNotConfirmed)
-
-selectToBuffer ::
-     Int
-  -> Entropic
-  -> Variant
-  -> FundSet
-  -> Either String [Fund]
-selectToBuffer count minValue variant fs
-  = if length coins < count
-    then Left $ concat
-      [ "selectToBuffer: not enough coins found: count: ", show count
-      , " minValue: ", show minValue
-      , " variant: ", show variant
-      ]
-    else Right coins
- where
-  coins = take count $ toAscList ( Proxy :: Proxy Entropic) (fs @=variant @= IsConfirmed @>= minValue)
 
 -- Todo: check sufficant funds and minimumValuePerUtxo
 inputsToOutputsWithFee :: Entropic -> Int -> [Entropic] -> [Entropic]

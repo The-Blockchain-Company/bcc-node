@@ -17,7 +17,7 @@ import qualified Data.ByteString.Short as SBS
 
 import qualified Zerepoch.V1.Ledger.Scripts as Zerepoch
 import qualified ZerepochTx
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 
 {-# INLINABLE mkValidator #-}
 mkValidator :: BuiltinData -> BuiltinData -> BuiltinData -> ()

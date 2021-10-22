@@ -5,17 +5,15 @@ module Test.Bcc.Api.Typed.RawBytes
   ( tests
   ) where
 
-import           Bcc.Prelude
-
-import           Hedgehog (Property)
-import qualified Hedgehog as H
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
 import           Bcc.Api
+import           Bcc.Prelude
 import           Gen.Bcc.Api.Typed
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover)
 import           Test.Bcc.Api.Typed.Orphans ()
+import           Test.Tasty (TestTree)
+
+import qualified Hedgehog as H
 
 {- HLINT ignore "Use camelCase" -}
 
@@ -97,4 +95,4 @@ roundtrip_verification_key_hash_raw roletoken =
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover

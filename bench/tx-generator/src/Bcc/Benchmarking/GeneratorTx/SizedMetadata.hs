@@ -1,18 +1,18 @@
 {- HLINT ignore "Use camelCase" -}
 {- HLINT ignore "Use uncurry" -}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
 module Bcc.Benchmarking.GeneratorTx.SizedMetadata
 where
 
 import           Prelude
 
-import           Bcc.Api
-import           Bcc.Benchmarking.GeneratorTx.Tx
-import qualified Data.ByteString as BS
 import qualified Data.Map.Strict as Map
 import           Data.Word (Word64)
+import qualified Data.ByteString as BS
+import           Bcc.Benchmarking.GeneratorTx.Tx
+import           Bcc.Api
 
 maxMapSize :: Int
 maxMapSize = 1000
@@ -108,6 +108,7 @@ dummyTxSizeInEra metadata = case makeTransactionBody dummyTx of
     , txValidityRange = (TxValidityNoLowerBound, mkValidityUpperBound 0)
     , txMetadata = metadata
     , txAuxScripts = TxAuxScriptsNone
+    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txExtraKeyWits = TxExtraKeyWitnessesNone
     , txProtocolParams = BuildTxWith Nothing
     , txWithdrawals = TxWithdrawalsNone
@@ -139,7 +140,7 @@ mkMetadata size
     SophieBasedEraSophie -> 37
     SophieBasedEraEvie -> 39
     SophieBasedEraJen    -> 39
-    SophieBasedEraAurum  -> 39 -- TODO: check minSize for Aurum
+    SophieBasedEraAurum  -> error "39"
   nettoSize = size - minSize
 
   -- At 24 the CBOR representation changes.

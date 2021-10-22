@@ -15,7 +15,7 @@ from_addr="2cWKMJemoBain3UWCzSY5wZvcf8uQ2MAaSy8hedrwpqsbYCm4QnBgPn3cEH7KF3X7DKoZ
 from_key="${configuration_root}/genesis/delegate-keys.000.key"
 default_to_key="${configuration_root}/genesis/delegate-keys.001.key"
 
-## DAFI to be spent
+## BCC to be spent
 default_entropic="863000000000000"
 case $# in
         1 ) proto_magic=$(jq '.protocolConsts | .protocolMagic' "${genesis_file}")

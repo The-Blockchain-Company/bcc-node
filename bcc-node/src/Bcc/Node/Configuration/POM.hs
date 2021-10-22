@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 {-# OPTIONS_GHC -Wno-noncanonical-monoid-instances #-}
 
@@ -34,12 +33,9 @@ import           Bcc.Crypto (RequiresNetworkMagic (..))
 import           Bcc.Node.Protocol.Types (Protocol (..))
 import           Bcc.Node.Types
 import           Bcc.Tracing.Config
-import           Shardagnostic.Consensus.Mempool.API (MempoolCapacityBytesOverride (..), MempoolCapacityBytes (..))
 import           Shardagnostic.Consensus.Storage.LedgerDB.DiskPolicy (SnapshotInterval (..))
 import           Shardagnostic.Network.Block (MaxSlotNo (..))
 import           Shardagnostic.Network.NodeToNode (DiffusionMode (..))
-
-import qualified Data.Aeson.Types as Aeson
 
 data NodeConfiguration
   = NodeConfiguration
@@ -87,8 +83,6 @@ data NodeConfiguration
        , ncLoggingSwitch  :: !Bool
        , ncLogMetrics     :: !Bool
        , ncTraceConfig    :: !TraceOptions
-
-       , ncMaybeMempoolCapacityOverride :: !(Maybe MempoolCapacityBytesOverride)
        } deriving (Eq, Show)
 
 
@@ -108,7 +102,7 @@ data PartialNodeConfiguration
        , pncShutdownIPC     :: !(Last (Maybe Fd))
        , pncShutdownOnSlotSynced :: !(Last MaxSlotNo)
 
-         -- Protocol-specific parameters:
+          -- Protocol-specific parameters:
        , pncProtocolConfig :: !(Last NodeProtocolConfiguration)
 
          -- Node parameters, not protocol-specific:
@@ -125,9 +119,6 @@ data PartialNodeConfiguration
        , pncLoggingSwitch  :: !(Last Bool)
        , pncLogMetrics     :: !(Last Bool)
        , pncTraceConfig    :: !(Last TraceOptions)
-
-         -- Configuration for testing purposes
-       , pncMaybeMempoolCapacityOverride :: !(Last MempoolCapacityBytesOverride)
        } deriving (Eq, Generic, Show)
 
 instance AdjustFilePaths PartialNodeConfiguration where
@@ -176,8 +167,6 @@ instance FromJSON PartialNodeConfiguration where
                                                                <*> parseSophieProtocol v
                                                                <*> parseAurumProtocol v
                                                                <*> parseHardForkProtocol v)
-      pncMaybeMempoolCapacityOverride <- Last <$> parseMempoolCapacityBytesOverride v
-
       pure PartialNodeConfiguration {
              pncProtocolConfig
            , pncSocketPath
@@ -199,26 +188,13 @@ instance FromJSON PartialNodeConfiguration where
            , pncValidateDB = mempty
            , pncShutdownIPC = mempty
            , pncShutdownOnSlotSynced = mempty
-           , pncMaybeMempoolCapacityOverride
            }
     where
-      parseMempoolCapacityBytesOverride v = parseNoOverride <|> parseOverride
-        where
-          parseNoOverride = fmap (MempoolCapacityBytesOverride . MempoolCapacityBytes) <$> v .:? "MempoolCapacityBytesOverride"
-          parseOverride = do
-            maybeString :: Maybe String <- v .:? "MempoolCapacityBytesOverride"
-            case maybeString of
-              Just "NoOverride" -> return (Just NoMempoolCapacityBytesOverride)
-              Just invalid ->  fmap Just . Aeson.parseFail $
-                    "Invalid value for 'MempoolCapacityBytesOverride'.  \
-                    \Expecting byte count or NoOverride.  Value was: " <> show invalid
-              Nothing -> return Nothing
-
       parseColeProtocol v = do
-        prijen   <- v .:? "ColeGenesisFile"
+        primary   <- v .:? "ColeGenesisFile"
         secondary <- v .:? "GenesisFile"
         npcColeGenesisFile <-
-          case (prijen, secondary) of
+          case (primary, secondary) of
             (Just g, Nothing)  -> return g
             (Nothing, Just g)  -> return g
             (Nothing, Nothing) -> fail $ "Missing required field, either "
@@ -234,8 +210,8 @@ instance FromJSON PartialNodeConfiguration where
                                          .!= Cole.ApplicationName "bcc-sl"
         npcColeApplicationVersion  <- v .:? "ApplicationVersion" .!= 1
         protVerMajor                <- v .: "LastKnownBlockVersion-Major"
-        protVerMinor                <- v .: "LastKnownBlockVersion-Minor"
-        protVerAlt                  <- v .: "LastKnownBlockVersion-Alt" .!= 0
+        protVerSeal                <- v .: "LastKnownBlockVersion-Seal"
+                        
 
         pure NodeColeProtocolConfiguration {
                npcColeGenesisFile
@@ -245,15 +221,14 @@ instance FromJSON PartialNodeConfiguration where
              , npcColeApplicationName
              , npcColeApplicationVersion
              , npcColeSupportedProtocolVersionMajor = protVerMajor
-             , npcColeSupportedProtocolVersionMinor = protVerMinor
-             , npcColeSupportedProtocolVersionAlt   = protVerAlt
+             , npcColeSupportedProtocolVersionSeal = protVerSeal
              }
 
       parseSophieProtocol v = do
-        prijen   <- v .:? "SophieGenesisFile"
+        primary   <- v .:? "SophieGenesisFile"
         secondary <- v .:? "GenesisFile"
         npcSophieGenesisFile <-
-          case (prijen, secondary) of
+          case (primary, secondary) of
             (Just g, Nothing)  -> return g
             (Nothing, Just g)  -> return g
             (Nothing, Nothing) -> fail $ "Missing required field, either "
@@ -333,7 +308,6 @@ defaultPartialNodeConfiguration =
     , pncMaxConcurrencyDeadline = mempty
     , pncLogMetrics = mempty
     , pncTraceConfig = mempty
-    , pncMaybeMempoolCapacityOverride = mempty
     }
 
 lastOption :: Parser a -> Parser (Last a)
@@ -383,7 +357,6 @@ makeNodeConfiguration pnc = do
              , ncLogMetrics = logMetrics
              , ncTraceConfig = if loggingSwitch then traceConfig
                                                 else TracingOff
-             , ncMaybeMempoolCapacityOverride = getLast $ pncMaybeMempoolCapacityOverride pnc
              }
 
 ncProtocol :: NodeConfiguration -> Protocol

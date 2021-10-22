@@ -4,7 +4,6 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
 
-
 module Bcc.ZerepochExample.MintingScript
   ( apiExampleZerepochMintingScript
   , mintingScriptShortBs
@@ -21,7 +20,7 @@ import qualified Data.ByteString.Short as SBS
 import           Ledger hiding (singleton)
 import qualified Ledger.Typed.Scripts as Scripts
 import qualified ZerepochTx
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 
 
 {- HLINT ignore "Avoid lambda" -}

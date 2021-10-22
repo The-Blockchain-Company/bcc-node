@@ -25,7 +25,7 @@ import           Options.Applicative as Opt
 
 -- Node API imports
 import           Bcc.Api
-import           Bcc.CLI.Types (SigningKeyFile (..))
+import           Bcc.CLI.Types (SigningKeyFile(..))
 
 -- Node imports
 import           Bcc.Node.Types
@@ -197,7 +197,7 @@ parseGeneratorCmd =
 
 data GeneratorFunds
   = FundsGenesis   SigningKeyFile
-  | FundsUtxo      SigningKeyFile TxIn (TxOut CtxTx SophieEra)
+  | FundsUtxo      SigningKeyFile TxIn (TxOut SophieEra)
   | FundsSplitUtxo SigningKeyFile FilePath
   deriving stock Show
 

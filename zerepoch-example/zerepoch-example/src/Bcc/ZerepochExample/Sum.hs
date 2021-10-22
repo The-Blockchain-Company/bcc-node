@@ -11,7 +11,7 @@
 module Bcc.ZerepochExample.Sum
   where
 
-import           Prelude hiding (($), (+), (-), (==))
+import           Prelude hiding (($),(==),(+),(-))
 
 import           Bcc.Api.Sophie (ZerepochScript (..), ZerepochScriptV1)
 
@@ -22,7 +22,7 @@ import qualified Data.ByteString.Short as SBS
 import qualified Ledger.Typed.Scripts as Scripts
 import qualified Zerepoch.V1.Ledger.Scripts as Zerepoch
 import qualified ZerepochTx
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 
 
 smartSum :: Integer -> Integer

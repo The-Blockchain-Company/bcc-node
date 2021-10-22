@@ -3,8 +3,8 @@ cabal-version: 2.4
 name:                  locli
 version:               1.29
 description:           Bcc log analysis CLI.
-author:                BCIO
-maintainer:            operations@iohk.io
+author:                TBCO (Blockchain Engineer Robert Mourey Jr for The-Blockchain-Company)
+maintainer:            operations@tbco.io
 license:               Apache-2.0
 license-files:
   NOTICE
@@ -51,7 +51,7 @@ library
                      , file-embed
                      , gnuplot
                      , Histogram
-                     , iohk-monitoring
+                     , tbco-monitoring
                      , optparse-applicative-fork
                      , optparse-generic
                      , shardagnostic-network

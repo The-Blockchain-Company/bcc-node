@@ -13,7 +13,6 @@ module Bcc.Api.Script (
     SimpleScriptV1,
     SimpleScriptV2,
     ZerepochScriptV1,
-    ZerepochScriptV2,
     ScriptLanguage(..),
     SimpleScriptVersion(..),
     ZerepochScriptVersion(..),
@@ -97,6 +96,7 @@ module Bcc.Api.Script (
 
 import           Prelude
 
+import           Data.Word (Word64)
 import qualified Data.ByteString.Lazy as LBS
 import           Data.ByteString.Short (ShortByteString)
 import qualified Data.ByteString.Short as SBS
@@ -112,8 +112,8 @@ import           Numeric.Natural (Natural)
 
 import           Data.Aeson (Value (..), object, (.:), (.=))
 import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Encoding as Aeson
 import qualified Data.Aeson.Types as Aeson
+import qualified Data.Aeson.Encoding as Aeson
 import qualified Data.Sequence.Strict as Seq
 import           Data.Vector (Vector)
 import qualified Data.Vector as Vector
@@ -128,12 +128,12 @@ import qualified Bcc.Crypto.Hash.Class as Crypto
 import           Bcc.Slotting.Slot (SlotNo)
 
 import qualified Bcc.Ledger.Core as Ledger
-import qualified Bcc.Ledger.Era as Ledger
+import qualified Bcc.Ledger.Era  as Ledger
 
-import qualified Bcc.Ledger.Keys as Sophie
-import qualified Bcc.Ledger.Sophie.Scripts as Sophie
 import qualified Bcc.Ledger.SophieMA.Timelocks as Timelock
 import           Shardagnostic.Consensus.Sophie.Eras (StandardCrypto)
+import qualified Bcc.Ledger.Keys as Sophie
+import qualified Sophie.Spec.Ledger.Scripts as Sophie
 
 import qualified Bcc.Ledger.Aurum.Language as Aurum
 import qualified Bcc.Ledger.Aurum.Scripts as Aurum
@@ -183,7 +183,6 @@ data SimpleScriptV2
 -- languages, not just multiple versions of a single language.
 --
 data ZerepochScriptV1
-data ZerepochScriptV2
 
 instance HasTypeProxy SimpleScriptV1 where
     data AsType SimpleScriptV1 = AsSimpleScriptV1
@@ -197,9 +196,6 @@ instance HasTypeProxy ZerepochScriptV1 where
     data AsType ZerepochScriptV1 = AsZerepochScriptV1
     proxyToAsType _ = AsZerepochScriptV1
 
-instance HasTypeProxy ZerepochScriptV2 where
-    data AsType ZerepochScriptV2 = AsZerepochScriptV2
-    proxyToAsType _ = AsZerepochScriptV2
 
 -- ----------------------------------------------------------------------------
 -- Value level representation for script languages
@@ -239,15 +235,12 @@ instance TestEquality SimpleScriptVersion where
 
 data ZerepochScriptVersion lang where
     ZerepochScriptV1 :: ZerepochScriptVersion ZerepochScriptV1
-    ZerepochScriptV2 :: ZerepochScriptVersion ZerepochScriptV2
 
 deriving instance (Eq   (ZerepochScriptVersion lang))
 deriving instance (Show (ZerepochScriptVersion lang))
 
 instance TestEquality ZerepochScriptVersion where
     testEquality ZerepochScriptV1 ZerepochScriptV1 = Just Refl
-    testEquality ZerepochScriptV2 ZerepochScriptV2 = Just Refl
-    testEquality _ _ = Nothing
 
 
 data AnyScriptLanguage where
@@ -265,17 +258,15 @@ instance Enum AnyScriptLanguage where
     toEnum 0 = AnyScriptLanguage (SimpleScriptLanguage SimpleScriptV1)
     toEnum 1 = AnyScriptLanguage (SimpleScriptLanguage SimpleScriptV2)
     toEnum 2 = AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV1)
-    toEnum 3 = AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV2)
-    toEnum err = error $ "AnyScriptLanguage.toEnum: bad argument: " <> show err
+    toEnum _ = error "AnyScriptLanguage.toEnum: bad argument"
 
     fromEnum (AnyScriptLanguage (SimpleScriptLanguage SimpleScriptV1)) = 0
     fromEnum (AnyScriptLanguage (SimpleScriptLanguage SimpleScriptV2)) = 1
     fromEnum (AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV1)) = 2
-    fromEnum (AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV2)) = 3
 
 instance Bounded AnyScriptLanguage where
     minBound = AnyScriptLanguage (SimpleScriptLanguage SimpleScriptV1)
-    maxBound = AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV2)
+    maxBound = AnyScriptLanguage (ZerepochScriptLanguage ZerepochScriptV1)
 
 
 data AnyZerepochScriptVersion where
@@ -292,15 +283,13 @@ instance Ord AnyZerepochScriptVersion where
 
 instance Enum AnyZerepochScriptVersion where
     toEnum 0 = AnyZerepochScriptVersion ZerepochScriptV1
-    toEnum 1 = AnyZerepochScriptVersion ZerepochScriptV2
-    toEnum err = error $ "AnyZerepochScriptVersion.toEnum: bad argument: " <> show err
+    toEnum _ = error "AnyZerepochScriptVersion.toEnum: bad argument"
 
     fromEnum (AnyZerepochScriptVersion ZerepochScriptV1) = 0
-    fromEnum (AnyZerepochScriptVersion ZerepochScriptV2) = 1
 
 instance Bounded AnyZerepochScriptVersion where
     minBound = AnyZerepochScriptVersion ZerepochScriptV1
-    maxBound = AnyZerepochScriptVersion ZerepochScriptV2
+    maxBound = AnyZerepochScriptVersion ZerepochScriptV1
 
 instance ToCBOR AnyZerepochScriptVersion where
     toCBOR = toCBOR . fromEnum
@@ -316,15 +305,12 @@ instance FromCBOR AnyZerepochScriptVersion where
 instance ToJSON AnyZerepochScriptVersion where
     toJSON (AnyZerepochScriptVersion ZerepochScriptV1) =
       Aeson.String "ZerepochScriptV1"
-    toJSON (AnyZerepochScriptVersion ZerepochScriptV2) =
-      Aeson.String "ZerepochScriptV2"
 
 parseZerepochScriptVersion :: Text -> Aeson.Parser AnyZerepochScriptVersion
 parseZerepochScriptVersion t =
   case t of
     "ZerepochScriptV1" -> return (AnyZerepochScriptVersion ZerepochScriptV1)
-    "ZerepochScriptV2" -> return (AnyZerepochScriptVersion ZerepochScriptV2)
-    _                -> fail "Expected ZerepochScriptV1 or ZerepochScriptV2"
+    _                -> fail "Expected ZerepochScriptV1"
 
 instance FromJSON AnyZerepochScriptVersion where
     parseJSON = Aeson.withText "ZerepochScriptVersion" parseZerepochScriptVersion
@@ -337,16 +323,13 @@ instance Aeson.ToJSONKey AnyZerepochScriptVersion where
       where
         toText :: AnyZerepochScriptVersion -> Text
         toText (AnyZerepochScriptVersion ZerepochScriptV1) = "ZerepochScriptV1"
-        toText (AnyZerepochScriptVersion ZerepochScriptV2) = "ZerepochScriptV2"
         toAesonEncoding = Aeson.text . toText
 
 toAurumLanguage :: AnyZerepochScriptVersion -> Aurum.Language
 toAurumLanguage (AnyZerepochScriptVersion ZerepochScriptV1) = Aurum.ZerepochV1
-toAurumLanguage (AnyZerepochScriptVersion ZerepochScriptV2) = Aurum.ZerepochV2
 
 fromAurumLanguage :: Aurum.Language -> AnyZerepochScriptVersion
 fromAurumLanguage Aurum.ZerepochV1 = AnyZerepochScriptVersion ZerepochScriptV1
-fromAurumLanguage Aurum.ZerepochV2 = AnyZerepochScriptVersion ZerepochScriptV2
 
 
 class HasTypeProxy lang => IsScriptLanguage lang where
@@ -360,9 +343,6 @@ instance IsScriptLanguage SimpleScriptV2 where
 
 instance IsScriptLanguage ZerepochScriptV1 where
     scriptLanguage = ZerepochScriptLanguage ZerepochScriptV1
-
-instance IsScriptLanguage ZerepochScriptV2 where
-    scriptLanguage = ZerepochScriptLanguage ZerepochScriptV2
 
 
 class IsScriptLanguage lang => IsSimpleScriptLanguage lang where
@@ -381,8 +361,6 @@ class IsScriptLanguage lang => IsZerepochScriptLanguage lang where
 instance IsZerepochScriptLanguage ZerepochScriptV1 where
     zerepochScriptVersion = ZerepochScriptV1
 
-instance IsZerepochScriptLanguage ZerepochScriptV2 where
-    zerepochScriptVersion = ZerepochScriptV2
 
 -- ----------------------------------------------------------------------------
 -- Script type: covering all script languages
@@ -426,9 +404,6 @@ instance IsScriptLanguage lang => SerialiseAsCBOR (Script lang) where
     serialiseToCBOR (ZerepochScript ZerepochScriptV1 s) =
       CBOR.serialize' s
 
-    serialiseToCBOR (ZerepochScript ZerepochScriptV2 s) =
-      CBOR.serialize' s
-
     deserialiseFromCBOR _ bs =
       case scriptLanguage :: ScriptLanguage lang of
         SimpleScriptLanguage SimpleScriptV1 ->
@@ -447,9 +422,6 @@ instance IsScriptLanguage lang => SerialiseAsCBOR (Script lang) where
               ZerepochScript ZerepochScriptV1
           <$> CBOR.decodeFull' bs
 
-        ZerepochScriptLanguage ZerepochScriptV2 ->
-              ZerepochScript ZerepochScriptV2
-          <$> CBOR.decodeFull' bs
 
 instance IsScriptLanguage lang => HasTextEnvelope (Script lang) where
     textEnvelopeType _ =
@@ -457,7 +429,6 @@ instance IsScriptLanguage lang => HasTextEnvelope (Script lang) where
         SimpleScriptLanguage SimpleScriptV1 -> "SimpleScriptV1"
         SimpleScriptLanguage SimpleScriptV2 -> "SimpleScriptV2"
         ZerepochScriptLanguage ZerepochScriptV1 -> "ZerepochScriptV1"
-        ZerepochScriptLanguage ZerepochScriptV2 -> "ZerepochScriptV2"
 
 
 -- ----------------------------------------------------------------------------
@@ -536,7 +507,6 @@ data ScriptLanguageInEra lang era where
      SimpleScriptV2InAurum  :: ScriptLanguageInEra SimpleScriptV2 AurumEra
 
      ZerepochScriptV1InAurum  :: ScriptLanguageInEra ZerepochScriptV1 AurumEra
-     ZerepochScriptV2InAurum  :: ScriptLanguageInEra ZerepochScriptV2 AurumEra
 
 deriving instance Eq   (ScriptLanguageInEra lang era)
 deriving instance Show (ScriptLanguageInEra lang era)
@@ -578,9 +548,6 @@ scriptLanguageSupportedInEra era lang =
       (AurumEra, ZerepochScriptLanguage ZerepochScriptV1) ->
         Just ZerepochScriptV1InAurum
 
-      (AurumEra, ZerepochScriptLanguage ZerepochScriptV2) ->
-        Just ZerepochScriptV2InAurum
-
       _ -> Nothing
 
 languageOfScriptLanguageInEra :: ScriptLanguageInEra lang era
@@ -597,7 +564,6 @@ languageOfScriptLanguageInEra langInEra =
       SimpleScriptV2InAurum  -> SimpleScriptLanguage SimpleScriptV2
 
       ZerepochScriptV1InAurum  -> ZerepochScriptLanguage ZerepochScriptV1
-      ZerepochScriptV2InAurum  -> ZerepochScriptLanguage ZerepochScriptV2
 
 eraOfScriptLanguageInEra :: ScriptLanguageInEra lang era
                          -> SophieBasedEra era
@@ -615,7 +581,6 @@ eraOfScriptLanguageInEra langInEra =
       SimpleScriptV2InAurum  -> SophieBasedEraAurum
 
       ZerepochScriptV1InAurum  -> SophieBasedEraAurum
-      ZerepochScriptV2InAurum  -> SophieBasedEraAurum
 
 
 -- | Given a target era and a script in some language, check if the language is
@@ -784,11 +749,11 @@ deriving instance Show (ScriptWitnessInCtx witctx)
 data ExecutionUnits =
      ExecutionUnits {
         -- | This corresponds roughly to the time to execute a script.
-        executionSteps  :: Natural,
+        executionSteps  :: Word64,
 
         -- | This corresponds roughly to the peak memory used during script
         -- execution.
-        executionMemory :: Natural
+        executionMemory :: Word64
      }
   deriving (Eq, Show)
 
@@ -881,12 +846,7 @@ hashScript (ZerepochScript ZerepochScriptV1 (ZerepochScriptSerialised script)) =
     -- hash that. Later ledger eras have to be compatible anyway.
     ScriptHash
   . Ledger.hashScript @(SophieLedgerEra AurumEra)
-  $ Aurum.ZerepochScript Aurum.ZerepochV1 script
-
-hashScript (ZerepochScript ZerepochScriptV2 (ZerepochScriptSerialised script)) =
-    ScriptHash
-  . Ledger.hashScript @(SophieLedgerEra AurumEra)
-  $ Aurum.ZerepochScript Aurum.ZerepochV2 script
+  $ Aurum.ZerepochScript script
 
 toSophieScriptHash :: ScriptHash -> Sophie.ScriptHash StandardCrypto
 toSophieScriptHash (ScriptHash h) =  h
@@ -1003,7 +963,6 @@ instance (IsZerepochScriptLanguage lang, Typeable lang) =>
     textEnvelopeType _ =
       case zerepochScriptVersion :: ZerepochScriptVersion lang of
         ZerepochScriptV1 -> "ZerepochScriptV1"
-        ZerepochScriptV2 -> "ZerepochScriptV2"
 
 
 -- | An example Zerepoch script that always succeeds, irrespective of inputs.
@@ -1070,13 +1029,7 @@ toSophieScript (ScriptInEra langInEra (SimpleScript SimpleScriptV2 script)) =
 toSophieScript (ScriptInEra langInEra (ZerepochScript ZerepochScriptV1
                                          (ZerepochScriptSerialised script))) =
     case langInEra of
-      ZerepochScriptV1InAurum  -> Aurum.ZerepochScript Aurum.ZerepochV1 script
-
-toSophieScript (ScriptInEra langInEra (ZerepochScript ZerepochScriptV2
-                                         (ZerepochScriptSerialised script))) =
-    case langInEra of
-      ZerepochScriptV2InAurum  -> Aurum.ZerepochScript Aurum.ZerepochV2 script
-
+      ZerepochScriptV1InAurum  -> Aurum.ZerepochScript script
 
 fromSophieBasedScript  :: SophieBasedEra era
                         -> Ledger.Script (SophieLedgerEra era)
@@ -1101,13 +1054,9 @@ fromSophieBasedScript era script =
           ScriptInEra SimpleScriptV2InAurum $
           SimpleScript SimpleScriptV2 $
           fromEvieTimelock TimeLocksInSimpleScriptV2 s
-        Aurum.ZerepochScript Aurum.ZerepochV1 s ->
+        Aurum.ZerepochScript s ->
           ScriptInEra ZerepochScriptV1InAurum $
           ZerepochScript ZerepochScriptV1 $
-          ZerepochScriptSerialised s
-        Aurum.ZerepochScript Aurum.ZerepochV2 s ->
-          ScriptInEra ZerepochScriptV2InAurum $
-          ZerepochScript ZerepochScriptV2 $
           ZerepochScriptSerialised s
 
 

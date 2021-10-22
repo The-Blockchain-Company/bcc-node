@@ -19,8 +19,8 @@ import qualified Shardagnostic.Consensus.Cole.Ledger.Block as Cole
 import qualified Shardagnostic.Consensus.Cole.Ledger.Ledger as Cole
 
 import qualified Shardagnostic.Consensus.Sophie.Ledger as Sophie
-import qualified Bcc.Ledger.Sophie.LedgerState as Sophie
-import qualified Bcc.Ledger.Sophie.UTxO as Sophie
+import qualified Sophie.Spec.Ledger.LedgerState as Sophie
+import qualified Sophie.Spec.Ledger.UTxO as Sophie
 
 import qualified Shardagnostic.Consensus.Bcc as Bcc
 import qualified Shardagnostic.Consensus.Bcc.Block as Bcc

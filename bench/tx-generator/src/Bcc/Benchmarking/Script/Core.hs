@@ -16,7 +16,6 @@ module Bcc.Benchmarking.Script.Core
 where
 
 import           Prelude
-import           Data.Ratio ((%))
 import           Control.Monad
 import           Control.Monad.Trans.Except
 import           Control.Monad.IO.Class
@@ -25,10 +24,10 @@ import           Control.Tracer (traceWith, nullTracer)
 
 import           Shardagnostic.Network.Protocol.LocalTxSubmission.Type (SubmitResult (..))
 import           Bcc.Api
-import           Bcc.Api.Sophie ( ProtocolParameters, protocolParamPrices)
+import           Bcc.Api.Sophie ( ProtocolParameters)
 
 import qualified Bcc.Benchmarking.FundSet as FundSet
-import           Bcc.Benchmarking.FundSet (FundInEra(..), Validity(..), Variant(..), liftAnyEra )
+import           Bcc.Benchmarking.FundSet (AllowRecycle(..), FundInEra(..), Validity(..), Variant(..), liftAnyEra )
 import qualified Bcc.Benchmarking.GeneratorTx as GeneratorTx
                    (asyncBenchmark, waitBenchmark, walletBenchmark
                    , readSigningKey, secureGenesisFund, splitFunds, txGenerator)
@@ -51,12 +50,10 @@ import           Bcc.Benchmarking.Types as Core
                    (NumberOfInputsPerTx(..), NumberOfOutputsPerTx(..),NumberOfTxs(..), SubmissionErrorPolicy(..)
                    , TPSRate, TxAdditionalSize(..))
 import           Bcc.Benchmarking.Wallet as Wallet
-import           Bcc.Benchmarking.ListBufferedSelector
 
 import           Bcc.Benchmarking.Script.Env
 import           Bcc.Benchmarking.Script.Setters
 import           Bcc.Benchmarking.Script.Store as Store
-import           Bcc.Benchmarking.Script.Types
 
 liftCoreWithEra :: (forall era. IsSophieBasedEra era => AsType era -> ExceptT TxGenError IO x) -> ActionM (Either TxGenError x)
 liftCoreWithEra coreCall = withEra ( liftIO . runExceptT . coreCall)
@@ -275,23 +272,18 @@ waitForEra era = do
       liftIO $ threadDelay 1_000_000
       waitForEra era
 
-runWalletScriptInMode :: forall era.
+localTestWalletScript :: forall era.
      IsSophieBasedEra era
-  => SubmitMode
-  -> WalletScript era
+  => WalletScript era
   -> ActionM ()
-runWalletScriptInMode submitMode s = do
+localTestWalletScript s = do
   step <- liftIO $ runWalletScript s
   case step of
     Done -> return ()
     Error err -> throwE $ ApiError $ show err
     NextTx nextScript tx -> do
-      case submitMode of
-        LocalSocket -> void $ localSubmitTx $ txInModeBcc tx
-        NodeToNode -> throwE $ ApiError "NodeToNodeMode not supported in runWalletScriptInMode"
-        DumpToFile filePath -> dumpToFile filePath $ txInModeBcc tx
-        DiscardTX -> return ()
-      runWalletScriptInMode submitMode nextScript
+      void $ localSubmitTx $ txInModeBcc tx
+      localTestWalletScript nextScript
 
 localSubmitTx :: TxInMode BccMode -> ActionM (SubmitResult (TxValidationErrorInMode BccMode))
 localSubmitTx tx = do
@@ -312,16 +304,12 @@ makeMetadata = do
     Right m -> return m
     Left err -> throwE $ MetadataError err
 
-runBenchmark :: SubmitMode -> SpendMode -> ThreadName -> NumberOfTxs -> TPSRate -> ActionM ()
-runBenchmark submitMode spendMode threadName txCount tps
-  = case spendMode of
-      SpendOutput -> withEra $ runBenchmarkInEra submitMode threadName txCount tps
-      SpendScript scriptFile executionUnits scriptData scriptRedeemer
-        -> runZerepochBenchmark submitMode scriptFile executionUnits scriptData scriptRedeemer threadName txCount tps
+runBenchmark :: ThreadName -> NumberOfTxs -> TPSRate -> ActionM ()
+runBenchmark threadName txCount tps
+  = withEra $ runBenchmarkInEra threadName txCount tps
 
-
-runBenchmarkInEra :: forall era. IsSophieBasedEra era => SubmitMode -> ThreadName -> NumberOfTxs -> TPSRate -> AsType era -> ActionM ()
-runBenchmarkInEra submitMode (ThreadName threadName) txCount tps era = do
+runBenchmarkInEra :: forall era. IsSophieBasedEra era => ThreadName -> NumberOfTxs -> TPSRate -> AsType era -> ActionM ()
+runBenchmarkInEra (ThreadName threadName) txCount tps era = do
   tracers  <- get BenchTracers
   networkId <- get NetworkId
   fundKey <- getName $ KeyName "pass-partout" -- should be walletkey
@@ -334,25 +322,12 @@ runBenchmarkInEra submitMode (ThreadName threadName) txCount tps era = do
   metadata <- makeMetadata
   connectClient <- getConnectClient
   let
-    (Quantity minValue) = entropicToQuantity $ fromIntegral numOutputs * minValuePerUTxO + fee
+    minTxValue :: Entropic
+    minTxValue = fromIntegral numOutputs * minValuePerUTxO + fee
 
-  -- this is not totally correct:
-  -- beware of rounding errors !
-    minValuePerInput = quantityToEntropic $ fromIntegral (if m==0 then d else d+1)
-      where
-        (d, m) = minValue `divMod` fromIntegral numInputs
+    fundSource :: FundSet.Target -> FundSet.FundSource
+    fundSource target = mkWalletFundSource walletRef $ FundSet.selectInputs ConfirmedBeforeReuse numInputs minTxValue PlainOldFund target
 
---    fundSource :: FundSet.Target -> FundSet.FundSource
---    fundSource target = mkWalletFundSource walletRef $ FundSet.selectInputs ConfirmedBeforeReuse numInputs minTxValue PlainOldFund target
-
-  fundSource <- liftIO (mkBufferedSource walletRef
-                   (fromIntegral (unNumberOfTxs txCount) * numInputs)
-                   minValuePerInput
-                   PlainOldFund numInputs) >>= \case
-    Right a  -> return a
-    Left err -> throwE $ WalletError err
-
-  let
     inToOut :: [Entropic] -> [Entropic]
     inToOut = FundSet.inputsToOutputsWithFee fee numOutputs
 
@@ -364,84 +339,56 @@ runBenchmarkInEra submitMode (ThreadName threadName) txCount tps era = do
     fundToStore = mkWalletFundStore walletRef
 
     walletScript :: FundSet.Target -> WalletScript era
-    walletScript = benchmarkWalletScript walletRef txGenerator txCount (const fundSource) inToOut toUTxO fundToStore
+    walletScript = benchmarkWalletScript walletRef txGenerator txCount fundSource inToOut toUTxO fundToStore
 
     coreCall :: AsType era -> ExceptT TxGenError IO AsyncBenchmarkControl
     coreCall eraProxy = GeneratorTx.walletBenchmark (btTxSubmit_ tracers) (btN2N_ tracers) connectClient
                                                threadName targets tps LogErrors eraProxy txCount walletScript
-  case submitMode of
-    NodeToNode -> do
-      ret <- liftIO $ runExceptT $ coreCall era
-      case ret of
-        Left err -> liftTxGenError err
-        Right ctl -> setName (ThreadName threadName) ctl
-    _otherwise -> runWalletScriptInMode submitMode $ walletScript $ FundSet.Target "alternate-submit-mode"
+  ret <- liftIO $ runExceptT $ coreCall era
+  case ret of
+    Left err -> liftTxGenError err
+    Right ctl -> do
+      setName (ThreadName threadName) ctl
 
-runZerepochBenchmark :: SubmitMode -> FilePath -> ExecutionUnits -> ScriptData -> ScriptRedeemer -> ThreadName -> NumberOfTxs -> TPSRate -> ActionM ()
-runZerepochBenchmark submitMode scriptFile executionUnits scriptData scriptRedeemer (ThreadName threadName) txCount tps = do
+runZerepochBenchmark :: ThreadName -> NumberOfTxs -> TPSRate -> ActionM ()
+runZerepochBenchmark (ThreadName threadName) txCount tps = do
   tracers  <- get BenchTracers
   targets  <- getUser TTargets
-  (NumberOfInputsPerTx   numInputs) <- getUser TNumberOfInputsPerTx
-  (NumberOfOutputsPerTx numOutputs) <- getUser TNumberOfOutputsPerTx
   networkId <- get NetworkId
-  minValuePerUTxO <- getUser TMinValuePerUTxO
   protocolParameters <- queryProtocolParameters
-  executionUnitPrices <- case protocolParamPrices protocolParameters of
-    Just x -> return x
-    Nothing -> throwE $ WalletError "unexpected protocolParamPrices == Nothing in runZerepochBenchmark"
   walletRef <- get GlobalWallet
   fundKey <- getName $ KeyName "pass-partout"
-  (ZerepochScript ZerepochScriptV1 script) <- liftIO $ ZerepochExample.readScript scriptFile
-  -- This does not remove the collateral from the wallet, i.e. same collateral is uses for everything.
-  -- This is fine unless a script ever fails.
+  (ZerepochScript ZerepochScriptV1 script) <- liftIO $ ZerepochExample.readScript "bench/script/sum1ToN.zerepoch"
   collateral <- liftIO ( askWalletRef walletRef (FundSet.selectCollateral . walletFunds)) >>= \case
+    -- TODO !! FIX THIS BUG !
+    -- This just selects one UTxO as colleteral, but I have to also remove it from the wallet.
+    -- Otherwise it may be spend accidentially
     Right c -> return c
     Left err -> throwE $ WalletError err
   baseFee <- getUser TFee
   _minValuePerUTxO <- getUser TMinValuePerUTxO -- TODO:Fix
   metadata <- makeMetadata
   connectClient <- getConnectClient
-
   let
-    scriptFee = quantityToEntropic $ Quantity $ ceiling f
-       where
-         f :: Rational
-         f = (executionSteps e `times` priceExecutionSteps p) + (executionMemory e `times` priceExecutionMemory p)
-         e = executionUnits
-         p = executionUnitPrices
-         times w c = fromIntegral w % 1 * c
+    fundSource :: FundSet.Target -> FundSet.FundSource
+    fundSource _target = mkWalletFundSource walletRef FundSet.selectZerepochFund
 
-    totalFee = baseFee +  fromIntegral numInputs * scriptFee
-    (Quantity minValue) = entropicToQuantity $ fromIntegral numOutputs * minValuePerUTxO + totalFee
-  -- this is not totally correct:
-  -- beware of rounding errors !
-    minValuePerInput = quantityToEntropic $ fromIntegral (if m==0 then d else d+1)
-      where
-        (d, m) = minValue `divMod` fromIntegral numInputs
-
---    fundSource :: FundSet.Target -> FundSet.FundSource
---    fundSource target = mkWalletFundSource walletRef $ FundSet.selectInputs ConfirmedBeforeReuse numInputs minTxValue PlainOldFund target
-
-  fundSource <- liftIO (mkBufferedSource walletRef
-                   (fromIntegral (unNumberOfTxs txCount) * numInputs)
-                   minValuePerInput
-                   (ZerepochScriptFund scriptFile scriptData) numInputs) >>= \case
-    Right a  -> return a
-    Left err -> throwE $ WalletError err
-
-  let
+    requiredMemory = 700000000
+    requiredSteps  = 700000000
+    totalFee = baseFee + fromIntegral requiredMemory + fromIntegral requiredSteps
+  
     inToOut :: [Entropic] -> [Entropic]
-    inToOut = FundSet.inputsToOutputsWithFee totalFee numOutputs
---    inToOut = FundSet.inputsToOutputsWithFee totalFee 1
+--    inToOut = FundSet.inputsToOutputsWithFee totalFee numOutputs
+    inToOut = FundSet.inputsToOutputsWithFee totalFee 1
 
     scriptWitness :: ScriptWitness WitCtxTxIn AurumEra
     scriptWitness = ZerepochScriptWitness
                           ZerepochScriptV1InAurum
                           ZerepochScriptV1
                           script
-                          (ScriptDatumForTxIn scriptData)
-                          scriptRedeemer
-                          executionUnits
+                          (ScriptDatumForTxIn $ ScriptDataNumber 3) -- script data
+                          (ScriptDataNumber 6) -- script redeemer
+                          (ExecutionUnits requiredSteps requiredMemory)
 
     txGenerator = genTxZerepochSpend protocolParameters collateral scriptWitness (mkFee totalFee) metadata
 
@@ -451,37 +398,28 @@ runZerepochBenchmark submitMode scriptFile executionUnits scriptData scriptRedee
     toUTxO target seqNumber = Wallet.mkUTxO networkId fundKey (InFlight target seqNumber)
 
     walletScript :: FundSet.Target -> WalletScript AurumEra
-    walletScript = benchmarkWalletScript walletRef txGenerator txCount (const fundSource) inToOut toUTxO fundToStore
+    walletScript = benchmarkWalletScript walletRef txGenerator txCount fundSource inToOut toUTxO fundToStore
 
-  case submitMode of
-    NodeToNode -> do
-      ret <- liftIO $ runExceptT $ GeneratorTx.walletBenchmark (btTxSubmit_ tracers) (btN2N_ tracers) connectClient
-                               threadName targets tps LogErrors AsAurumEra txCount walletScript
-      case ret of
-        Left err -> liftTxGenError err
-        Right ctl -> setName (ThreadName threadName) ctl
-    _otherwise -> runWalletScriptInMode submitMode $ walletScript $ FundSet.Target "alternate-submit-mode"
+--  TODO: this is useful for debugging: add to JSON scripting language
+--  localTestWalletScript $ walletScript $ FundSet.Target "local"
 
-dumpToFile :: FilePath -> TxInMode BccMode -> ActionM ()
-dumpToFile filePath tx = liftIO $ dumpToFileIO filePath tx
-
-dumpToFileIO :: FilePath -> TxInMode BccMode -> IO ()
-dumpToFileIO filePath tx = appendFile filePath ('\n' : show tx)
+  ret <- liftIO $ runExceptT $
+           GeneratorTx.walletBenchmark (btTxSubmit_ tracers) (btN2N_ tracers) connectClient
+                                       threadName targets tps LogErrors AsAurumEra txCount walletScript
+  case ret of
+    Left err -> liftTxGenError err
+    Right ctl -> do
+      setName (ThreadName threadName) ctl
 
 -- Todo: make it possible to import several funds
 -- (Split init and import)
 importGenesisFund
-   :: SubmitMode
-   -> KeyName
+   :: KeyName
    -> KeyName
    -> ActionM ()
-importGenesisFund submitMode genesisKeyName destKey = do
+importGenesisFund genesisKeyName destKey= do
   tracer <- btTxSubmit_ <$> get BenchTracers
-  localSubmit <- case submitMode of
-    LocalSocket -> getLocalSubmitTx
-    NodeToNode -> throwE $ WalletError "NodeToNode mode not supported in importGenesisFund"
-    DumpToFile filePath -> return $ \tx -> dumpToFileIO filePath tx >> return SubmitSuccess
-    DiscardTX -> return $ \_ -> return SubmitSuccess
+  localSubmit <- getLocalSubmitTx
   networkId <- get NetworkId
   genesis  <- get Genesis
   fee      <- getUser TFee
@@ -513,91 +451,69 @@ initGlobalWallet networkId key ((txIn, outVal), skey) = do
   , _fundVariant = PlainOldFund
   }
 
-createChange :: SubmitMode -> PayMode -> Entropic -> Int -> ActionM ()
-createChange submitMode payMode value count = case payMode of
-  PayToAddr -> withEra $ createChangeInEra submitMode PlainOldFund value count
-  -- Problem here: PayToCollateral will create an output marked as collateral
-  -- and also return any change to a collateral, which makes the returned change unusable.
-  PayToCollateral -> withEra $ createChangeInEra submitMode CollateralFund value count
-  PayToScript scriptFile scriptData -> createChangeScriptFunds submitMode scriptFile scriptData value count
-
-createChangeScriptFunds :: SubmitMode -> FilePath -> ScriptData -> Entropic -> Int -> ActionM ()
-createChangeScriptFunds submitMode scriptFile scriptData value count = do
+localCreateScriptFunds :: Entropic -> Int -> ActionM ()
+localCreateScriptFunds value count = do
   walletRef <- get GlobalWallet
   networkId <- get NetworkId
   fundKey <- getName $ KeyName "pass-partout"
   fee <- getUser TFee  
-  script <- liftIO $ ZerepochExample.readScript scriptFile --TODO: this should throw a file-not-found-error !
+  let scriptData = ZerepochExample.toScriptHash "e88bd757ad5b9bedf372d8d3f0cf6c962a469db61a265f6418e1ffed86da29ec"
+  script <- liftIO $ ZerepochExample.readScript "bench/script/sum1ToN.zerepoch"
   let
-    createCoins fundSource coins = do
+    createCoins coins = do
       let
---        selector :: FundSet.FundSource
---        selector = mkWalletFundSource walletRef $ FundSet.selectMinValue $ sum coins + fee
+        selector :: FundSet.FundSource
+        selector = mkWalletFundSource walletRef $ FundSet.selectMinValue $ sum coins + fee
         inOut :: [Entropic] -> [Entropic]
         inOut = Wallet.includeChange fee coins
-        toUTxO = ZerepochExample.mkUtxoScript networkId fundKey (scriptFile, script, scriptData) Confirmed
+        toUTxO = ZerepochExample.mkUtxoScript networkId fundKey (script,scriptData) Confirmed
         fundToStore = mkWalletFundStore walletRef
 
-      tx <- liftIO $ sourceToStoreTransaction (genTx (mkFee fee) TxMetadataNone) fundSource inOut toUTxO fundToStore
+      tx <- liftIO $ sourceToStoreTransaction (genTx (mkFee fee) TxMetadataNone) selector inOut toUTxO fundToStore
       return $ fmap txInModeBcc tx
-  createChangeGeneric submitMode createCoins value count
+  createChangeGeneric createCoins value count
 
-createChangeInEra :: forall era. IsSophieBasedEra era => SubmitMode -> Variant -> Entropic -> Int -> AsType era -> ActionM ()
-createChangeInEra submitMode variant value count _proxy = do
+createChange :: Entropic -> Int -> ActionM ()
+createChange value count = withEra $ createChangeInEra value count
+
+createChangeInEra :: forall era. IsSophieBasedEra era => Entropic -> Int -> AsType era -> ActionM ()
+createChangeInEra value count _proxy = do
   networkId <- get NetworkId
+  fundKey <- getName $ KeyName "pass-partout"
   fee <- getUser TFee
   walletRef <- get GlobalWallet
-  fundKey <- getName $ KeyName "pass-partout"
   let
-    createCoins :: FundSet.FundSource -> [Entropic] -> ActionM (Either String (TxInMode BccMode))
-    createCoins fundSource coins = do
+    createCoins :: [Entropic] -> ActionM (Either String (TxInMode BccMode))
+    createCoins coins = do
       let
---        selector :: FundSet.FundSource
---        selector = mkWalletFundSource walletRef $ FundSet.selectMinValue $ sum coins + fee
+        selector :: FundSet.FundSource
+        selector = mkWalletFundSource walletRef $ FundSet.selectMinValue $ sum coins + fee
         inOut :: [Entropic] -> [Entropic]
         inOut = Wallet.includeChange fee coins
-        toUTxO = Wallet.mkUTxOVariant variant networkId fundKey Confirmed
+        toUTxO = Wallet.mkUTxO networkId fundKey Confirmed
         fundToStore = mkWalletFundStore walletRef
 
-      (tx :: Either String (Tx era)) <- liftIO $ sourceToStoreTransaction (genTx (mkFee fee) TxMetadataNone) fundSource inOut toUTxO fundToStore
+      (tx :: Either String (Tx era)) <- liftIO $ sourceToStoreTransaction (genTx (mkFee fee) TxMetadataNone) selector inOut toUTxO fundToStore
       return $ fmap txInModeBcc tx
-  createChangeGeneric submitMode createCoins value count
+  createChangeGeneric createCoins value count
 
-createChangeGeneric ::
-     SubmitMode
-  ->(FundSet.FundSource -> [Entropic] -> ActionM (Either String (TxInMode BccMode)))
-  -> Entropic
-  -> Int
-  -> ActionM ()
-createChangeGeneric submitMode createCoins value count = do
+createChangeGeneric :: ([Entropic] -> ActionM (Either String (TxInMode BccMode))) -> Entropic -> Int -> ActionM ()
+createChangeGeneric createCoins value count = do
   submitTracer <- btTxSubmit_ <$> get BenchTracers
-  fee <- getUser TFee
-  walletRef <- get GlobalWallet
   let
     coinsList = replicate count value
     maxTxSize = 30
     chunks = chunkList maxTxSize coinsList
-    txCount = length chunks
-    txValue = fromIntegral (min maxTxSize count) * value + fee
     msg = mconcat [ "createChangeGeneric: outputs: ", show count
                   , " value: ", show value
-                  , " number of txs: ", show txCount
+                  , " number of txs: ", show $ length chunks
                   ]
   liftIO $ traceWith submitTracer $ TraceBenchTxSubDebug msg
-  fundSource <- liftIO (mkBufferedSource walletRef txCount txValue PlainOldFund 1) >>= \case
-    Right a  -> return a
-    Left err -> throwE $ WalletError err
-
   forM_ chunks $ \coins -> do
-    gen <- createCoins fundSource coins
+    gen <- createCoins coins
     case gen of
       Left err -> throwE $ WalletError err
-      Right tx -> case submitMode of
-        LocalSocket -> void $ localSubmitTx tx
-        NodeToNode -> throwE $ WalletError "NodeToNode mode not supported in createChangeGeneric"
-        DumpToFile filePath -> dumpToFile filePath tx
-        DiscardTX -> return ()
-
+      Right tx -> void $ localSubmitTx tx
   liftIO $ traceWith submitTracer $ TraceBenchTxSubDebug "createChangeGeneric: splitting done"
  where
   chunkList :: Int -> [a] -> [[a]]
@@ -609,6 +525,21 @@ This is for dirty hacking and testing and quick-fixes.
 Its a function that can be called from the JSON scripts
 and for which the JSON encoding is "reserved".
 -}
+{-
 reserved :: [String] -> ActionM ()
 reserved _ = do
   throwE $ UserError "no dirty hack is implemented"
+
+-}
+reserved :: [String] -> ActionM ()
+reserved _ = do
+  -- create some regular change first
+  -- genesis holds  100000000000000
+  createChange            800000000000 100
+  createChange              1492000000 1 -- magic value to tag collateral UTxO
+   -- max-tx-size 30 => ca 66 transcaction to create 2000 outputs
+  localCreateScriptFunds   20000000000 2000
+  delay 60
+  runZerepochBenchmark (ThreadName "zerepochBenchmark") 1000 10
+  waitBenchmark (ThreadName "zerepochBenchmark")
+  return ()

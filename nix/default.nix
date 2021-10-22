@@ -15,35 +15,35 @@ let
     };
   in {
     "haskell.nix" = compat flakeLock.haskellNix;
-    "iohk-nix" = compat flakeLock.iohkNix;
+    "tbco-nix" = compat flakeLock.tbcoNix;
   };
   sources = flakeSources // sourcesOverride;
   haskellNix = import sources."haskell.nix" { inherit system sourcesOverride; };
   # IMPORTANT: report any change to nixpkgs channel in flake.nix:
   nixpkgs = haskellNix.sources.nixpkgs-2105;
-  iohkNix = import sources.iohk-nix { inherit system; };
+  tbcoNix = import sources.tbco-nix { inherit system; };
   # for inclusion in pkgs:
   overlays =
-    # Haskell.nix (https://github.com/the-blockchain-company/haskell.nix)
+    # Haskell.nix (https://github.com/The-Blockchain-Company/haskell.nix)
     haskellNix.nixpkgsArgs.overlays
     # haskell-nix.haskellLib.extra: some useful extra utility functions for haskell.nix
-    ++ iohkNix.overlays.haskell-nix-extra
-    ++ iohkNix.overlays.crypto
-    # iohkNix: nix utilities:
-    ++ iohkNix.overlays.iohkNix
-    ++ iohkNix.overlays.utils
+    ++ tbcoNix.overlays.haskell-nix-extra
+    ++ tbcoNix.overlays.crypto
+    # tbcoNix: nix utilities:
+    ++ tbcoNix.overlays.tbcoNix
+    ++ tbcoNix.overlays.utils
     # our own overlays:
     ++ [
       (pkgs: _: {
         gitrev = if gitrev == null
-          then iohkNix.commitIdFromGitRepoOrZero ../.git
+          then tbcoNix.commitIdFromGitRepoOrZero ../.git
           else gitrev;
         customConfig = pkgs.lib.recursiveUpdate
           (import ./custom-config.nix pkgs.customConfig)
           customConfig;
-        inherit (pkgs.iohkNix) bccLib;
-        # commonLib: mix pkgs.lib with iohk-nix utils and our own:
-        commonLib = with pkgs; lib // bccLib // iohk-nix.lib
+        inherit (pkgs.tbcoNix) bccLib;
+        # commonLib: mix pkgs.lib with tbco-nix utils and our own:
+        commonLib = with pkgs; lib // bccLib // tbco-nix.lib
           // import ./util.nix { inherit haskell-nix; }
           // import ./svclib.nix { inherit pkgs; }
           # also expose our sources, nixpkgs and overlays

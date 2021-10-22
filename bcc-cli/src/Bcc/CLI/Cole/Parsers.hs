@@ -54,8 +54,8 @@ import           Bcc.Chain.Update (ApplicationName (..), InstallerHash (..), Num
                    ProtocolVersion (..), SoftforkRule (..), SoftwareVersion (..), SystemTag (..),
                    checkApplicationName, checkSystemTag)
 
-import           Bcc.Api hiding (GenesisParameters, UpdateProposal)
-import           Bcc.Api.Cole (Address (..), ColeProtocolParametersUpdate (..),
+import           Bcc.Api hiding (UpdateProposal, GenesisParameters)
+import           Bcc.Api.Cole (Address (..), ColeProtocolParametersUpdate (..), Entropic (..),
                    toColeEntropic)
 
 import           Bcc.CLI.Cole.Commands
@@ -284,12 +284,12 @@ parseTxIdAtto = (<?> "Transaction ID (hexadecimal)") $ do
 parseTxIxAtto :: Atto.Parser TxIx
 parseTxIxAtto = toEnum <$> Atto.decimal
 
-parseTxOut :: Parser (TxOut CtxTx ColeEra)
+parseTxOut :: Parser (TxOut ColeEra)
 parseTxOut =
   option
     ( (\(addr, entropic) -> TxOut (pAddressInEra addr)
                                   (pEntropicTxOut entropic)
-                                  TxOutDatumNone)
+                                  TxOutDatumHashNone)
       <$> auto
     )
     $ long "txout"
@@ -306,7 +306,7 @@ parseTxOut =
   pEntropicTxOut l =
     if l > (maxBound :: Word64)
     then panic $ show l <> " entropic exceeds the Word64 upper bound"
-    else TxOutDafiOnly DafiOnlyInColeEra . Entropic $ toInteger l
+    else TxOutBccOnly BccOnlyInColeEra . Entropic $ toInteger l
 
 readerFromAttoParser :: Atto.Parser a -> Opt.ReadM a
 readerFromAttoParser p =
@@ -508,8 +508,7 @@ parseMpcThd =
 parseProtocolVersion :: Parser ProtocolVersion
 parseProtocolVersion =
   ProtocolVersion <$> (parseWord "protocol-version-major" "Protocol verson major." "WORD16" :: Parser Word16)
-                  <*> (parseWord "protocol-version-minor" "Protocol verson minor." "WORD16" :: Parser Word16)
-                  <*> (parseWord "protocol-version-alt" "Protocol verson alt." "WORD8" :: Parser Word8)
+                  <*> (parseWord "protocol-version-minor" "Protocol verson seal." "WORD16" :: Parser Word16)
 
 parseHeavyDelThd :: Parser Cole.EntropicPortion
 parseHeavyDelThd =

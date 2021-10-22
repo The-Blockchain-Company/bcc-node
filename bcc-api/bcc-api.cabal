@@ -1,10 +1,10 @@
 cabal-version: 3.0
 
 name:                   bcc-api
-version:                1.30.0
+version:                1.29.0
 description:            The bcc api
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE
@@ -93,7 +93,6 @@ library
                         Bcc.Api.TxSubmit.Types
                         Bcc.Api.Utils
                         Bcc.Api.Value
-                        Bcc.Api.ValueParser
 
   build-depends:        aeson             >= 1.5.6.0
                       , aeson-pretty      >= 0.8.5
@@ -132,11 +131,10 @@ library
                       , shardagnostic-consensus-sophie
                       , shardagnostic-network
                       , shardagnostic-network-framework
-                      , parsec
                       , zerepoch-ledger-api
                       , prettyprinter
                       , scientific
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
                       , small-steps
                       , stm
                       , strict-containers
@@ -162,6 +160,7 @@ library gen
                         Gen.Bcc.Crypto.Seed
                         Gen.Hedgehog.Roundtrip.Bech32
                         Gen.Hedgehog.Roundtrip.CBOR
+                        Gen.Tasty.Hedgehog.Group
 
   build-depends:        aeson             >= 1.5.6.0
                       , base16-bytestring
@@ -177,7 +176,9 @@ library gen
                       , containers
                       , hedgehog
                       , zerepoch-ledger-api
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
+                      , tasty
+                      , tasty-hedgehog
                       , text
 
 test-suite bcc-api-test
@@ -204,12 +205,10 @@ test-suite bcc-api-test
                       , shardagnostic-consensus
                       , shardagnostic-consensus-sophie
                       , QuickCheck
-                      , bcc-ledger-sophie
-                      , bcc-ledger-sophie-test
+                      , sophie-spec-ledger
+                      , sophie-spec-ledger-test
                       , tasty
-                      , tasty-hedgehog
                       , tasty-quickcheck
-                      , tasty-th
                       , time
 
   other-modules:        Test.Bcc.Api.Crypto
@@ -218,7 +217,6 @@ test-suite bcc-api-test
                         Test.Bcc.Api.KeysCole
                         Test.Bcc.Api.Ledger
                         Test.Bcc.Api.Metadata
-                        Test.Bcc.Api.Typed.Address
                         Test.Bcc.Api.Typed.Bech32
                         Test.Bcc.Api.Typed.CBOR
                         Test.Bcc.Api.Typed.Envelope

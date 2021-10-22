@@ -104,9 +104,7 @@ golden_sophieGenesisCreate = propertyOnce $ do
     actualStartTime === fmtStartTime
     actualDelegateCount === delegateCount
     actualDelegateCount === utxoCount
-    actualTotalSupply === supply - 1000000  -- Check that the sum of the initial fund amounts matches the total supply
-                                            -- We don't use the entire supply so there is dafi in the treasury. This is
-                                            -- required for stake pool rewards.
+    actualTotalSupply === supply -- Check that the sum of the initial fund amounts matches the total supply
 
     -- Check uniqueness and count of hash keys
     S.size (S.fromList actualHashKeys) === length actualHashKeys -- This isn't strictly necessary because we use aeson which guarantees uniqueness of keys
@@ -176,9 +174,8 @@ golden_sophieGenesisCreate = propertyOnce $ do
     actualStartTime === fmtStartTime
     actualDelegateCount === delegateCount
     actualDelegateCount === utxoCount
-    actualTotalSupply === supply - 1000000  -- Check that the sum of the initial fund amounts matches the total supply
-                                            -- We don't use the entire supply so there is dafi in the treasury. This is
-                                            -- required for stake pool rewards.
+    actualTotalSupply === supply -- Check that the sum of the initial fund amounts matches the total supply
+
     -- Check uniqueness and count of hash keys
     S.size (S.fromList actualHashKeys) === length actualHashKeys -- This isn't strictly necessary because we use aeson which guarantees uniqueness of keys
     S.size (S.fromList actualHashKeys) === delegateCount

@@ -56,7 +56,7 @@ This validates that JSON fits the required schema, if it does, you will get the 
 
 ### Register your relay nodes on-chain
 
-The operator should register their relay nodes on-chain (including them into the pool’s registration certificate) to ensure that other peers on the network have an ability to connect to them. Registered relay nodes are continuously updated and added to a JSON dataset. IOG offers this [list of all registered relays categorized by geographical location](https://explorer.bcc-mainnet.iohk.io/relays/topology.json) for SPOs to consider for connection purposes. It is recommended that SPOs generate a configuration that uses 20 other SPOs as peers. The list allows selecting peers that are both nearby and far away so that there is strong inter-region connectivity.
+The operator should register their relay nodes on-chain (including them into the pool’s registration certificate) to ensure that other peers on the network have an ability to connect to them. Registered relay nodes are continuously updated and added to a JSON dataset. IOG offers this [list of all registered relays categorized by geographical location](https://explorer.bcc-mainnet.tbco.io/relays/topology.json) for SPOs to consider for connection purposes. It is recommended that SPOs generate a configuration that uses 20 other SPOs as peers. The list allows selecting peers that are both nearby and far away so that there is strong inter-region connectivity.
 
 To register your relay nodes during the creation of the pool registration certificate, specify their IP addresses and/or domain name using: 
 

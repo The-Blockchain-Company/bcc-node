@@ -235,7 +235,7 @@ hprop_zerepoch = H.integration . H.runFinallies . H.workspace "chairman" $ \temp
 
   H.threadDelay 5000000
 
-  -- Querying UTxO at $targetaddress. If there is DAFI at the address the Zerepoch script successfully executed!
+  -- Querying UTxO at $targetaddress. If there is BCC at the address the Zerepoch script successfully executed!
 
   result <- T.pack <$> H.execCli' execConfig
     [ "query", "utxo"
@@ -243,4 +243,4 @@ hprop_zerepoch = H.integration . H.runFinallies . H.workspace "chairman" $ \temp
     , "--testnet-magic", show @Int testnetMagic
     ]
 
-  L.filter (not . T.null) (T.splitOn " " (T.lines result !! 2)) !! 2 === "100000000"
+  L.filter (not . T.null) (T.splitOn " " (T.lines result !! 2)) !! 2 === "111111111"

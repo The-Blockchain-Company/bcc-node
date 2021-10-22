@@ -45,7 +45,7 @@ import           Bcc.Api (NetworkId(..), LocalNodeConnectInfo(..), ConsensusMode
                              , submitTxToNodeLocal)
 import           Bcc.Api.Protocol.Types (BlockType(..), ProtocolInfoArgs(..), protocolInfo)
 
-import           Bcc.Ledger.Sophie.Genesis (SophieGenesis)
+import           Sophie.Spec.Ledger.Genesis (SophieGenesis)
 
 type BccBlock = Consensus.BccBlock StandardCrypto
 

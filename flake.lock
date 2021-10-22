@@ -55,13 +55,13 @@
       "locked": {
         "lastModified": 1608537748,
         "narHash": "sha256-PulY1GfiMgKVnBci3ex4ptk2UNYMXqGjJOxcPy2KYT4=",
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "bcc-shell",
         "rev": "9392c75087cb9a3d453998f4230930dea3a95725",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "bcc-shell",
         "type": "github"
       }
@@ -70,13 +70,13 @@
       "locked": {
         "lastModified": 1630400035,
         "narHash": "sha256-MWaVOCzuFwp09wZIW9iHq5wWen5C69I940N1swZLEQ0=",
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "empty-flake",
         "rev": "2040a05b67bf9a669ce17eca56beb14b4206a99a",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "empty-flake",
         "type": "github"
       }
@@ -96,19 +96,19 @@
         "type": "github"
       }
     },
-    "ghc-8.6.5-iohk": {
+    "ghc-8.6.5-tbco": {
       "flake": false,
       "locked": {
         "lastModified": 1600920045,
         "narHash": "sha256-DO6kxJz248djebZLpSzTGD6s8WRpNI9BTwUeOf5RwY8=",
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "ghc",
         "rev": "95713a6ecce4551240da7c96b6176f980af75cae",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
-        "ref": "release/8.6.5-iohk",
+        "owner": "The-Blockchain-Company",
+        "ref": "release/8.6.5-tbco",
         "repo": "ghc",
         "type": "github"
       }
@@ -116,15 +116,15 @@
     "hackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1631668346,
-        "narHash": "sha256-4dWzl+HoFlXNhaqw4snC3ELBU+6IVBUihuVz41JZi4Y=",
-        "owner": "the-blockchain-company",
+        "lastModified": 1629421936,
+        "narHash": "sha256-DoLWRyyaApMXxYoedIgW62ngNOuNTYTOGYrXU2i2Mfo=",
+        "owner": "The-Blockchain-Company",
         "repo": "hackage.nix",
-        "rev": "7eb138fdad1ce0a3fba0697d3eba819b185a83d6",
+        "rev": "3a54edfb3c87f3d777c74e46f3eb503ff9acc2c2",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "hackage.nix",
         "type": "github"
       }
@@ -136,7 +136,7 @@
         "cabal-34": "cabal-34",
         "bcc-shell": "bcc-shell",
         "flake-utils": "flake-utils",
-        "ghc-8.6.5-iohk": "ghc-8.6.5-iohk",
+        "ghc-8.6.5-tbco": "ghc-8.6.5-tbco",
         "hackage": "hackage",
         "hpc-coveralls": "hpc-coveralls",
         "nix-tools": "nix-tools",
@@ -151,15 +151,15 @@
         "stackage": "stackage"
       },
       "locked": {
-        "lastModified": 1631703614,
-        "narHash": "sha256-XYC0M96V9oQTGq1TSIQTVwkA+SrUqE4o6kUZo4iO8Z4=",
-        "owner": "the-blockchain-company",
+        "lastModified": 1629422110,
+        "narHash": "sha256-ysX3f3F2BnauoB7ob4/WZnIFV3+yBvVzJM+rpsie4Uk=",
+        "owner": "The-Blockchain-Company",
         "repo": "haskell.nix",
-        "rev": "19052d83fda811dd39216e3fc197c980abd037fd",
+        "rev": "8407c0fcdb7591d1a323f5ca39abc607f226d0dc",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "haskell.nix",
         "type": "github"
       }
@@ -180,23 +180,23 @@
         "type": "github"
       }
     },
-    "iohkNix": {
+    "tbcoNix": {
       "inputs": {
         "nixpkgs": [
           "nixpkgs"
         ]
       },
       "locked": {
-        "lastModified": 1631778944,
-        "narHash": "sha256-N5eCcUYtZ5kUOl/JJGjx6ZzhA3uIn1itDRTiRV+3jLw=",
-        "owner": "the-blockchain-company",
-        "repo": "iohk-nix",
-        "rev": "db2c75a09c696271194bb3ef25ec8e9839b594b7",
+        "lastModified": 1629474248,
+        "narHash": "sha256-qKlcKdm0Pvpqt3jtWJPVL7CWYk92vzY2dmude61dTow=",
+        "owner": "The-Blockchain-Company",
+        "repo": "tbco-nix",
+        "rev": "266ca46a8d1cb4286b9699b4fd435066e88440ac",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
-        "repo": "iohk-nix",
+        "owner": "The-Blockchain-Company",
+        "repo": "tbco-nix",
         "type": "github"
       }
     },
@@ -205,13 +205,13 @@
       "locked": {
         "lastModified": 1626997434,
         "narHash": "sha256-1judQmP298ao6cGUNxcGhcAXHOnA9qSLvWk/ZtoUL7w=",
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "nix-tools",
         "rev": "c8c5e6a6fbb12a73598d1a434984a36e880ce3cf",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "nix-tools",
         "type": "github"
       }
@@ -250,11 +250,11 @@
     },
     "nixpkgs-2105": {
       "locked": {
-        "lastModified": 1630481079,
-        "narHash": "sha256-leWXLchbAbqOlLT6tju631G40SzQWPqaAXQG3zH1Imw=",
+        "lastModified": 1624291665,
+        "narHash": "sha256-kNkaoa3dai9WOi7fsPklCCWZ8hRAkXx0ZUhpYKShyUk=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "110a2c9ebbf5d4a94486854f18a37a938cfacbbb",
+        "rev": "3c6f3f84af60a8ed5b8a79cf3026b7630fcdefb8",
         "type": "github"
       },
       "original": {
@@ -283,16 +283,16 @@
     "old-ghc-nix": {
       "flake": false,
       "locked": {
-        "lastModified": 1631092763,
-        "narHash": "sha256-sIKgO+z7tj4lw3u6oBZxqIhDrzSkvpHtv0Kki+lh9Fg=",
+        "lastModified": 1621819714,
+        "narHash": "sha256-EJCnYQSWk7FRLwS0lZgTWIiQ6pcvDX1VuD6LGD4Uwzs=",
         "owner": "angerman",
         "repo": "old-ghc-nix",
-        "rev": "af48a7a7353e418119b6dfe3cd1463a657f342b8",
+        "rev": "f089a6f090cdb35fcf95f865fc6a31ba6b3ac4eb",
         "type": "github"
       },
       "original": {
         "owner": "angerman",
-        "ref": "master",
+        "ref": "master2",
         "repo": "old-ghc-nix",
         "type": "github"
       }
@@ -301,7 +301,7 @@
       "inputs": {
         "customConfig": "customConfig",
         "haskellNix": "haskellNix",
-        "iohkNix": "iohkNix",
+        "tbcoNix": "tbcoNix",
         "nixpkgs": [
           "haskellNix",
           "nixpkgs-2105"
@@ -312,15 +312,15 @@
     "stackage": {
       "flake": false,
       "locked": {
-        "lastModified": 1631495632,
-        "narHash": "sha256-jnkmC3PqnRpM4y74b4ZxgD+MTpz3ovxoU99TBCNRDP0=",
-        "owner": "the-blockchain-company",
+        "lastModified": 1629422053,
+        "narHash": "sha256-gMFLPUTUz8+MUnUz75ghPvbFjt/haYopNpl/m5eORec=",
+        "owner": "The-Blockchain-Company",
         "repo": "stackage.nix",
-        "rev": "3f43e2e72e0853e911497277ec094933892718a9",
+        "rev": "5e45f399001eb36bdc5a0a8e747221bb9506541c",
         "type": "github"
       },
       "original": {
-        "owner": "the-blockchain-company",
+        "owner": "The-Blockchain-Company",
         "repo": "stackage.nix",
         "type": "github"
       }

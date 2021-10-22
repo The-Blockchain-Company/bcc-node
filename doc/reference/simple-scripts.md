@@ -375,12 +375,12 @@ Below is an example that shows how to use a script. This is a step-by-step
 process involving:
 
 + the creation of a script address
-+ sending dafi to that address
-+ gathering required witnesses in order to spend dafi from the script address.
++ sending bcc to that address
++ gathering required witnesses in order to spend bcc from the script address.
 
 The example is based on using an `all` script.
 
-#### Sending dafi to a script address
+#### Sending bcc to a script address
 
 #### Step 1 - create a script
 
@@ -428,7 +428,7 @@ accidentally confused with each other.
 
 #### Step 3 - construct and submit a transaction (tx) to the script address
 
-To construct and submit a tx to send dafi to the script address, construct the
+To construct and submit a tx to send bcc to the script address, construct the
 transaction body:
 
 ```bash
@@ -464,7 +464,7 @@ bcc-cli transaction assemble
 After submitting the above tx, the inputs associated with the script address
 will be "guarded" by the script.
 
-### Sending dafi from a script address
+### Sending bcc from a script address
 
 #### Step 1 - construct the tx body
 

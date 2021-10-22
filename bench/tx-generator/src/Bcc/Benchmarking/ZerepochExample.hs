@@ -3,32 +3,32 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Bcc.Benchmarking.ZerepochExample
 where
-import           Prelude
+import Prelude
 
-import           Control.Monad.Trans.Except
 import qualified Data.ByteString.Char8 as BSC
+import Control.Monad.Trans.Except
 
-import           Bcc.CLI.Sophie.Script (readFileScriptInAnyLang)
+import Bcc.CLI.Sophie.Script (readFileScriptInAnyLang)
 
-import           Bcc.Api
-import           Bcc.Api.Sophie (ProtocolParameters)
+import Bcc.Api
+import Bcc.Api.Sophie (ProtocolParameters)
 
-import           Bcc.Benchmarking.FundSet
-import           Bcc.Benchmarking.GeneratorTx.Tx as Tx (mkTxOutValueDafiOnly)
-import           Bcc.Benchmarking.Wallet
+import Bcc.Benchmarking.FundSet
+import Bcc.Benchmarking.GeneratorTx.Tx as Tx (mkTxOutValueBccOnly)
+import Bcc.Benchmarking.Wallet
 
 mkUtxoScript ::
      NetworkId
   -> SigningKey PaymentKey
-  -> (FilePath, Script ZerepochScriptV1, ScriptData)
+  -> (Script ZerepochScriptV1, Hash ScriptData)
   -> Validity
   -> ToUTxO AurumEra
-mkUtxoScript networkId key (scriptFile, script, txOutDatum) validity values
+mkUtxoScript networkId key (script, txOutDatumHash) validity values
   = ( map mkTxOut values
     , newFunds
     )
  where
-  mkTxOut v = TxOut zerepochScriptAddr (mkTxOutValueDafiOnly v) (TxOutDatumHash ScriptDataInAurumEra $ hashScriptData txOutDatum)
+  mkTxOut v = TxOut zerepochScriptAddr (mkTxOutValueBccOnly v) (TxOutDatumHash ScriptDataInAurumEra txOutDatumHash)
 
   zerepochScriptAddr = makeSophieAddressInEra
                        networkId
@@ -40,10 +40,10 @@ mkUtxoScript networkId key (scriptFile, script, txOutDatum) validity values
   mkNewFund :: TxId -> TxIx -> Entropic -> Fund
   mkNewFund txId txIx val = Fund $ InAnyBccEra AurumEra $ FundInEra {
       _fundTxIn = TxIn txId txIx
-    , _fundVal = mkTxOutValueDafiOnly val
+    , _fundVal = mkTxOutValueBccOnly val
     , _fundSigningKey = key
     , _fundValidity = validity
-    , _fundVariant = ZerepochScriptFund scriptFile txOutDatum
+    , _fundVariant = ZerepochScriptFund
     }
 
 readScript :: FilePath -> IO (Script ZerepochScriptV1)
@@ -85,6 +85,7 @@ genTxZerepochSpend protocolParameters collateral scriptWitness fee metadata inFu
     , txValidityRange = (TxValidityNoLowerBound, TxValidityNoUpperBound ValidityNoUpperBoundInAurumEra)
     , txMetadata = metadata
     , txAuxScripts = TxAuxScriptsNone
+    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txExtraKeyWits = TxExtraKeyWitnessesNone
     , txProtocolParams = BuildTxWith $ Just protocolParameters
     , txWithdrawals = TxWithdrawalsNone

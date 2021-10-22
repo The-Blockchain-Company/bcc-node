@@ -4,18 +4,16 @@ module Test.Bcc.Api.Typed.Ord
   ( tests
   ) where
 
-import           Prelude
-
-import           Hedgehog (Property, (===))
-import qualified Hedgehog as H
-import           Test.Bcc.Api.Metadata (genTxMetadataValue)
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
 import           Bcc.Api
+import           Prelude
 import           Bcc.Api.Sophie
 import           Gen.Bcc.Api.Typed
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover, (===))
+import           Test.Bcc.Api.Metadata (genTxMetadataValue)
+import           Test.Tasty (TestTree)
+
+import qualified Hedgehog as H
 
 {- HLINT ignore "Use camelCase" -}
 
@@ -59,4 +57,5 @@ prop_ord_distributive_ScriptData =
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover
+

@@ -13,17 +13,15 @@ module Test.Bcc.Api.Typed.JSON
   ) where
 
 import           Bcc.Prelude
-
 import           Data.Aeson
-import           Hedgehog (Property, forAll, tripping)
+import           Gen.Bcc.Api.Typed
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover, forAll, tripping)
+import           Test.Bcc.Api.Typed.Orphans ()
+import           Test.Tasty (TestTree)
+
 import qualified Hedgehog as H
 import qualified Hedgehog.Gen as Gen
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
-import           Gen.Bcc.Api.Typed
-import           Test.Bcc.Api.Typed.Orphans ()
 
 {- HLINT ignore "Use camelCase" -}
 
@@ -40,4 +38,4 @@ prop_roundtrip_protocol_parameters_JSON = H.property $ do
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover

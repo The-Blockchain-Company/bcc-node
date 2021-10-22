@@ -1,10 +1,10 @@
 cabal-version: 3.0
 
 name:                   bcc-cli
-version:                1.30.0
+version:                1.29.0
 description:            The Bcc command-line interface.
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE
@@ -90,6 +90,8 @@ library
                         Bcc.CLI.Sophie.Run.Transaction
                         Bcc.CLI.Sophie.Script
 
+                        Bcc.CLI.Jen.ValueParser
+
                         Bcc.CLI.TopHandler
 
   other-modules:        Paths_bcc_cli
@@ -133,7 +135,7 @@ library
                       , parsec
                       , zerepoch-ledger-api
                       , prettyprinter
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
                       , small-steps
                       , split
                       , strict-containers
@@ -142,6 +144,7 @@ library
                       , transformers
                       , transformers-except
                       , utf8-string
+                      , unordered-containers
                       , vector
                       , yaml
 
@@ -165,8 +168,7 @@ test-suite bcc-cli-test
   main-is:              bcc-cli-test.hs
   type:                 exitcode-stdio-1.0
 
-  build-depends:        aeson
-                      , bech32            >= 1.1.0
+  build-depends:        bech32            >= 1.1.0
                       , bytestring
                       , base16-bytestring
                       , bcc-api
@@ -175,18 +177,13 @@ test-suite bcc-cli-test
                       , bcc-node
                       , bcc-prelude
                       , bcc-slotting
-                      , directory
                       , exceptions
-                      , filepath
                       , hedgehog
                       , hedgehog-extras
                       , parsec
                       , text
-                      , transformers
-                      , yaml
 
-  other-modules:        Test.Config.Mainnet
-                        Test.Cli.FilePermissions
+  other-modules:        Test.Cli.FilePermissions
                         Test.Cli.ITN
                         Test.Cli.MultiAssetParsing
                         Test.Cli.Pioneers.Exercise1
@@ -262,7 +259,9 @@ test-suite bcc-cli-golden
                         Test.Golden.Sophie.TextEnvelope.Certificates.StakePoolCertificates
                         Test.Golden.Sophie.TextEnvelope.Keys.ExtendedPaymentKeys
                         Test.Golden.Sophie.TextEnvelope.Keys.GenesisDelegateKeys
+                        Test.Golden.Sophie.TextEnvelope.Keys.VestedDelegateKeys
                         Test.Golden.Sophie.TextEnvelope.Keys.GenesisKeys
+                        Test.Golden.Sophie.TextEnvelope.Keys.VestedKeys
                         Test.Golden.Sophie.TextEnvelope.Keys.GenesisUTxOKeys
                         Test.Golden.Sophie.TextEnvelope.Keys.KESKeys
                         Test.Golden.Sophie.TextEnvelope.Keys.PaymentKeys

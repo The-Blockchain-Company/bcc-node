@@ -146,7 +146,7 @@ txSpendGenesisUTxOColePBFT
   -> NetworkId
   -> SomeColeSigningKey
   -> Address ColeAddr
-  -> [TxOut CtxTx ColeEra]
+  -> [TxOut ColeEra]
   -> Tx ColeEra
 txSpendGenesisUTxOColePBFT gc nId sk (ColeAddress bAddr) outs = do
     let txBodyCont =
@@ -162,6 +162,7 @@ txSpendGenesisUTxOColePBFT gc nId sk (ColeAddress bAddr) outs = do
             )
             TxMetadataNone
             TxAuxScriptsNone
+            (BuildTxWith TxExtraScriptDataNone)
             TxExtraKeyWitnessesNone
             (BuildTxWith Nothing)
             TxWithdrawalsNone
@@ -185,7 +186,7 @@ txSpendUTxOColePBFT
   :: NetworkId
   -> SomeColeSigningKey
   -> [TxIn]
-  -> [TxOut CtxTx ColeEra]
+  -> [TxOut ColeEra]
   -> Tx ColeEra
 txSpendUTxOColePBFT nId sk txIns outs = do
   let txBodyCont = TxBodyContent
@@ -201,6 +202,7 @@ txSpendUTxOColePBFT nId sk txIns outs = do
                      )
                      TxMetadataNone
                      TxAuxScriptsNone
+                     (BuildTxWith TxExtraScriptDataNone)
                      TxExtraKeyWitnessesNone
                      (BuildTxWith Nothing)
                      TxWithdrawalsNone

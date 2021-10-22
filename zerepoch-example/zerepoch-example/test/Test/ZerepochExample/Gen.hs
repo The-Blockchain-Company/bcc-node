@@ -10,15 +10,14 @@ import qualified Data.Map.Strict as Map
 
 import qualified Bcc.Ledger.Aurum.Tx as Aurum
 import qualified Bcc.Ledger.Aurum.TxInfo as Aurum
--- import           Bcc.Ledger.BaseTypes (ProtoVer)
 import           Bcc.Ledger.Crypto (StandardCrypto)
 import qualified Bcc.Ledger.Era as Ledger
 import           Bcc.ZerepochExample.ScriptContextChecker
 import           Gen.Bcc.Api.Typed
 import qualified Ledger as Zerepoch
 import qualified Zerepoch.V1.Ledger.DCert as Zerepoch
-import qualified Bcc.Ledger.Sophie.UTxO as Ledger
-import qualified Bcc.Ledger.TxIn as Ledger
+import qualified Sophie.Spec.Ledger.TxBody as Ledger
+import qualified Sophie.Spec.Ledger.UTxO as Ledger
 
 import           Hedgehog (Gen)
 import qualified Hedgehog.Gen as Gen
@@ -31,8 +30,7 @@ genZerepochTxOut = do
     TxOut <$> (sophieAddressInEra <$> genAddressSophie)
           <*> genTxOutValue AurumEra
           <*> genTxOutDatumHash AurumEra
-  Gen.just . return . Aurum.txInfoOut
-    $ toSophieTxOut SophieBasedEraAurum (toCtxUTxOTxOut aurumTxOut)
+  Gen.just $ return $ Aurum.txInfoOut $ toSophieTxOut SophieBasedEraAurum aurumTxOut
 
 genMyCustomRedeemer :: Gen MyCustomRedeemer
 genMyCustomRedeemer =
@@ -65,11 +63,11 @@ genReqSigners = do
 genLedgerUTxO
   :: (Ledger.Crypto (SophieLedgerEra era) ~ StandardCrypto)
   => SophieBasedEra era
-  -> (TxIn, TxOut CtxTx era)
+  -> (TxIn, TxOut era)
   -> Gen (Ledger.UTxO (SophieLedgerEra era))
 genLedgerUTxO sbe (txin, out) = do
   UTxO utxoMap <- genUTxO (sophieBasedToBccEra sbe)
-  return . toLedgerUTxO sbe . UTxO $ Map.insert txin (toCtxUTxOTxOut out) utxoMap
+  return . toLedgerUTxO sbe . UTxO $ Map.insert txin out  utxoMap
 
 genZerepochCert :: Gen Zerepoch.DCert
 genZerepochCert = Aurum.transDCert . toSophieCertificate <$> genCertificate

@@ -17,7 +17,7 @@ module Bcc.Benchmarking.Tracer
   , NodeToNodeSubmissionTrace(..)
   , SendRecvConnect
   , SendRecvTxSubmission2
-  , SubmissionSumjen(..)
+  , SubmissionSummary(..)
   , TraceBenchTxSubmit(..)
   , TraceLowLevelSubmit(..)
   , createTracers
@@ -136,8 +136,8 @@ data TraceBenchTxSubmit txid
   | TraceBenchTxSubRateLimit DiffTime
   -- ^ Rate limiter bit, this much delay inserted to keep within
   --   configured rate.
-  | TraceBenchTxSubSumjen SubmissionSumjen
-  -- ^ SubmissionSumjen.
+  | TraceBenchTxSubSummary SubmissionSummary
+  -- ^ SubmissionSummary.
   | TraceBenchTxSubDebug String
   | TraceBenchTxSubError Text
   deriving stock (Show)
@@ -149,9 +149,9 @@ instance Transformable Text IO (TraceBenchTxSubmit TxId) where
 instance HasSeverityAnnotation (TraceBenchTxSubmit TxId)
 instance HasPrivacyAnnotation  (TraceBenchTxSubmit TxId)
 
--- | Sumjen of a tx submission run.
-data SubmissionSumjen
-  = SubmissionSumjen
+-- | Summary of a tx submission run.
+data SubmissionSummary
+  = SubmissionSummary
       { ssThreadName    :: !String
       , ssTxSent        :: !Sent
       , ssTxUnavailable :: !Unav
@@ -161,7 +161,7 @@ data SubmissionSumjen
       , ssFailures      :: ![String]
       }
   deriving stock (Show, Generic)
-instance ToJSON SubmissionSumjen
+instance ToJSON SubmissionSummary
 
 {-------------------------------------------------------------------------------
   N2N submission trace
@@ -305,7 +305,7 @@ instance ToObject (TraceBenchTxSubmit TxId) where
       TraceBenchTxSubServCons _  -> mkObject ["kind" .= A.String "TraceBenchTxSubServCons"]
       TraceBenchTxSubIdle        -> mkObject ["kind" .= A.String "TraceBenchTxSubIdle"]
       TraceBenchTxSubRateLimit _ -> mkObject ["kind" .= A.String "TraceBenchTxSubRateLimit"]
-      TraceBenchTxSubSumjen _   -> mkObject ["kind" .= A.String "TraceBenchTxSubSumjen"]
+      TraceBenchTxSubSummary _   -> mkObject ["kind" .= A.String "TraceBenchTxSubSummary"]
       TraceBenchTxSubDebug _     -> mkObject ["kind" .= A.String "TraceBenchTxSubDebug"]
       TraceBenchTxSubError _     -> mkObject ["kind" .= A.String "TraceBenchTxSubError"]
   toObject MaximalVerbosity t =
@@ -358,9 +358,9 @@ instance ToObject (TraceBenchTxSubmit TxId) where
         mkObject [ "kind"  .= A.String "TraceBenchTxSubRateLimit"
                  , "limit" .= toJSON limit
                  ]
-      TraceBenchTxSubSumjen sumjen ->
-        mkObject [ "kind"    .= A.String "TraceBenchTxSubSumjen"
-                 , "sumjen" .= toJSON sumjen
+      TraceBenchTxSubSummary summary ->
+        mkObject [ "kind"    .= A.String "TraceBenchTxSubSummary"
+                 , "summary" .= toJSON summary
                  ]
       TraceBenchTxSubDebug s ->
         mkObject [ "kind" .= A.String "TraceBenchTxSubDebug"

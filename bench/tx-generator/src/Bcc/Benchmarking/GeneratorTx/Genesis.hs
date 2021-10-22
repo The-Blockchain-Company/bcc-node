@@ -8,17 +8,16 @@ module Bcc.Benchmarking.GeneratorTx.Genesis
 where
 
 import           Bcc.Prelude hiding (TypeError, filter)
-import qualified Data.Map.Strict as Map
 import           Prelude (error, filter)
+import qualified Data.Map.Strict as Map
 
-import           Bcc.Api
-import           Bcc.Api.Sophie (fromSophieEntropic, fromSophiePaymentCredential,
-                   fromSophieStakeReference)
 import           Control.Arrow ((***))
+import           Bcc.Api
+import           Bcc.Api.Sophie (fromSophieEntropic, fromSophieStakeReference, fromSophiePaymentCredential)
 
 import           Bcc.Benchmarking.GeneratorTx.Tx
 
-import           Bcc.Ledger.Sophie.API (Addr (..), SophieGenesis, sgInitialFunds)
+import           Sophie.Spec.Ledger.API (Addr(..), SophieGenesis, sgInitialFunds)
 import           Shardagnostic.Consensus.Sophie.Eras (StandardSophie)
 
 genesisFunds :: forall era. IsSophieBasedEra era
@@ -58,8 +57,8 @@ genesisExpenditure networkId key addr coin fee ttl = (tx, fund)
  where
   tx = mkGenesisTransaction (castKey key) 0 ttl fee [ pseudoTxIn ] [ txout ]
 
-  value = mkTxOutValueDafiOnly $ coin - fee
-  txout = TxOut addr value TxOutDatumNone
+  value = mkTxOutValueBccOnly $ coin - fee
+  txout = TxOut addr value TxOutDatumHashNone
 
   pseudoTxIn = genesisUTxOPseudoTxIn networkId
                  (verificationKeyHash $ getVerificationKey $ castKey key)

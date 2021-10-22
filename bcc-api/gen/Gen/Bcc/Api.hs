@@ -15,7 +15,7 @@ import qualified Data.Map.Strict as Map
 --TODO: why do we have this odd split? We can get rid of the old name "typed"
 import           Gen.Bcc.Api.Typed (genRational)
 
-import           Bcc.Ledger.Sophie.Metadata (Metadata (..), Metadatum (..))
+import           Sophie.Spec.Ledger.Metadata (Metadata (..), Metadatum (..))
 import qualified Bcc.Ledger.Aurum.Genesis as Aurum
 import qualified Bcc.Ledger.Aurum.Language as Aurum
 import qualified Bcc.Ledger.Aurum.Scripts as Aurum
@@ -76,8 +76,8 @@ genPrices = do
 
 genExUnits :: Gen Aurum.ExUnits
 genExUnits = do
-  exUnitsMem' <- Gen.integral (Range.linear 0 10)
-  exUnitsSteps' <- Gen.integral (Range.linear 0 10)
+  exUnitsMem' <- Gen.word64 (Range.linear 0 10)
+  exUnitsSteps' <- Gen.word64 (Range.linear 0 10)
   return Aurum.ExUnits
     { Aurum.exUnitsMem = exUnitsMem'
     , Aurum.exUnitsSteps = exUnitsSteps'

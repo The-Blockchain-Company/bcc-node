@@ -8,12 +8,10 @@ module Test.Bcc.Api.Typed.CBOR
 import           Bcc.Api
 import           Gen.Bcc.Api.Typed
 import           Gen.Hedgehog.Roundtrip.CBOR (roundtrip_CBOR)
-
-import           Hedgehog (Property)
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover)
 import           Test.Bcc.Api.Typed.Orphans ()
 import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
 
 {- HLINT ignore "Use camelCase" -}
 
@@ -167,11 +165,6 @@ prop_roundtrip_script_ZerepochScriptV1_CBOR =
   roundtrip_CBOR (AsScript AsZerepochScriptV1)
                  (genScript (ZerepochScriptLanguage ZerepochScriptV1))
 
-prop_roundtrip_script_ZerepochScriptV2_CBOR :: Property
-prop_roundtrip_script_ZerepochScriptV2_CBOR =
-  roundtrip_CBOR (AsScript AsZerepochScriptV2)
-                 (genScript (ZerepochScriptLanguage ZerepochScriptV2))
-
 prop_roundtrip_UpdateProposal_CBOR :: Property
 prop_roundtrip_UpdateProposal_CBOR =
   roundtrip_CBOR AsUpdateProposal genUpdateProposal
@@ -179,4 +172,4 @@ prop_roundtrip_UpdateProposal_CBOR =
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover

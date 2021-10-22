@@ -35,22 +35,22 @@ module Bcc.Api.ScriptData (
 import           Prelude
 
 import           Data.Bifunctor (first)
+import           Data.Maybe (fromMaybe)
+import           Data.Word
+import qualified Data.Scientific as Scientific
+import qualified Data.Char as Char
 import qualified Data.ByteString as BS
-import qualified Data.ByteString.Base16 as Base16
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy.Char8 as LBS
-import qualified Data.Char as Char
-import qualified Data.HashMap.Strict as HashMap
-import qualified Data.List as List
-import           Data.Maybe (fromMaybe)
-import qualified Data.Scientific as Scientific
+import qualified Data.ByteString.Base16 as Base16
 import           Data.String (IsString)
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as Text.Lazy
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.List as List
 import qualified Data.Vector as Vector
-import           Data.Word
 
 import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Text as Aeson.Text
@@ -59,9 +59,9 @@ import qualified Data.Attoparsec.ByteString.Char8 as Atto
 import           Control.Applicative (Alternative (..))
 
 import qualified Bcc.Crypto.Hash.Class as Crypto
-import qualified Bcc.Ledger.Aurum.Data as Aurum
 import qualified Bcc.Ledger.SafeHash as Ledger
-import           Shardagnostic.Consensus.Sophie.Eras (StandardAurum, StandardCrypto)
+import           Shardagnostic.Consensus.Sophie.Eras (StandardCrypto, StandardAurum)
+import qualified Bcc.Ledger.Aurum.Data as Aurum
 import qualified Zerepoch.V1.Ledger.Api as Zerepoch
 
 import           Bcc.Api.Eras
@@ -72,7 +72,7 @@ import           Bcc.Api.KeysSophie
 import           Bcc.Api.SerialiseJSON
 import           Bcc.Api.SerialiseRaw
 import           Bcc.Api.SerialiseUsing
-import           Bcc.Api.TxMetadata (pBytes, pSigned, parseAll)
+import           Bcc.Api.TxMetadata (parseAll, pSigned, pBytes)
 
 
 -- ----------------------------------------------------------------------------
@@ -92,6 +92,7 @@ data ScriptData = ScriptDataConstructor Integer [ScriptData]
 instance HasTypeProxy ScriptData where
     data AsType ScriptData = AsScriptData
     proxyToAsType _ = AsScriptData
+
 
 -- ----------------------------------------------------------------------------
 -- Script data hash

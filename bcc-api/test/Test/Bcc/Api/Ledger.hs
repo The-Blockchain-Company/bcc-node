@@ -7,18 +7,16 @@ module Test.Bcc.Api.Ledger
   ) where
 
 import           Bcc.Prelude
-
-import           Hedgehog (Property)
-import qualified Hedgehog as H
-import qualified Hedgehog.Extras.Aeson as H
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
 import           Bcc.Ledger.Address (deserialiseAddr, serialiseAddr)
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover)
 import           Shardagnostic.Consensus.Sophie.Eras (StandardCrypto)
 import           Test.Bcc.Api.Genesis
-import           Test.Bcc.Ledger.Sophie.Serialisation.Generators.Genesis (genAddress)
+import           Test.Sophie.Spec.Ledger.Serialisation.Generators.Genesis(genAddress)
+import           Test.Tasty (TestTree)
+
+import qualified Hedgehog as H
+import qualified Hedgehog.Extras.Aeson as H
 
 prop_golden_SophieGenesis :: Property
 prop_golden_SophieGenesis = H.goldenTestJsonValuePretty exampleSophieGenesis "test/Golden/SophieGenesis"
@@ -35,4 +33,4 @@ prop_roundtrip_Address_CBOR = H.property $ do
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover

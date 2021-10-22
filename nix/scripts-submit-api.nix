@@ -18,13 +18,11 @@ let
       ];
     };
 
-  in pkgs.writeScriptBin "bcc-submit-api-${service.network}" ''
+  in pkgs.writeScript "bcc-submit-api-${service.network}" ''
     #!${pkgs.runtimeShell}
     set -euo pipefail
     ${service.script} $@
-  '' // {
-    passthru = { inherit service; };
-  };
+  '';
 
   scripts = forEnvironments (environment: recurseIntoAttrs {
     submit-api = mkScript environment;

@@ -64,8 +64,7 @@ mkSomeConsensusProtocolCole NodeColeProtocolConfiguration {
                            npcColeApplicationName,
                            npcColeApplicationVersion,
                            npcColeSupportedProtocolVersionMajor,
-                           npcColeSupportedProtocolVersionMinor,
-                           npcColeSupportedProtocolVersionAlt
+                           npcColeSupportedProtocolVersionSeal
                          }
                          files = do
     genesisConfig <- readGenesis npcColeGenesisFile
@@ -81,8 +80,7 @@ mkSomeConsensusProtocolCole NodeColeProtocolConfiguration {
         coleProtocolVersion =
           Update.ProtocolVersion
             npcColeSupportedProtocolVersionMajor
-            npcColeSupportedProtocolVersionMinor
-            npcColeSupportedProtocolVersionAlt,
+            npcColeSupportedProtocolVersionSeal,
         coleSoftwareVersion =
           Update.SoftwareVersion
             npcColeApplicationName

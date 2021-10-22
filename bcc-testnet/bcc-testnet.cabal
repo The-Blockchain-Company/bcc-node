@@ -1,10 +1,10 @@
 cabal-version: 3.0
 
 name:                   bcc-testnet
-version:                1.30.0
+version:                1.29.0
 description:            The bcc full node
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE
@@ -101,9 +101,7 @@ test-suite bcc-testnet-tests
   type:                 exitcode-stdio-1.0
 
   build-depends:        aeson
-                      , bcc-api
                       , bcc-testnet
-                      , containers
                       , directory
                       , hedgehog
                       , hedgehog-extras
@@ -113,9 +111,7 @@ test-suite bcc-testnet-tests
                       , text
                       , unordered-containers
 
-  other-modules:        Spec.Zerepoch.Direct.ScriptContextEquality
-                        Spec.Zerepoch.Direct.ScriptContextEqualityMint
-                        Spec.Zerepoch.Direct.TxInLockingZerepoch
+  other-modules:        Spec.Zerepoch.Direct.TxInLockingZerepoch
                         Spec.Zerepoch.Script.TxInLockingZerepoch
                         Spec.Zerepoch.SubmitApi.TxInLockingZerepoch
 
@@ -123,5 +119,3 @@ test-suite bcc-testnet-tests
 
   build-tool-depends:   bcc-node:bcc-node
                       , bcc-cli:bcc-cli
-                      , bcc-submit-api:bcc-submit-api
-                      , zerepoch-example:create-script-context

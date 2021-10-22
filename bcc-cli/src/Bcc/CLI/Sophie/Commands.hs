@@ -23,6 +23,7 @@ module Bcc.CLI.Sophie.Commands
   , ColeKeyFormat (..)
   , BccAddressKeyType (..)
   , GenesisDir (..)
+  , VestedDir (..)
   , TxInCount (..)
   , TxOutCount (..)
   , TxSophieWitnessCount (..)
@@ -38,6 +39,7 @@ module Bcc.CLI.Sophie.Commands
   , InputTxFile (..)
   , VerificationKeyBase64 (..)
   , GenesisKeyFile (..)
+  , VestedKeyFile (..)
   , MetadataFile (..)
   , PoolId (..)
   , PoolMetadataFile (..)
@@ -58,7 +60,7 @@ import           Bcc.CLI.Sophie.Key (PaymentVerifier, StakeVerifier, Verificatio
                    VerificationKeyOrHashOrFile, VerificationKeyTextOrFile)
 import           Bcc.CLI.Types
 
-import           Bcc.Ledger.Sophie.TxBody (MIRPot)
+import           Sophie.Spec.Ledger.TxBody (MIRPot)
 --
 -- Sophie CLI command data types
 --
@@ -117,7 +119,7 @@ renderAddressCmd cmd =
 data StakeAddressCmd
   = StakeAddressKeyGen VerificationKeyFile SigningKeyFile
   | StakeAddressKeyHash (VerificationKeyOrFile StakeKey) (Maybe OutputFile)
-  | StakeAddressBuild StakeVerifier NetworkId (Maybe OutputFile)
+  | StakeAddressBuild (VerificationKeyOrFile StakeKey) NetworkId (Maybe OutputFile)
   | StakeRegistrationCert StakeVerifier OutputFile
   | StakeCredentialDelegationCert
       StakeVerifier
@@ -141,6 +143,7 @@ data KeyCmd
   | KeyNonExtendedKey  VerificationKeyFile VerificationKeyFile
   | KeyConvertColeKey (Maybe Text) ColeKeyType SomeKeyFile OutputFile
   | KeyConvertColeGenesisVKey VerificationKeyBase64 OutputFile
+  | KeyConvertColeVestedVKey VerificationKeyBase64 OutputFile
   | KeyConvertITNStakeKey SomeKeyFile OutputFile
   | KeyConvertITNExtendedToStakeKey SomeKeyFile OutputFile
   | KeyConvertITNBip32ToStakeKey SomeKeyFile OutputFile
@@ -154,6 +157,7 @@ renderKeyCmd cmd =
     KeyNonExtendedKey {} -> "key non-extended-key"
     KeyConvertColeKey {} -> "key convert-cole-key"
     KeyConvertColeGenesisVKey {} -> "key convert-cole-genesis-key"
+    KeyConvertColeVestedVKey {} -> "key convert-cole-vested-key"
     KeyConvertITNStakeKey {} -> "key convert-itn-key"
     KeyConvertITNExtendedToStakeKey {} -> "key convert-itn-extended-key"
     KeyConvertITNBip32ToStakeKey {} -> "key convert-itn-bip32-key"
@@ -377,6 +381,11 @@ data GovernanceCmd
       (VerificationKeyOrHashOrFile GenesisDelegateKey)
       (VerificationKeyOrHashOrFile VrfKey)
       OutputFile
+  | GovernanceVestedKeyDelegationCertificate
+      (VerificationKeyOrHashOrFile VestedKey)
+      (VerificationKeyOrHashOrFile VestedDelegateKey)
+      (VerificationKeyOrHashOrFile VrfKey)
+      OutputFile
   | GovernanceUpdateProposal OutputFile EpochNo
                              [VerificationKeyFile]
                              ProtocolParametersUpdate
@@ -386,6 +395,7 @@ renderGovernanceCmd :: GovernanceCmd -> Text
 renderGovernanceCmd cmd =
   case cmd of
     GovernanceGenesisKeyDelegationCertificate {} -> "governance create-genesis-key-delegation-certificate"
+    GovernanceVestedKeyDelegationCertificate   {} -> "governance create-vested-key-delegation-certificate"
     GovernanceMIRPayStakeAddressesCertificate {} -> "governance create-mir-certificate stake-addresses"
     GovernanceMIRTransfer _ _ TransferToTreasury -> "governance create-mir-certificate transfer-to-treasury"
     GovernanceMIRTransfer _ _ TransferToReserves -> "governance create-mir-certificate transfer-to-reserves"
@@ -404,6 +414,8 @@ data GenesisCmd
   | GenesisCreateStaked GenesisDir Word Word Word Word (Maybe SystemStart) (Maybe Entropic) Entropic NetworkId Word Word Word
   | GenesisKeyGenGenesis VerificationKeyFile SigningKeyFile
   | GenesisKeyGenDelegate VerificationKeyFile SigningKeyFile OpCertCounterFile
+  | GenesisKeyGenVested VerificationKeyFile SigningKeyFile
+  | GenesisKeyGenVestedDelegate VerificationKeyFile SigningKeyFile OpCertCounterFile
   | GenesisKeyGenUTxO VerificationKeyFile SigningKeyFile
   | GenesisCmdKeyHash VerificationKeyFile
   | GenesisVerKey VerificationKeyFile SigningKeyFile
@@ -419,6 +431,8 @@ renderGenesisCmd cmd =
     GenesisCreateStaked {} -> "genesis create-staked"
     GenesisKeyGenGenesis {} -> "genesis key-gen-genesis"
     GenesisKeyGenDelegate {} -> "genesis key-gen-delegate"
+    GenesisKeyGenVested {} -> "genesis key-gen-vested"
+    GenesisKeyGenVestedDelegate {} -> "genesis key-gen-vesteddelegate"
     GenesisKeyGenUTxO {} -> "genesis key-gen-utxo"
     GenesisCmdKeyHash {} -> "genesis key-hash"
     GenesisVerKey {} -> "genesis get-ver-key"
@@ -458,6 +472,10 @@ newtype GenesisKeyFile
   = GenesisKeyFile FilePath
   deriving Show
 
+newtype VestedKeyFile
+  = VestedKeyFile FilePath
+  deriving Show
+
 data MetadataFile = MetadataFileJSON FilePath
                   | MetadataFileCBOR FilePath
 
@@ -479,6 +497,10 @@ newtype GenesisDir
   = GenesisDir FilePath
   deriving Show
 
+newtype VestedDir
+  = VestedDir FilePath
+  deriving Show
+
 -- | Either a verification or signing key, used for conversions and other
 -- commands that make sense for both.
 --
@@ -496,6 +518,7 @@ data AddressKeyType
 data ColeKeyType
   = ColePaymentKey  ColeKeyFormat
   | ColeGenesisKey  ColeKeyFormat
+  | ColeVestedKey    ColeKeyFormat
   | ColeDelegateKey ColeKeyFormat
   deriving Show
 
@@ -558,5 +581,6 @@ data WitnessSigningData
 data ColdVerificationKeyOrFile
   = ColdStakePoolVerificationKey !(VerificationKey StakePoolKey)
   | ColdGenesisDelegateVerificationKey !(VerificationKey GenesisDelegateKey)
+  | ColdVestedDelegateVerificationKey !(VerificationKey VestedDelegateKey)
   | ColdVerificationKeyFile !VerificationKeyFile
   deriving Show

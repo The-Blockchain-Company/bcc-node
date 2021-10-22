@@ -10,8 +10,8 @@ export BASE="${BASE:-.}"
 export BCC_CLI="${BCC_CLI:-bcc-cli}"
 export BCC_NODE_SOCKET_PATH="${BCC_NODE_SOCKET_PATH:-example/node-bft1/node.sock}"
 export TESTNET_MAGIC="${TESTNET_MAGIC:-42}"
-export UTXO_VKEY="${UTXO_VKEY:-example/sophie/utxo-keys/utxo1.vkey}"
-export UTXO_SKEY="${UTXO_SKEY:-example/sophie/utxo-keys/utxo1.skey}"
+export UTXO_VKEY="${UTXO_VKEY:-example/shelley/utxo-keys/utxo1.vkey}"
+export UTXO_SKEY="${UTXO_SKEY:-example/shelley/utxo-keys/utxo1.skey}"
 export RESULT_FILE="${RESULT_FILE:-$WORK/result.out}"
 
 echo "Socket path: $BCC_NODE_SOCKET_PATH"
@@ -95,7 +95,7 @@ echo "$txinCollateral"
 
 # We need to generate a dummy redeemer in order to create a txbody from which we can generate
 # a tx and then derive the correct redeemer.
-create-script-context --out-file "$WORK/script-context.redeemer"
+create-script-context --generate
 
 correctredeemer="$WORK/script-context.redeemer"
 
@@ -128,7 +128,6 @@ $BCC_CLI transaction sign \
 
 create-script-context \
   --generate-tx "$WORK/test-aurum.tx" \
-  --out-file "$WORK/script-context.redeemer" \
   --bcc-mode \
   --testnet-magic 42 \
 
@@ -163,7 +162,7 @@ echo "Submit the tx with zerepoch script and wait 5 seconds..."
 $BCC_CLI transaction submit --tx-file $WORK/aurum.tx --testnet-magic "$TESTNET_MAGIC"
 sleep 5
 echo ""
-echo "Querying UTxO at $dummyaddress. If there is DAFI at the address the Zerepoch script successfully executed!"
+echo "Querying UTxO at $dummyaddress. If there is ADA at the address the Zerepoch script successfully executed!"
 echo ""
 $BCC_CLI query utxo --address "$dummyaddress"  --testnet-magic "$TESTNET_MAGIC" \
   | tee "$RESULT_FILE"

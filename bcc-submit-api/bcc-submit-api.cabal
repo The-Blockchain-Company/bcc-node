@@ -4,36 +4,36 @@ name:                   bcc-submit-api
 version:                3.1.2
 synopsis:               A web server that allows transactions to be POSTed to the bcc chain
 description:
-homepage:               https://github.com/the-blockchain-company/bcc-node
-bug-reports:            https://github.com/the-blockchain-company/bcc-node/issues
+homepage:               https://github.com/The-Blockchain-Company/bcc-node
+bug-reports:            https://github.com/The-Blockchain-Company/bcc-node/issues
 license:                Apache-2.0
 license-file:           LICENSE
-author:                 BCIO Engineering Team
-maintainer:             operations@iohk.io
-copyright:              (c) 2019-2021 BCIO
+author:                 TBCO Engineering Team
+maintainer:             operations@tbco.io
+copyright:              (c)2021 TBCO
 category:               Language
 build-type:             Simple
 extra-source-files:     CHANGELOG.md
 
 common base                         { build-depends: base                             >= 4.14       && < 4.15     }
 
-common bcc-api                  { build-depends: bcc-api                                                  }
-common bcc-submit-api           { build-depends: bcc-submit-api                                           }
+common bcc-api                     { build-depends: bcc-api                         >= 0.1.0.0                  }
+common bcc-submit-api              { build-depends: bcc-submit-api                  >= 0.1.0.0                  }
 
 common aeson                        { build-depends: aeson                            >= 1.5.5.1                  }
 common async                        { build-depends: async                            >= 2.2.2                    }
 common bytestring                   { build-depends: bytestring                       >= 0.10.8.2                 }
-common bcc-binary               { build-depends: bcc-binary                   >= 1.5.0                    }
-common bcc-crypto-class         { build-depends: bcc-crypto-class             >= 2.0.0                    }
-common bcc-ledger-cole         { build-depends: bcc-ledger-cole             >= 0.1.0.0                  }
+common bcc-binary                  { build-depends: bcc-binary                      >= 1.5.0                    }
+common bcc-crypto-class            { build-depends: bcc-crypto-class                >= 0.1.0.0                  }
+common bcc-ledger-cole          { build-depends: bcc-ledger-cole              >= 0.1.0.0                  }
 common formatting                   { build-depends: formatting                       >= 6.3.7                    }
 common http-media                   { build-depends: http-media                       >= 0.8.0.0                  }
-common iohk-monitoring              { build-depends: iohk-monitoring                  >= 0.1.10.1                 }
+common tbco-monitoring          { build-depends: tbco-monitoring              >= 0.1.10.1                 }
 common mtl                          { build-depends: mtl                              >= 2.2.2                    }
 common network                      { build-depends: network                          >= 3.1.2.1                  }
 common optparse-applicative-fork    { build-depends: optparse-applicative-fork        >= 0.16.1.0                 }
-common shardagnostic-consensus-bcc  { build-depends: shardagnostic-consensus-bcc      >= 0.1.0.0                  }
-common shardagnostic-network            { build-depends: shardagnostic-network                >= 0.1.0.0                  }
+common shardagnostic-consensus-bcc           { build-depends: shardagnostic-consensus-bcc               >= 0.1.0.0                  }
+common shardagnostic-network            { build-depends: shardagnostic-network                            >= 0.1.0.0                  }
 common prometheus                   { build-depends: prometheus                       >= 2.2.2                    }
 common protolude                    { build-depends: protolude                        >= 0.3.0                    }
 common servant                      { build-depends: servant                          >= 0.18.2                   }
@@ -75,7 +75,7 @@ library
                       , bcc-ledger-cole
                       , formatting
                       , http-media
-                      , iohk-monitoring
+                      , tbco-monitoring
                       , mtl
                       , network
                       , optparse-applicative-fork

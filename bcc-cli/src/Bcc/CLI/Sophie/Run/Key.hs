@@ -88,6 +88,9 @@ runKeyCmd cmd =
 
     KeyConvertColeGenesisVKey oldVk newVkf ->
       runConvertColeGenesisVerificationKey oldVk newVkf
+    
+    KeyConvertColeVestedVKey oldVk newVkf ->
+      runConvertColeVestedVerificationKey oldVk newVkf
 
     KeyConvertITNStakeKey itnKeyFile outFile ->
       runConvertITNStakeKey itnKeyFile outFile
@@ -112,7 +115,7 @@ runGetVerificationKey skf (VerificationKeyFile vkf) = do
 
 
 data SomeSigningKey
-  = AColeSigningKey           (SigningKey ColeKey)
+  = AColeSigningKey         (SigningKey ColeKey)
   | APaymentSigningKey         (SigningKey PaymentKey)
   | APaymentExtendedSigningKey (SigningKey PaymentExtendedKey)
   | AStakeSigningKey           (SigningKey StakeKey)
@@ -124,6 +127,12 @@ data SomeSigningKey
   | AGenesisDelegateExtendedSigningKey
                                (SigningKey GenesisDelegateExtendedKey)
   | AGenesisUTxOSigningKey     (SigningKey GenesisUTxOKey)
+  | AVestedSigningKey           (SigningKey VestedKey)
+  | AVestedExtendedSigningKey   (SigningKey VestedExtendedKey)
+  | AVestedDelegateSigningKey   (SigningKey VestedDelegateKey)
+  | AVestedDelegateExtendedSigningKey
+                               (SigningKey VestedDelegateExtendedKey)
+  | AVestedUTxOSigningKey       (SigningKey VestedUTxOKey)
   | AVrfSigningKey             (SigningKey VrfKey)
   | AKesSigningKey             (SigningKey KesKey)
 
@@ -132,7 +141,7 @@ withSomeSigningKey :: SomeSigningKey
                    -> a
 withSomeSigningKey ssk f =
     case ssk of
-      AColeSigningKey           sk -> f sk
+      AColeSigningKey         sk -> f sk
       APaymentSigningKey         sk -> f sk
       APaymentExtendedSigningKey sk -> f sk
       AStakeSigningKey           sk -> f sk
@@ -144,6 +153,12 @@ withSomeSigningKey ssk f =
       AGenesisDelegateExtendedSigningKey
                                  sk -> f sk
       AGenesisUTxOSigningKey     sk -> f sk
+      AVestedSigningKey           sk -> f sk
+      AVestedExtendedSigningKey   sk -> f sk
+      AVestedDelegateSigningKey   sk -> f sk
+      AVestedDelegateExtendedSigningKey
+                                 sk -> f sk
+      AVestedUTxOSigningKey       sk -> f sk
       AVrfSigningKey             sk -> f sk
       AKesSigningKey             sk -> f sk
 
@@ -177,6 +192,16 @@ readSigningKeyFile skFile =
                       AGenesisDelegateExtendedSigningKey
       , FromSomeType (AsSigningKey AsGenesisUTxOKey)
                       AGenesisUTxOSigningKey
+      , FromSomeType (AsSigningKey AsVestedKey)
+                      AVestedSigningKey
+      , FromSomeType (AsSigningKey AsVestedExtendedKey)
+                      AVestedExtendedSigningKey
+      , FromSomeType (AsSigningKey AsVestedDelegateKey)
+                      AVestedDelegateSigningKey
+      , FromSomeType (AsSigningKey AsVestedDelegateExtendedKey)
+                      AVestedDelegateExtendedSigningKey
+      , FromSomeType (AsSigningKey AsVestedUTxOKey)
+                      AVestedUTxOSigningKey
       , FromSomeType (AsSigningKey AsVrfKey)
                       AVrfSigningKey
       , FromSomeType (AsSigningKey AsKesKey)
@@ -226,6 +251,11 @@ withNonExtendedKey (AGenesisExtendedVerificationKey vk) f =
 withNonExtendedKey (AGenesisDelegateExtendedVerificationKey vk) f =
     f (castVerificationKey vk :: VerificationKey GenesisDelegateKey)
 
+withNonExtendedKey (AVestedExtendedVerificationKey vk) f =
+    f (castVerificationKey vk :: VerificationKey VestedKey)
+
+withNonExtendedKey (AVestedDelegateExtendedVerificationKey vk) f =
+    f (castVerificationKey vk :: VerificationKey VestedDelegateKey)
 
 data SomeExtendedVerificationKey
   = APaymentExtendedVerificationKey (VerificationKey PaymentExtendedKey)
@@ -233,6 +263,9 @@ data SomeExtendedVerificationKey
   | AGenesisExtendedVerificationKey (VerificationKey GenesisExtendedKey)
   | AGenesisDelegateExtendedVerificationKey
                                     (VerificationKey GenesisDelegateExtendedKey)
+  | AVestedExtendedVerificationKey   (VerificationKey VestedExtendedKey)
+  | AVestedDelegateExtendedVerificationKey
+                                    (VerificationKey VestedDelegateExtendedKey)
 
 readExtendedVerificationKeyFile
   :: VerificationKeyFile
@@ -249,6 +282,10 @@ readExtendedVerificationKeyFile (VerificationKeyFile evkfile) =
                       AGenesisExtendedVerificationKey
       , FromSomeType (AsVerificationKey AsGenesisDelegateExtendedKey)
                       AGenesisDelegateExtendedVerificationKey
+      , FromSomeType (AsVerificationKey AsVestedExtendedKey)
+                      AVestedExtendedVerificationKey
+      , FromSomeType (AsVerificationKey AsVestedDelegateExtendedKey)
+                      AVestedDelegateExtendedVerificationKey
       ]
 
 
@@ -270,6 +307,12 @@ runConvertColeKey mPwd (ColeGenesisKey format) (ASigningKeyFile skeyPathOld) =
     convert :: Cole.SigningKey -> SigningKey GenesisExtendedKey
     convert (Cole.SigningKey xsk) = GenesisExtendedSigningKey xsk
 
+runConvertColeKey mPwd (ColeVestedKey format) (ASigningKeyFile skeyPathOld) =
+    convertColeSigningKey mPwd format convert skeyPathOld
+  where
+    convert :: Cole.SigningKey -> SigningKey VestedExtendedKey
+    convert (Cole.SigningKey xsk) = VestedExtendedSigningKey xsk 
+
 runConvertColeKey mPwd (ColeDelegateKey format) (ASigningKeyFile skeyPathOld) =
     convertColeSigningKey mPwd format convert skeyPathOld
   where
@@ -290,6 +333,13 @@ runConvertColeKey _ (ColeGenesisKey NonLegacyColeKeyFormat)
     convert :: Cole.VerificationKey -> VerificationKey GenesisExtendedKey
     convert (Cole.VerificationKey xvk) = GenesisExtendedVerificationKey xvk
 
+runConvertColeKey _ (ColeVestedKey NonLegacyColeKeyFormat)
+                     (AVerificationKeyFile vkeyPathOld) =
+    convertColeVerificationKey convert vkeyPathOld
+  where
+    convert :: Cole.VerificationKey -> VerificationKey VestedExtendedKey
+    convert (Cole.VerificationKey xvk) = VestedExtendedVerificationKey xvk
+
 runConvertColeKey _ (ColeDelegateKey NonLegacyColeKeyFormat)
                      (AVerificationKeyFile vkeyPathOld) =
     convertColeVerificationKey convert vkeyPathOld
@@ -304,6 +354,10 @@ runConvertColeKey _ (ColePaymentKey  LegacyColeKeyFormat)
     const legacyVerificationKeysNotSupported
 
 runConvertColeKey _ (ColeGenesisKey  LegacyColeKeyFormat)
+                      AVerificationKeyFile{} =
+    const legacyVerificationKeysNotSupported
+
+runConvertColeKey _ (ColeVestedKey  LegacyColeKeyFormat)
                       AVerificationKeyFile{} =
     const legacyVerificationKeysNotSupported
 
@@ -397,6 +451,29 @@ runConvertColeGenesisVerificationKey (VerificationKeyBase64 b64ColeVKey)
     convert :: Cole.VerificationKey -> VerificationKey GenesisKey
     convert (Cole.VerificationKey xvk) =
       castVerificationKey (GenesisExtendedVerificationKey xvk)
+
+runConvertColeVestedVerificationKey
+  :: VerificationKeyBase64  -- ^ Input key raw old format
+  -> OutputFile             -- ^ Output file: new format
+  -> ExceptT SophieKeyCmdError IO ()
+runConvertColeVestedVerificationKey (VerificationKeyBase64 b64ColeVKey)
+                                      (OutputFile vkeyPathNew) = do
+
+    vk <- firstExceptT (SophieKeyCmdColeKeyParseError . show)
+        . hoistEither
+        . Cole.Crypto.parseFullVerificationKey
+        . Text.pack
+        $ b64ColeVKey
+
+    let vk' :: VerificationKey VestedKey
+        vk' = convert vk
+
+    firstExceptT SophieKeyCmdWriteFileError . newExceptT $
+      writeFileTextEnvelope vkeyPathNew Nothing vk'
+  where
+    convert :: Cole.VerificationKey -> VerificationKey VestedKey
+    convert (Cole.VerificationKey xvk) =
+      castVerificationKey (VestedExtendedVerificationKey xvk)
 
 
 --------------------------------------------------------------------------------

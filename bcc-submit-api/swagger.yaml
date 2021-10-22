@@ -7,7 +7,7 @@ info:
   version: 3.1.0
   license:
     name: Apache-2.0
-    url: https://github.com/the-blockchain-company/bcc-rest/blob/master/submit-api/LICENSE
+    url: https://github.com/The-Blockchain-Company/bcc-rest/blob/master/submit-api/LICENSE
   description: |
     <p align="right"><img style="position: relative; top: -10em; margin-bottom: -12em;" width="20%" src="https://bccdocs.com/img/bcc.png"></img></p>
 
@@ -19,7 +19,7 @@ paths:
   /api/submit/tx:
     post:
       operationId: postTransaction
-      sumjen: Submit Tx
+      summary: Submit Tx
       description: Submit an already serialized transaction to the network.
       parameters:
         - in: header
@@ -32,7 +32,7 @@ paths:
         - lang: "Shell"
           label: "cURL"
           source: |
-            # Assuming `data` is a raw binary serialized transaction on the file-system.
+            # Assuming `data` is a serialized transaction on the file-system.
             curl -X POST \
                 --header "Content-Type: application/cbor" \
                 --data-binary @data http://localhost:8101/api/submit/tx

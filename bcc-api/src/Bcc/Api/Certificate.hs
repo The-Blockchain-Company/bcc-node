@@ -24,6 +24,7 @@ module Bcc.Api.Certificate (
     -- * Special certificates
     makeMIRCertificate,
     makeGenesisKeyDelegationCertificate,
+    makeVestedKeyDelegationCertificate,
     MIRTarget (..),
 
     -- * Internal conversion functions
@@ -58,8 +59,8 @@ import           Bcc.Ledger.Crypto (StandardCrypto)
 import           Bcc.Ledger.BaseTypes (maybeToStrictMaybe, strictMaybeToMaybe)
 import qualified Bcc.Ledger.BaseTypes as Sophie
 import qualified Bcc.Ledger.Coin as Sophie (toDeltaCoin)
-import           Bcc.Ledger.Sophie.TxBody (MIRPot (..))
-import qualified Bcc.Ledger.Sophie.TxBody as Sophie
+import           Sophie.Spec.Ledger.TxBody (MIRPot (..))
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
 
 import           Bcc.Api.Address
 import           Bcc.Api.HasTypeProxy
@@ -92,6 +93,10 @@ data Certificate =
    | GenesisKeyDelegationCertificate (Hash GenesisKey)
                                      (Hash GenesisDelegateKey)
                                      (Hash VrfKey)
+     -- Vested certificate
+   | VestedKeyDelegationCertificate (Hash VestedKey)
+                                   (Hash VestedDelegateKey)
+                                   (Hash VrfKey)
    | MIRCertificate MIRPot MIRTarget
 
   deriving stock (Eq, Show)
@@ -116,6 +121,7 @@ instance HasTextEnvelope Certificate where
       StakePoolRegistrationCertificate{}      -> "Pool registration"
       StakePoolRetirementCertificate{}        -> "Pool retirement"
       GenesisKeyDelegationCertificate{}       -> "Genesis key delegation"
+      VestedKeyDelegationCertificate{}         -> "Vested key delegation"
       MIRCertificate{}                        -> "MIR"
 
 -- | The 'MIRTarget' determines the target of a 'MIRCertificate'.
@@ -205,6 +211,12 @@ makeGenesisKeyDelegationCertificate :: Hash GenesisKey
                                     -> Certificate
 makeGenesisKeyDelegationCertificate = GenesisKeyDelegationCertificate
 
+makeVestedKeyDelegationCertificate :: Hash VestedKey
+                                  -> Hash VestedDelegateKey
+                                  -> Hash VrfKey
+                                  -> Certificate
+makeVestedKeyDelegationCertificate = VestedKeyDelegationCertificate
+
 makeMIRCertificate :: MIRPot -> MIRTarget -> Certificate
 makeMIRCertificate = MIRCertificate
 
@@ -252,6 +264,16 @@ toSophieCertificate (GenesisKeyDelegationCertificate
       Sophie.GenesisDelegCert
         genesiskh
         delegatekh
+        vrfkh
+
+toSophieCertificate (VestedKeyDelegationCertificate
+                       (VestedKeyHash         vestedkh)
+                       (VestedDelegateKeyHash vesteddelegatekh)
+                       (VrfKeyHash             vrfkh)) =
+    Sophie.DCertVested $
+      Sophie.VestedDelegCert
+        vestedkh
+        vesteddelegatekh
         vrfkh
 
 toSophieCertificate (MIRCertificate mirpot (StakeAddressesMIR amounts)) =
@@ -312,6 +334,13 @@ fromSophieCertificate (Sophie.DCertGenesis
     GenesisKeyDelegationCertificate
       (GenesisKeyHash         genesiskh)
       (GenesisDelegateKeyHash delegatekh)
+      (VrfKeyHash             vrfkh)
+
+fromSophieCertificate (Sophie.DCertVested
+                         (Sophie.VestedDelegCert vestedkh vesteddelegatekh vrfkh)) =
+    VestedKeyDelegationCertificate
+      (VestedKeyHash         vestedkh)
+      (VestedDelegateKeyHash vesteddelegatekh)
       (VrfKeyHash             vrfkh)
 
 fromSophieCertificate (Sophie.DCertMir

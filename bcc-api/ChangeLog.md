@@ -1,23 +1,9 @@
 # Changelog for bcc-api
 
-## 1.30 -- September 2021
-
-- Improvements to the ledger state API. (#3143)
-- Make it easier to use monadic queries. (#3151)
-- Implement 'getBlockHeader' for Aurum. This was a stray function that got
-  missed when implementing Aurum in the API. (#3158)
-- A few additional exports for API consumers. (#3156)
-- Expose ledger events through the API. Ledger events provide a way for
-  consumers to receive details about things that are happening inside the
-  ledger, and will be used by tools such as db-sync. (#3085)
-- Improve the error message reported when you try to spend a non-Zerepoch locked
-  input using a Zerepoch script. (#3187)
-
-
 ## 1.29 -- August 2021
 
 - Support for automated Tx building. (#2953)
-- A few additional exports for API consumers. (#3001, #3055)
+- A few additional exports for API consumers. (#3001, 3055)
 - Miscallaneous internal improvements. (#2948)
 - Block folding interface now derives the network ID automatically from the
   ledger config. (#2955, #2975)
@@ -87,13 +73,13 @@
 - New IPC modules for easier interaction with the node, including support for
   all existing local state queries (#2230, #2238, #2263, #2277, #2286)
 - API support for Cole era update proposals and votes (#2209, #2271)
-- Make Bcc.Api the prijen public module for the API.
+- Make Bcc.Api the primary public module for the API.
 - API support for serialising multi-asset PolicyId and AssetName (#2270)
 - API for pretty-printing JSON output (#2103)
 - Improved tests for Cole era legacy key formats (#2259)
 - More precise error cases for tx outputs that are out of range (#2217)
 - Host up-to-date generated API documentation via github
-  https://the-blockchain-company.github.io/bcc-node/ (#2273, #2276, #2278)
+  https://The-Blockchain-Company.github.io/bcc-node/ (#2273, #2276, #2278)
 
 ## 1.24.2 -- December 2020
 

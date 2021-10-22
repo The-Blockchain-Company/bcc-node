@@ -8,20 +8,20 @@
 # To launch with pre-loaded configuration, using the NETWORK env.
 # An example using a docker volume to persist state:
 #
-#   docker run -v /data -e NETWORK=mainnet blockchainco/bcc-node
+#   docker run -v /data -e NETWORK=mainnet tbco/bcc-node
 #
 # Provide a complete command otherwise:
 #
 #   docker run -v $PWD/configuration/defaults/cole-mainnet:/configuration \
-#     blockchainco/bcc-node run \
+#     tbco/bcc-node run \
 #      --config /configuration/configuration.yaml \
 #      --topology /configuration/topology.json \
 #      --database-path /db
 #
 # Mount a volume into /ipc for establishing cross-container communication via node.socket
 #
-#   docker run -v node-ipc:/ipc blockchainco/bcc-node
-#   docker run -v node-ipc:/ipc blockchainco/some-node-client
+#   docker run -v node-ipc:/ipc tbco/bcc-node
+#   docker run -v node-ipc:/ipc tbco/some-node-client
 ############################################################################
 
 { pkgs
@@ -53,7 +53,7 @@
 , lib
 , exe
 , script
-, repoName ? "blockchainco/${exe}"
+, repoName ? "tbco/${exe}"
 }:
 
 let
@@ -79,7 +79,7 @@ let
       mkdir -m 0777 tmp
     '';
   };
-  # Image with all iohk-nix network configs or utilizes a configuration volume mount
+  # Image with all tbco-nix network configs or utilizes a configuration volume mount
   # To choose a network, use `-e NETWORK testnet`
   clusterStatements = lib.concatStringsSep "\n" (lib.mapAttrsToList (env: scripts: let
     scriptBin = scripts.${script};

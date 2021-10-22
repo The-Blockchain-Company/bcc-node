@@ -14,7 +14,7 @@ set -o pipefail
 work=example/minting
 mkdir -p $work
 
-# Step 1 - Send DAFI to token script owner
+# Step 1 - Send BCC to token script owner
 
 export BCC_NODE_SOCKET_PATH="${BCC_NODE_SOCKET_PATH:-example/node-bft1/node.sock}"
 zerepochscriptinuse=scripts/zerepoch/scripts/anyone-can-mint.zerepoch

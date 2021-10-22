@@ -81,8 +81,6 @@ module Bcc.Api (
 
     -- ** Addresses in any era
     AddressAny(..),
-    lexPlausibleAddressString,
-    parseAddressAny,
 
     -- ** Addresses in specific eras
     AddressInEra(..),
@@ -105,8 +103,8 @@ module Bcc.Api (
     StakeExtendedKey,
 
     -- * Currency values
-    -- ** Dafi \/ Entropic
-    Entropic(..),
+    -- ** Bcc \/ Entropic
+    Entropic,
 
     -- ** Multi-asset values
     Quantity(..),
@@ -115,7 +113,6 @@ module Bcc.Api (
     AssetName(..),
     AssetId(..),
     Value,
-    parseValue,
     selectAsset,
     valueFromList,
     valueToList,
@@ -128,7 +125,7 @@ module Bcc.Api (
     renderValue,
     renderValuePretty,
 
-    -- ** Dafi \/ Entropic within multi-asset values
+    -- ** Bcc \/ Entropic within multi-asset values
     quantityToEntropic,
     entropicToQuantity,
     selectEntropic,
@@ -169,16 +166,12 @@ module Bcc.Api (
     -- ** Transaction inputs
     TxIn(TxIn),
     TxIx(TxIx),
-    renderTxIn,
 
     -- ** Transaction outputs
-    CtxTx, CtxUTxO,
     TxOut(TxOut),
     TxOutValue(..),
-    txOutValueToEntropic,
-    txOutValueToValue,
-    TxOutDatum(..),
-    parseHashScriptData,
+    serialiseAddressForTxOut,
+    TxOutDatumHash(..),
 
     -- ** Other transaction body types
     TxInsCollateral(..),
@@ -189,6 +182,7 @@ module Bcc.Api (
     EpochSlots(..),
     TxMetadataInEra(..),
     TxAuxScripts(..),
+    TxExtraScriptData(..),
     TxExtraKeyWitnesses(..),
     TxWithdrawals(..),
     TxCertificates(..),
@@ -203,7 +197,7 @@ module Bcc.Api (
     -- ** Era-dependent transaction body features
     CollateralSupportedInEra(..),
     MultiAssetSupportedInEra(..),
-    OnlyDafiSupportedInEra(..),
+    OnlyBccSupportedInEra(..),
     TxFeesExplicitInEra(..),
     TxFeesImplicitInEra(..),
     ValidityUpperBoundSupportedInEra(..),
@@ -331,7 +325,6 @@ module Bcc.Api (
     SimpleScriptV1,
     SimpleScriptV2,
     ZerepochScriptV1,
-    ZerepochScriptV2,
     ScriptLanguage(..),
     SimpleScriptVersion(..),
     ZerepochScriptVersion(..),
@@ -579,11 +572,18 @@ module Bcc.Api (
     -- ** Genesis paramaters
     GenesisParameters(..),
 
+-- | Types and functions needed to inspect or create a genesis file.
+    VestedKey,
+    VestedExtendedKey,
+    VestedDelegateKey,
+    VestedDelegateExtendedKey,
+    VestedUTxOKey,
     -- * Special transactions
     -- | There are various additional things that can be embedded in a
     -- transaction for special operations.
     makeMIRCertificate,
     makeGenesisKeyDelegationCertificate,
+    makeVestedKeyDelegationCertificate,
     MIRTarget (..),
 
     -- * Protocol parameter updates
@@ -598,14 +598,12 @@ module Bcc.Api (
     -- ** Conversions
     toLedgerPParams,
     fromLedgerPParams,
-    toCtxUTxOTxOut,
     --TODO: arrange not to export these
     toNetworkMagic,
     fromLedgerTxOuts,
     toLedgerUTxO,
     --TODO: Remove after updating bcc-node-chairman with new IPC
     SomeNodeClientProtocol(..),
-    runParsecParser,
 
     SlotsInEpoch(..),
     SlotsToEpochEnd(..),
@@ -618,12 +616,7 @@ module Bcc.Api (
     executeLocalStateQueryExpr,
     executeLocalStateQueryExprWithChainSync,
     queryExpr,
-    determineEraExpr,
-
-    chainPointToSlotNo,
-    chainPointToHeaderHash,
-    makeChainTip
-
+    determineEraExpr
   ) where
 
 import           Bcc.Api.Address
@@ -658,8 +651,6 @@ import           Bcc.Api.StakePoolMetadata
 import           Bcc.Api.Tx
 import           Bcc.Api.TxBody
 import           Bcc.Api.TxMetadata
-import           Bcc.Api.Utils
 import           Bcc.Api.Value
-import           Bcc.Api.ValueParser
 --TODO: Remove after updating bcc-node-chairman with new IPC
 import           Bcc.Api.Protocol.Types

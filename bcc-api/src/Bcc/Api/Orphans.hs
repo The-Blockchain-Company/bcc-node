@@ -7,7 +7,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -25,7 +24,6 @@ import qualified Data.Map.Strict as Map
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
-import           Data.Word (Word64)
 
 import           Control.Applicative
 import           Control.Iterate.SetAlgebra (BiMap (..), Bimap)
@@ -50,16 +48,16 @@ import qualified Bcc.Ledger.Core as Ledger
 import qualified Bcc.Ledger.Crypto as Crypto
 import qualified Bcc.Ledger.Era as Ledger
 import qualified Bcc.Ledger.Jen.Value as Jen
-import qualified Bcc.Ledger.PoolDistr as Ledger
 import qualified Bcc.Ledger.SafeHash as SafeHash
 import qualified Bcc.Ledger.Sophie.Constraints as Sophie
+import qualified Bcc.Protocol.TOptimum as Optimum
 import qualified Shardagnostic.Consensus.Sophie.Eras as Consensus
-import qualified Bcc.Ledger.Sophie.API as Sophie
-import qualified Bcc.Ledger.Sophie.EpochBoundary as SophieEpoch
-import qualified Bcc.Ledger.Sophie.LedgerState as SophieLedger
-import           Bcc.Ledger.Sophie.PParams (PParamsUpdate)
-import qualified Bcc.Ledger.Sophie.RewardUpdate as Sophie
-import qualified Bcc.Ledger.Sophie.Rewards as Sophie
+import qualified Sophie.Spec.Ledger.API as Sophie
+import qualified Sophie.Spec.Ledger.EpochBoundary as SophieEpoch
+import qualified Sophie.Spec.Ledger.LedgerState as SophieLedger
+import           Sophie.Spec.Ledger.PParams (PParamsUpdate)
+import qualified Sophie.Spec.Ledger.RewardUpdate as Sophie
+import qualified Sophie.Spec.Ledger.Rewards as Sophie
 
 import           Zerepoch.V1.Ledger.Api (defaultCostModelParams)
 
@@ -281,13 +279,13 @@ instance Crypto.Crypto crypto => ToJSON (Sophie.PulsingRewUpdate crypto) where
 instance ToJSON Sophie.DeltaCoin where
   toJSON (Sophie.DeltaCoin i) = toJSON i
 
-instance Crypto.Crypto crypto => ToJSON (Ledger.PoolDistr crypto) where
-  toJSON (Ledger.PoolDistr m) = toJSON m
+instance Crypto.Crypto crypto => ToJSON (Optimum.PoolDistr crypto) where
+  toJSON (Optimum.PoolDistr m) = toJSON m
 
-instance Crypto.Crypto crypto => ToJSON (Ledger.IndividualPoolStake crypto) where
+instance Crypto.Crypto crypto => ToJSON (Optimum.IndividualPoolStake crypto) where
   toJSON indivPoolStake =
-    object [ "individualPoolStake" .= Ledger.individualPoolStake indivPoolStake
-           , "individualPoolStakeVrf" .= Ledger.individualPoolStakeVrf indivPoolStake
+    object [ "individualPoolStake" .= Optimum.individualPoolStake indivPoolStake
+           , "individualPoolStakeVrf" .= Optimum.individualPoolStakeVrf indivPoolStake
            ]
 
 instance Crypto.Crypto crypto => ToJSON (Sophie.Reward crypto) where
@@ -306,28 +304,8 @@ instance Crypto.Crypto c => ToJSON (SafeHash.SafeHash c a) where
 
 -----
 
-deriving instance ToJSON a => ToJSON (Aurum.ExUnits' a)
-deriving instance FromJSON a => FromJSON (Aurum.ExUnits' a)
-
-instance ToJSON Aurum.ExUnits where
-  toJSON Aurum.ExUnits {Aurum.exUnitsMem, Aurum.exUnitsSteps} =
-    object [ "exUnitsMem" .= toJSON exUnitsMem
-           , "exUnitsSteps" .= toJSON exUnitsSteps
-           ]
-
-instance FromJSON Aurum.ExUnits where
-  parseJSON = Aeson.withObject "exUnits" $ \o -> do
-    mem <- o .: "exUnitsMem"
-    steps <- o .: "exUnitsSteps"
-    bmem <- checkWord64Bounds mem
-    bsteps <- checkWord64Bounds steps
-    return $ Aurum.ExUnits bmem bsteps
-    where
-      checkWord64Bounds n =
-        if n >= fromIntegral (minBound @Word64)
-            && n <= fromIntegral (maxBound @Word64)
-        then pure n
-        else fail ("Unit out of bounds for Word64: " <> show n)
+instance ToJSON Aurum.ExUnits
+deriving instance FromJSON Aurum.ExUnits
 
 instance ToJSON Aurum.Prices where
   toJSON Aurum.Prices { Aurum.prSteps, Aurum.prMem } =
@@ -357,7 +335,6 @@ deriving newtype instance ToJSON Aurum.CostModel
 
 languageToText :: Aurum.Language -> Text
 languageToText Aurum.ZerepochV1 = "ZerepochV1"
-languageToText Aurum.ZerepochV2 = "ZerepochV2"
 
 languageFromText :: MonadFail m => Text -> m Aurum.Language
 languageFromText "ZerepochV1" = pure Aurum.ZerepochV1
@@ -378,7 +355,7 @@ instance FromJSONKey Aurum.Language where
 instance FromJSON Aurum.AurumGenesis where
   parseJSON = Aeson.withObject "Aurum Genesis" $ \o -> do
     coinsPerUTxOWord     <- o .:  "entropicPerUTxOWord"
-                        <|> o .:  "dafiPerUTxOWord" --TODO: deprecate
+                        <|> o .:  "bccPerUTxOWord" --TODO: deprecate
     cModels              <- o .:? "costModels"
     prices               <- o .:  "executionPrices"
     maxTxExUnits         <- o .:  "maxTxExUnits"

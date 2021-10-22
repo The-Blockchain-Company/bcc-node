@@ -31,8 +31,15 @@ main :: IO ()
 main = do
   -- Get socket path from CLI argument.
   configFilePath : socketPath : xs <- getArgs
+  coleSlotLength <- case xs of
+        coleSlotLengthStr : _ -> return (read coleSlotLengthStr)
+        _ -> do
+          let l = 21600
+          putStrLn $ "Using default cole slots per epoch: " <> show l
+          return l
   blockCount <- fmap (either (error . T.unpack . renderFoldBlocksError) id) $ runExceptT $ foldBlocks
     configFilePath
+    (BccModeParams (EpochSlots coleSlotLength))
     socketPath
     FullValidation
     (0 :: Int) -- We just use a count of the blocks as the current state

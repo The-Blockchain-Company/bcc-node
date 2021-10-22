@@ -40,7 +40,7 @@ Select Prometheus
 
 ![Prometheus](images/grafana_13.40.31.png)
 
-Rename it as **prometheus** (BCIO dashboard uses this name, this is useful if you want to import one of our dashboards)
+Rename it as **prometheus** (TBCO dashboard uses this name, this is useful if you want to import one of our dashboards)
 
 ![prometheus](images/grafana_prometheus.png)
 
@@ -55,9 +55,9 @@ On the left panel open the Dashboards menu and go to manage:
 
 ![Dashboard](images/grafana_13.55.40.png)
 
-You can create a New Dashboard from scratch or import one of BCIO's dashboards. To import a dashboard, click on import
+You can create a New Dashboard from scratch or import one of TBCO's dashboards. To import a dashboard, click on import
 
-Copy `bcc-application-dashboard-v2.json` from the [bcc-ops repository](https://raw.githubusercontent.com/the-blockchain-company/bcc-ops/ea161f35792e74b41efa749085ead64c901f784d/modules/grafana/bcc/bcc-application-dashboard-v2.json)
+Copy `bcc-application-dashboard-v2.json` from the [bcc-ops repository](https://raw.githubusercontent.com/The-Blockchain-Company/bcc-ops/ea161f35792e74b41efa749085ead64c901f784d/modules/grafana/bcc/bcc-application-dashboard-v2.json)
 
 and paste the json under `Import via panel json`
 

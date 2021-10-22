@@ -8,8 +8,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Word
 import           Data.Dependent.Sum ((==>) )
 
-import           Bcc.Api (AnyBccEra(..), BccEra(..), Quantity(..), ScriptData(..), SlotNo(..), quantityToEntropic )
-import           Bcc.Api.Sophie (ExecutionUnits(..))
+import           Bcc.Api (AnyBccEra(..), BccEra(..), Quantity(..), SlotNo(..), quantityToEntropic )
 import           Bcc.Node.Types
 import           Shardagnostic.Network.NodeToClient (withIOManager)
 
@@ -19,7 +18,6 @@ import           Bcc.Benchmarking.Script.Aeson
 import           Bcc.Benchmarking.Script.Env
 import           Bcc.Benchmarking.Script.Store
 import           Bcc.Benchmarking.Script.Setters
-import           Bcc.Benchmarking.Script.Types
 
 runTestScript :: IO (Either Error (), Env, ())
 runTestScript = withIOManager $ runActionM (forM_ testScript action)
@@ -56,14 +54,12 @@ testScript =
   , AsyncBenchmark threadName txList (TPSRate 10)
   , WaitForEra $ AnyBccEra ColeEra
   , CancelBenchmark threadName
-  , ImportGenesisFund DiscardTX passPartout passPartout
-  , CreateChange LocalSocket PayToAddr (quantityToEntropic 10000) 1000
-  , RunBenchmark (DumpToFile "/tmp/tx-list.txt") SpendOutput (ThreadName "walletThread") (NumberOfTxs 1000) (TPSRate 10)
-  , RunBenchmark (DumpToFile "/tmp/tx-list.txt") scriptDef (ThreadName "walletThread") (NumberOfTxs 1000) (TPSRate 10)  
+  , ImportGenesisFund passPartout passPartout
+  , CreateChange (quantityToEntropic 10000) 1000
+  , RunBenchmark (ThreadName "walletThread") (NumberOfTxs 1000) (TPSRate 10)
   , Reserved []
   ]
  where
-  scriptDef = SpendScript "filePath" (ExecutionUnits 70000000 70000000) (ScriptDataNumber 3) (ScriptDataNumber 6)
   passPartout = KeyName "pass-partout"
   genFund = FundName "genFund"
   outputFunds = map FundName ["fund1", "fund2", "fund3", "fund4"]

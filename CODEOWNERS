@@ -1,14 +1,13 @@
 # Technical writers
-doc                                                           @fsancheziohk @nahern @olgahryniuk
-README.*                                                      @fsancheziohk @nahern @olgahryniuk
-bcc-cli/README.md                                         @fsancheziohk @nahern @olgahryniuk
+doc                                                           @tbco devs Robert Mourey Jr
+README.*                                                      @tbco devs Robert Mourey Jr
+bcc-cli/README.md                                            @tbco devs Robert Mourey Jr
 
 # Release manager added for notification on dependency updates
 cabal.project                                                 @LaurenceIO
 
 # General reviewers per PR
-#                       David          Duncan   Jordan     Erik   John      Nick Jared
-*                       @DavidEichmann @dcoutts @Jimbo4350 @erikd @newhoggy @nc6 @JaredCorduan
+#                       TBD
 
 # Specific reviewers for code pieces
 # NB - The last matching pattern takes precedence
@@ -19,12 +18,12 @@ cabal.project                                                 @LaurenceIO
 doc                                                           @docs-access
 README.*                                                      @docs-access
 
-bench/tx-generator                                            @deepfire @MarcFontaine
-bench                                                         @deepfire @denisshevchenko @jutaro @MarcFontaine
-nix/workbench                                                 @deepfire @denisshevchenko @jutaro @MarcFontaine
-nix/supervisord-cluster                                       @deepfire @denisshevchenko @jutaro @MarcFontaine
-trace-forward                                                 @deepfire @denisshevchenko @jutaro
-Makefile                                                      @deepfire
+bench/tx-generator                                            @tbco devs Robert Mourey Jr
+bench                                                         @tbco devs Robert Mourey Jr
+nix/workbench                                                 @tbco devs Robert Mourey Jr
+nix/supervisord-cluster                                       @tbco devs Robert Mourey Jr
+trace-forward                                                 @tbco devs Robert Mourey Jr
+Makefile                                                      @tbco devs Robert Mourey Jr
 
 .buildkite                                                    @devops
 .github                                                       @devops
@@ -34,7 +33,6 @@ nix                                                           @devops
 *.nix                                                         @devops
 flake.lock                                                    @devops
 bors.toml                                                     @devops
-docker-compose.yml                                            @devops
 bcc-node/src/Bcc/Tracing/OrphanInstances/Network.hs   @devops @coot @karknu
 bcc-node/src/Bcc/Node/Configuration/Logging.hs        @devops
 bcc-node/src/Bcc/Node/Configuration/Socket.hs         @devops

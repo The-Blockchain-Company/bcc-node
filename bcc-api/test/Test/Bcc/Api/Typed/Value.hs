@@ -4,18 +4,18 @@ module Test.Bcc.Api.Typed.Value
   ( tests
   ) where
 
-import           Prelude
-
+import           Bcc.Api.Sophie
 import           Data.Aeson
 import           Data.List (groupBy, sort)
-import qualified Data.Map.Strict as Map
-import           Hedgehog (Property, forAll, property, tripping, (===))
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
-import           Bcc.Api.Sophie
 import           Gen.Bcc.Api.Typed
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover, forAll, property, tripping, (===))
+import           Prelude
+import           Test.Tasty (TestTree)
+
+import qualified Data.Map.Strict as Map
+
+{- HLINT ignore "Use map once" -}
 
 prop_roundtrip_Value_JSON :: Property
 prop_roundtrip_Value_JSON =
@@ -38,21 +38,22 @@ canonicalise :: ValueNestedRep -> ValueNestedRep
 canonicalise =
     ValueNestedRep
   . filter (not . isZeroOrEmpty)
-  . map (filterZeros . foldl1 mergeBundle)
+  . map filterZeros
+  . map (foldl1 mergeBundle)
   . groupBy samePolicyId
   . sort
   . (\(ValueNestedRep bundles) -> bundles)
   where
-    samePolicyId ValueNestedBundleDafi{}
-                 ValueNestedBundleDafi{} = True
+    samePolicyId ValueNestedBundleBcc{}
+                 ValueNestedBundleBcc{} = True
     samePolicyId (ValueNestedBundle pid _)
                  (ValueNestedBundle pid' _) = pid == pid'
     samePolicyId _ _ = False
 
     -- Merge together bundles that have already been grouped by same PolicyId:
-    mergeBundle (ValueNestedBundleDafi q)
-                (ValueNestedBundleDafi q') =
-      ValueNestedBundleDafi (q <> q')
+    mergeBundle (ValueNestedBundleBcc q)
+                (ValueNestedBundleBcc q') =
+      ValueNestedBundleBcc (q <> q')
 
     mergeBundle (ValueNestedBundle pid  as)
                 (ValueNestedBundle pid' as') | pid == pid' =
@@ -60,14 +61,14 @@ canonicalise =
 
     mergeBundle _ _ = error "canonicalise.mergeBundle: impossible"
 
-    filterZeros b@ValueNestedBundleDafi{} = b
+    filterZeros b@ValueNestedBundleBcc{} = b
     filterZeros (ValueNestedBundle pid as) =
       ValueNestedBundle pid (Map.filter (/=0) as)
 
-    isZeroOrEmpty (ValueNestedBundleDafi q) = q == 0
+    isZeroOrEmpty (ValueNestedBundleBcc q) = q == 0
     isZeroOrEmpty (ValueNestedBundle _ as) = Map.null as
 
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover

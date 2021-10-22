@@ -10,7 +10,6 @@ import qualified Test.Cli.Pioneers.Exercise2
 import qualified Test.Cli.Pioneers.Exercise3
 import qualified Test.Cli.Pioneers.Exercise4
 import qualified Test.Cli.Sophie.Run.Query
-import qualified Test.Config.Mainnet
 
 main :: IO ()
 main =
@@ -23,5 +22,4 @@ main =
     , Test.Cli.Pioneers.Exercise3.tests
     , Test.Cli.Pioneers.Exercise4.tests
     , Test.Cli.Sophie.Run.Query.tests
-    , Test.Config.Mainnet.tests
     ]

@@ -20,7 +20,7 @@ import           System.Posix.Files
 
 main :: IO ()
 main = toplevelExceptionHandler $ do
-  -- TODO: Remove sodiumInit: https://github.com/the-blockchain-company/bcc-base/issues/175
+  -- TODO: Remove sodiumInit: https://github.com/The-Blockchain-Company/bcc-base/issues/175
   Crypto.sodiumInit
 #ifdef UNIX
   _ <- setFileCreationMask (otherModes `unionFileModes` groupModes)

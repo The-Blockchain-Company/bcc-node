@@ -41,7 +41,7 @@ module Bcc.Api.Tx (
     getSophieKeyWitnessVerificationKey,
 
     -- * Data family instances
-    AsType(AsTx, AsColeTx, AsSophieTx, AsJenTx, AsEvieTx, AsAurumTx,
+    AsType(AsTx, AsColeTx, AsSophieTx,
            AsKeyWitness, AsColeWitness, AsSophieWitness),
   ) where
 
@@ -88,12 +88,12 @@ import           Bcc.Ledger.Crypto (StandardCrypto)
 
 import qualified Bcc.Ledger.Core as Ledger
 import qualified Bcc.Ledger.Era as Ledger
-import qualified Bcc.Ledger.Keys as Sophie
 import qualified Bcc.Ledger.SafeHash as Ledger
 import qualified Bcc.Ledger.Sophie.Constraints as Sophie
-import qualified Bcc.Ledger.Sophie.Address.Bootstrap as Sophie
-import qualified Bcc.Ledger.Sophie.Tx as Sophie
-import qualified Bcc.Ledger.Sophie.TxBody as Ledger (EraIndependentTxBody)
+import qualified Sophie.Spec.Ledger.TxBody as Ledger (EraIndependentTxBody)
+import qualified Sophie.Spec.Ledger.Address.Bootstrap as Sophie
+import qualified Bcc.Ledger.Keys as Sophie
+import qualified Sophie.Spec.Ledger.Tx as Sophie
 
 import qualified Bcc.Ledger.Aurum as Aurum
 import qualified Bcc.Ledger.Aurum.Tx as Aurum
@@ -173,27 +173,14 @@ instance HasTypeProxy era => HasTypeProxy (Tx era) where
     data AsType (Tx era) = AsTx (AsType era)
     proxyToAsType _ = AsTx (proxyToAsType (Proxy :: Proxy era))
 
-{-# DEPRECATED AsColeTx "Use AsTx AsColeEra instead." #-}
 pattern AsColeTx :: AsType (Tx ColeEra)
-pattern AsColeTx = AsTx AsColeEra
+pattern AsColeTx   = AsTx AsColeEra
 {-# COMPLETE AsColeTx #-}
 
-{-# DEPRECATED AsSophieTx "Use AsTx AsSophieEra instead." #-}
 pattern AsSophieTx :: AsType (Tx SophieEra)
 pattern AsSophieTx = AsTx AsSophieEra
 {-# COMPLETE AsSophieTx #-}
 
-pattern AsJenTx :: AsType (Tx JenEra)
-pattern AsJenTx = AsTx AsJenEra
-{-# COMPLETE AsJenTx #-}
-
-pattern AsEvieTx :: AsType (Tx EvieEra)
-pattern AsEvieTx = AsTx AsEvieEra
-{-# COMPLETE AsEvieTx #-}
-
-pattern AsAurumTx :: AsType (Tx AurumEra)
-pattern AsAurumTx = AsTx AsAurumEra
-{-# COMPLETE AsAurumTx #-}
 
 instance IsBccEra era => SerialiseAsCBOR (Tx era) where
     serialiseToCBOR (ColeTx tx) = CBOR.recoverBytes tx
@@ -756,6 +743,13 @@ data SophieWitnessSigningKey =
      | WitnessGenesisDelegateExtendedKey
                                  (SigningKey GenesisDelegateExtendedKey)
      | WitnessGenesisUTxOKey     (SigningKey GenesisUTxOKey)
+     | WitnessVestedKey         (SigningKey VestedKey)
+     | WitnessVestedExtendedKey (SigningKey VestedExtendedKey)
+     | WitnessVestedDelegateKey (SigningKey VestedDelegateKey)
+     | WitnessVestedDelegateExtendedKey
+                                 (SigningKey VestedDelegateExtendedKey)
+     | WitnessVestedUTxOKey     (SigningKey VestedUTxOKey)
+     
 
 
 makeSophieKeyWitness :: forall era
@@ -811,8 +805,11 @@ toSophieSigningKey key = case key of
   WitnessStakePoolKey   (StakePoolSigningKey   sk) -> SophieNormalSigningKey sk
   WitnessGenesisKey     (GenesisSigningKey     sk) -> SophieNormalSigningKey sk
   WitnessGenesisUTxOKey (GenesisUTxOSigningKey sk) -> SophieNormalSigningKey sk
-  WitnessGenesisDelegateKey (GenesisDelegateSigningKey sk) ->
-    SophieNormalSigningKey sk
+  WitnessGenesisDelegateKey (GenesisDelegateSigningKey sk) -> SophieNormalSigningKey sk
+  WitnessVestedKey       (VestedSigningKey       sk) -> SophieNormalSigningKey sk
+  WitnessVestedUTxOKey   (VestedUTxOSigningKey   sk) -> SophieNormalSigningKey sk
+  WitnessVestedDelegateKey   (VestedDelegateSigningKey   sk) -> SophieNormalSigningKey sk
+    
 
   -- The cases for extended keys
   WitnessPaymentExtendedKey (PaymentExtendedSigningKey sk) ->
@@ -825,6 +822,12 @@ toSophieSigningKey key = case key of
     SophieExtendedSigningKey sk
 
   WitnessGenesisDelegateExtendedKey (GenesisDelegateExtendedSigningKey sk) ->
+    SophieExtendedSigningKey sk
+  
+  WitnessVestedExtendedKey (VestedExtendedSigningKey sk) ->
+    SophieExtendedSigningKey sk
+
+  WitnessVestedDelegateExtendedKey (VestedDelegateExtendedSigningKey sk) ->
     SophieExtendedSigningKey sk
 
 

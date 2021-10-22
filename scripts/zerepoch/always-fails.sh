@@ -123,7 +123,7 @@ $BCC_CLI transaction submit --tx-file $WORK/aurum.tx --testnet-magic "$TESTNET_M
 sleep 5
 
 echo ""
-echo "UTxO for collateral address after submission.  If there is no DAFI at the address the collateral was successfully taken!"
+echo "UTxO for collateral address after submission.  If there is no BCC at the address the collateral was successfully taken!"
 $BCC_CLI query utxo --address "$utxoaddr"  --testnet-magic "$TESTNET_MAGIC"
 echo ""
 

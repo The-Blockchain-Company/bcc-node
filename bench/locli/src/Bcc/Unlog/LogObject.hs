@@ -168,10 +168,10 @@ interpreters = Map.fromList
   , (,) "TraceLedgerEvent.TookSnapshot" $
     \_ -> pure LOLedgerTookSnapshot
 
-  , (,) "TraceBenchTxSubSumjen" $
+  , (,) "TraceBenchTxSubSummary" $
     \v -> do
-       x :: Object <- v .: "sumjen"
-       LOGeneratorSumjen
+       x :: Object <- v .: "summary"
+       LOGeneratorSummary
          <$> ((x .: "ssFailures" :: Parser [Text])
               <&> null)
          <*> x .: "ssTxSent"
@@ -255,7 +255,7 @@ data LOBody
   | LOMempoolRejectedTx
   | LOLedgerTookSnapshot
   | LOBlockContext !Word64
-  | LOGeneratorSumjen !Bool !Word64 !NominalDiffTime (Vector Float)
+  | LOGeneratorSummary !Bool !Word64 !NominalDiffTime (Vector Float)
   | LOTxsAcked !(Vector Text)
   | LOTxsCollected !Word64
   | LOTxsProcessed !Word64 !Int
@@ -324,7 +324,7 @@ instance FromJSON LogObject where
 
 extendObject :: Text -> Value -> Value -> Value
 extendObject k v (Object hm) = Object $ hm <> HM.singleton (toText k) v
-extendObject k _ _ = error . Text.unpack $ "Sumjen key '" <> k <> "' does not serialise to an Object."
+extendObject k _ _ = error . Text.unpack $ "Summary key '" <> k <> "' does not serialise to an Object."
 
 parsePartialResourceStates :: Value -> Parser (Resources Word64)
 parsePartialResourceStates =

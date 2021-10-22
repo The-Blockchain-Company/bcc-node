@@ -14,14 +14,14 @@ import           Bcc.Prelude
 
 import           Data.Aeson (Value (..), object, toJSON, (.=))
 import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Types as Aeson
 import           Data.Yaml (array)
 import           Data.Yaml.Pretty (defConfig, encodePretty, setConfCompare)
 
 import           Bcc.Api
+import           Bcc.Api.Cole (Entropic (..))
 import           Bcc.Api.Sophie (Address (SophieAddress), StakeAddress (..))
 import           Bcc.Ledger.Crypto (Crypto)
-import qualified Bcc.Ledger.Sophie.API as Sophie
+import qualified Sophie.Spec.Ledger.API as Sophie
 
 import           Bcc.CLI.Helpers (textShow)
 
@@ -104,39 +104,26 @@ friendlyWithdrawals (TxWithdrawals _ withdrawals) =
     | (addr@(StakeAddress net cred), amount, _) <- withdrawals
     ]
 
-friendlyTxOut :: TxOut CtxTx era -> Aeson.Value
+friendlyTxOut :: TxOut era -> Aeson.Value
 friendlyTxOut (TxOut addr amount mdatum) =
   case addr of
-    AddressInEra ColeAddressInAnyEra coleAdr ->
-      object  [ "address era" .= String "Cole"
-              , "address" .= serialiseAddress coleAdr
-              , "amount" .= friendlyTxOutValue amount
-              ]
-
-    AddressInEra (SophieAddressInEra sbe) saddr@(SophieAddress net cred stake) ->
-      let preAurum :: [Aeson.Pair]
-          preAurum =
-            [ "address era" .= Aeson.String "Sophie"
-            , "network" .= net
-            , "payment credential" .= cred
-            , "stake reference" .= friendlyStakeReference stake
-            , "address" .= serialiseAddress saddr
-            , "amount" .= friendlyTxOutValue amount
-            ]
-          datum :: SophieBasedEra era -> [Aeson.Pair]
-          datum SophieBasedEraSophie = []
-          datum SophieBasedEraEvie = []
-          datum SophieBasedEraJen = []
-          datum SophieBasedEraAurum = ["datum" .= renderDatum mdatum]
-      in object $ preAurum ++ datum sbe
+    AddressInEra ColeAddressInAnyEra _ ->
+      object $ ("address era" .= String "Cole") : common
+    AddressInEra (SophieAddressInEra _) (SophieAddress net cred stake) ->
+      object $
+        [ "address era" .= String "Sophie"
+        , "network" .= net
+        , "payment credential" .= cred
+        , "stake reference" .= friendlyStakeReference stake
+        ]
+        ++ ["datum" .= datum | TxOutDatumHash _ datum <- [mdatum]]
+        ++ common
   where
-   renderDatum :: TxOutDatum CtxTx era -> Aeson.Value
-   renderDatum TxOutDatumNone = Aeson.Null
-   renderDatum (TxOutDatumHash _ h) =
-     Aeson.String $ serialiseToRawBytesHexText h
-   renderDatum (TxOutDatum _ sData) =
-     scriptDataToJson ScriptDataJsonDetailedSchema sData
-
+    common :: [(Text, Aeson.Value)]
+    common =
+      [ "address" .= serialiseAddressForTxOut addr
+      , "amount" .= friendlyTxOutValue amount
+      ]
 
 friendlyStakeReference :: Crypto crypto => Sophie.StakeReference crypto -> Aeson.Value
 friendlyStakeReference = \case
@@ -173,7 +160,7 @@ friendlyMintValue = \case
 
 friendlyAssetId :: AssetId -> Text
 friendlyAssetId = \case
-  DafiAssetId -> "DAFI"
+  BccAssetId -> "BCC"
   AssetId policyId (AssetName assetName) ->
     decodeUtf8 $ serialiseToRawBytesHex policyId <> suffix
     where
@@ -184,7 +171,7 @@ friendlyAssetId = \case
 
 friendlyTxOutValue :: TxOutValue era -> Aeson.Value
 friendlyTxOutValue = \case
-  TxOutDafiOnly _ entropic -> friendlyEntropic entropic
+  TxOutBccOnly _ entropic -> friendlyEntropic entropic
   TxOutValue _ multiasset -> toJSON multiasset
 
 friendlyMetadata :: TxMetadataInEra era -> Aeson.Value

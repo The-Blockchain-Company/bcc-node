@@ -25,8 +25,6 @@ module Bcc.Api.Address (
 
     -- ** Addresses in any era
     AddressAny(..),
-    lexPlausibleAddressString,
-    parseAddressAny,
 
     -- ** Addresses in specific eras
     AddressInEra(..),
@@ -70,15 +68,11 @@ module Bcc.Api.Address (
 
 import           Prelude
 
-import           Data.Aeson (FromJSON (..), ToJSON (..), withText)
+import           Data.Aeson (ToJSON (..))
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Base58 as Base58
-import           Data.Char
 import           Data.Text (Text)
-import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
-import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.String as Parsec
 
 import           Control.Applicative
 
@@ -92,7 +86,6 @@ import           Bcc.Api.NetworkId
 import           Bcc.Api.Script
 import           Bcc.Api.SerialiseBech32
 import           Bcc.Api.SerialiseRaw
-import           Bcc.Api.Utils
 import qualified Bcc.Chain.Common as Cole
 import qualified Bcc.Ledger.Address as Sophie
 import qualified Bcc.Ledger.BaseTypes as Sophie
@@ -323,29 +316,6 @@ data AddressInEra era where
 
 instance IsBccEra era => ToJSON (AddressInEra era) where
   toJSON = Aeson.String . serialiseAddress
-
-instance IsSophieBasedEra era => FromJSON (AddressInEra era) where
-  parseJSON = withText "AddressInEra" $ \txt -> do
-    addressAny <- runParsecParser parseAddressAny txt
-    pure $ anyAddressInSophieBasedEra addressAny
-
-parseAddressAny :: Parsec.Parser AddressAny
-parseAddressAny = do
-    str <- lexPlausibleAddressString
-    case deserialiseAddress AsAddressAny str of
-      Nothing   -> fail $ "invalid address: " <> Text.unpack str
-      Just addr -> pure addr
-
-lexPlausibleAddressString :: Parsec.Parser Text
-lexPlausibleAddressString =
-    Text.pack <$> Parsec.many1 (Parsec.satisfy isPlausibleAddressChar)
-  where
-    -- Covers both base58 and bech32 (with constrained prefixes)
-    isPlausibleAddressChar c =
-         isAsciiLower c
-      || isAsciiUpper c
-      || isDigit c
-      || c == '_'
 
 instance Eq (AddressInEra era) where
   (==) (AddressInEra ColeAddressInAnyEra addr1)
@@ -606,4 +576,3 @@ fromSophieStakeReference (Sophie.StakeRefPtr ptr) =
   StakeAddressByPointer (StakeAddressPointer ptr)
 fromSophieStakeReference Sophie.StakeRefNull =
   NoStakeAddress
-

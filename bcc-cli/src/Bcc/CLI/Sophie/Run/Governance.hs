@@ -18,7 +18,7 @@ import           Bcc.CLI.Sophie.Key (InputDecodeError, VerificationKeyOrHashOrFi
 import           Bcc.CLI.Sophie.Parsers
 import           Bcc.CLI.Types
 
-import qualified Bcc.Ledger.Sophie.TxBody as Sophie
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
 
 
 data SophieGovernanceCmdError
@@ -59,6 +59,8 @@ runGovernanceCmd (GovernanceMIRTransfer amt out direction) =
   runGovernanceMIRCertificateTransfer amt out direction
 runGovernanceCmd (GovernanceGenesisKeyDelegationCertificate genVk genDelegVk vrfVk out) =
   runGovernanceGenesisKeyDelegationCertificate genVk genDelegVk vrfVk out
+runGovernanceCmd (GovernanceVestedKeyDelegationCertificate genVk genDelegVk vrfVk out) =
+  runGovernanceVestedKeyDelegationCertificate genVk genDelegVk vrfVk out
 runGovernanceCmd (GovernanceUpdateProposal out eNo genVKeys ppUp) =
   runGovernanceUpdateProposal out eNo genVKeys ppUp
 
@@ -136,6 +138,33 @@ runGovernanceGenesisKeyDelegationCertificate genVkOrHashOrFp
   where
     genKeyDelegCertDesc :: TextEnvelopeDescr
     genKeyDelegCertDesc = "Genesis Key Delegation Certificate"
+
+runGovernanceVestedKeyDelegationCertificate
+  :: VerificationKeyOrHashOrFile VestedKey
+  -> VerificationKeyOrHashOrFile VestedDelegateKey
+  -> VerificationKeyOrHashOrFile VrfKey
+  -> OutputFile
+  -> ExceptT SophieGovernanceCmdError IO ()
+runGovernanceVestedKeyDelegationCertificate genVkOrHashOrFp
+                                             genDelVkOrHashOrFp
+                                             vrfVkOrHashOrFp
+                                             (OutputFile oFp) = do
+    vestedVkHash <- firstExceptT SophieGovernanceCmdKeyReadError
+      . newExceptT
+      $ readVerificationKeyOrHashOrTextEnvFile AsVestedKey genVkOrHashOrFp
+    vestedDelVkHash <-firstExceptT SophieGovernanceCmdKeyReadError
+      . newExceptT
+      $ readVerificationKeyOrHashOrTextEnvFile AsVestedDelegateKey genDelVkOrHashOrFp
+    vrfVkHash <- firstExceptT SophieGovernanceCmdKeyReadError
+      . newExceptT
+      $ readVerificationKeyOrHashOrFile AsVrfKey vrfVkOrHashOrFp
+    firstExceptT SophieGovernanceCmdTextEnvWriteError
+      . newExceptT
+      $ writeFileTextEnvelope oFp (Just genKeyDelegCertDesc)
+      $ makeVestedKeyDelegationCertificate vestedVkHash vestedDelVkHash vrfVkHash
+  where
+    genKeyDelegCertDesc :: TextEnvelopeDescr
+    genKeyDelegCertDesc = "Vested Key Delegation Certificate"
 
 runGovernanceUpdateProposal
   :: OutputFile

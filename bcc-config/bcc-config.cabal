@@ -2,8 +2,8 @@ cabal-version: 3.0
 
 name:                   bcc-config
 version:                0.1.0.0
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE

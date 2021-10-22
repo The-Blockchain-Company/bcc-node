@@ -2,7 +2,6 @@ import           Prelude
 
 import           Bcc.Api
 
-import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Except (runExceptT)
 import qualified Data.ByteString.Lazy as LB
 import           Data.Foldable
@@ -26,13 +25,10 @@ parseScriptContextCmd = parseGenerateDummy <|> parseGenerateTxBody
  where
   parseGenerateDummy :: Parser ScriptContextCmd
   parseGenerateDummy =
-    GenerateDummyScriptContextRedeemer
-      <$> strOption
-            ( long "out-file"
-            <> metavar "FILE"
-            <> help "Create a dummy script context redeemer. Redeeemer output filepath."
-            <> Opt.completer (Opt.bashCompleter "file")
-            )
+    flag' GenerateDummyScriptContextRedeemer
+      (  long "generate"
+      <> help "Create a dummy script context redeemer"
+      )
 
 
   parseGenerateTxBody :: Parser ScriptContextCmd
@@ -45,31 +41,22 @@ parseScriptContextCmd = parseGenerateDummy <|> parseGenerateTxBody
                     )
       <*> pConsensusModeParams
       <*> pNetworkId
-      <*> strOption ( long "out-file"
-                    <> metavar "FILE"
-                    <> help "Redeeemer output filepath."
-                    <> Opt.completer (Opt.bashCompleter "file")
-                    )
 
 data ScriptContextCmd
   = GenerateDummyScriptContextRedeemer
-      FilePath
   | GenerateScriptContextRedeemerTxBody
       FilePath
       AnyConsensusModeParams
       NetworkId
-      FilePath
 
 runScriptContextCmd :: ScriptContextCmd -> IO ()
-runScriptContextCmd (GenerateDummyScriptContextRedeemer outFp) =
-  LB.writeFile outFp sampleTestScriptContextDataJSON
-runScriptContextCmd (GenerateScriptContextRedeemerTxBody txbodyfile cModeParams nid outFp) = do
+runScriptContextCmd GenerateDummyScriptContextRedeemer =
+  LB.writeFile "example/work/script-context.redeemer" sampleTestScriptContextDataJSON
+runScriptContextCmd (GenerateScriptContextRedeemerTxBody txbodyfile cModeParams nid) = do
       eTxBodyRedeemer <- runExceptT $ txToRedeemer txbodyfile cModeParams nid
       case eTxBodyRedeemer of
-        Left err -> error $ "Error creating redeemer from: " <> txbodyfile <>
-                            " Error: " <> show err
-        Right redeemer -> liftIO $ LB.writeFile outFp redeemer
-
+        Left err -> print err
+        Right () -> return ()
 
 pConsensusModeParams :: Parser AnyConsensusModeParams
 pConsensusModeParams = asum
@@ -129,4 +116,3 @@ pEpochSlots =
       <> Opt.value defaultColeEpochSlots -- Default to the mainnet value.
       <> Opt.showDefault
       )
-

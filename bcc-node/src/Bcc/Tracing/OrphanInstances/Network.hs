@@ -22,7 +22,6 @@ import           Data.Text (pack)
 
 import           Network.Mux (MuxTrace (..), WithMuxBearer (..))
 import           Network.Socket (SockAddr (..))
-import           Network.TypedProtocol.Codec (AnyMessageAndAgency (..), PeerHasAgency (..))
 
 import           Bcc.Tracing.ConvertTxId (ConvertTxId)
 import           Bcc.Tracing.OrphanInstances.Common
@@ -40,6 +39,7 @@ import           Shardagnostic.Network.BlockFetch.ClientState (TraceFetchClientS
                    TraceLabelPeer (..))
 import qualified Shardagnostic.Network.BlockFetch.ClientState as BlockFetch
 import           Shardagnostic.Network.BlockFetch.Decision (FetchDecision, FetchDecline (..))
+import           Shardagnostic.Network.Codec (AnyMessageAndAgency (..), PeerHasAgency (..))
 import           Shardagnostic.Network.DeltaQ (GSV (..), PeerGSV (..))
 import           Shardagnostic.Network.KeepAlive (TraceKeepAliveClient (..))
 import qualified Shardagnostic.Network.NodeToClient as NtC

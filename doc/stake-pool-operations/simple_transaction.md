@@ -72,7 +72,7 @@ all amounts must be in Entropic:
 
     expr <UTXO BALANCE> - <AMOUNT TO SEND> - <TRANSACTION FEE>
 
-For example, if we send 10 DAFI from a UTxO containing 20 DAFI, the change to send back to `payment.addr` after paying the fee is: 9.832035 DAFI
+For example, if we send 10 BCC from a UTxO containing 20 BCC, the change to send back to `payment.addr` after paying the fee is: 9.832035 BCC
 
     expr 20000000 - 10000000 - 167965
 

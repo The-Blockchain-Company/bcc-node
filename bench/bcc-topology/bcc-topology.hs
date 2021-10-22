@@ -166,7 +166,7 @@ mkNode :: Spec -> Node
 mkNode Spec{..} = Node{..}
   where
     name = idName nodeId
-    org = "BCIO"
+    org = "TBCO"
     nodeId = id
     pools = mpools
     stakePool = isJust mpools

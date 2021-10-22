@@ -6,19 +6,22 @@ where
 import           Bcc.Prelude hiding (option)
 import           Prelude (String)
 
-import           Bcc.Api hiding (lexPlausibleAddressString, parseAddressAny)
-import           Bcc.CLI.Types (SigningKeyFile (..))
-import           Bcc.Node.Types
-import qualified Control.Arrow as Arr
 import           Control.Monad (fail)
 import qualified Data.Attoparsec.ByteString.Char8 as Atto
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Char as Char
-import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
-import           Options.Applicative (Parser, auto, bashCompleter, completer, flag, help, long,
-                   metavar, option, strOption)
+import qualified Data.Text as Text
+import           Options.Applicative
+                    ( Parser
+                    , auto, bashCompleter, completer, flag, help
+                    , long, metavar, option, strOption
+                    )
 import qualified Options.Applicative as Opt
+import qualified Control.Arrow as Arr
+import           Bcc.Api
+import           Bcc.CLI.Types (SigningKeyFile (..))
+import           Bcc.Node.Types
 
 
 lastly :: Parser a -> Parser (Last a)
@@ -130,7 +133,7 @@ readerFromAttoParser :: Atto.Parser a -> Opt.ReadM a
 readerFromAttoParser p =
     Opt.eitherReader (Atto.parseOnly (p <* Atto.endOfInput) . BSC.pack)
 
-pTxOut :: Parser (TxOut CtxTx SophieEra)
+pTxOut :: Parser (TxOut SophieEra)
 pTxOut =
   Opt.option (readerFromAttoParser parseTxOut)
     (  Opt.long "tx-out"
@@ -140,12 +143,12 @@ pTxOut =
                 \Entropic."
     )
   where
-    parseTxOut :: Atto.Parser (TxOut CtxTx SophieEra)
+    parseTxOut :: Atto.Parser (TxOut SophieEra)
     parseTxOut =
       TxOut <$> parseAddressInEra
             <*  Atto.char '+'
-            <*> (TxOutDafiOnly DafiOnlyInSophieEra <$> parseEntropic)
-            <*> pure TxOutDatumNone
+            <*> (TxOutBccOnly BccOnlyInSophieEra <$> parseEntropic)
+            <*> pure TxOutDatumHashNone
 
 parseAddressInEra :: IsBccEra era => Atto.Parser (AddressInEra era)
 parseAddressInEra = do

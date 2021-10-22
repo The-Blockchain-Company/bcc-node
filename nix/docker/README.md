@@ -10,19 +10,19 @@ nix-build -A scripts.mainnet.node -o ~/bin/bcc-node
 # Build + Install the bcc Docker image
 docker load -i $(nix-build -A dockerImage --no-out-link) \
   && GITHASH=`git log -n1 --pretty='%H'` \
-  && docker tag blockchainco/bcc-node:$GITHASH blockchainco/bcc-node:dev \
-  && docker rmi blockchainco/bcc-node:$GITHASH
+  && docker tag tbco/bcc-node:$GITHASH tbco/bcc-node:dev \
+  && docker rmi tbco/bcc-node:$GITHASH
 
 GITTAG=`git describe --exact-match --tags $GITHASH`
 if [ $? -eq 0 ]; then
   echo "Current tag: $GITTAG"
-  docker tag blockchainco/bcc-node:dev blockchainco/bcc-node:$GITTAG
+  docker tag tbco/bcc-node:dev tbco/bcc-node:$GITTAG
 fi
 
 # Bash into the node to look around
 docker run --rm -it --entrypoint=bash \
   -v node-data:/opt/bcc/data \
-  blockchainco/bcc-node:dev
+  tbco/bcc-node:dev
 
 bcc-node run \
   --config /opt/bcc/config/mainnet-config.json \
@@ -50,7 +50,7 @@ docker run --rm -it \
   -p 3001:3001 \
   -e NETWORK=mainnet \
   -v node-data:/data/db \
-  blockchainco/bcc-node:dev
+  tbco/bcc-node:dev
 ```
 
 Run -e NETWORK=mainnet and check graceful shutdown SIGTERM with --detach
@@ -62,7 +62,7 @@ docker run --detach \
   -p 3001:3001 \
   -e NETWORK=mainnet \
   -v node-data:/data/db \
-  blockchainco/bcc-node:dev
+  tbco/bcc-node:dev
 
 docker logs -f relay
 ```
@@ -75,7 +75,7 @@ Check graceful shutdown SIGINT with -it
 docker run --rm -it \
   -p 3001:3001 \
   -v node-data:/opt/bcc/data \
-  blockchainco/bcc-node:dev run
+  tbco/bcc-node:dev run
 ```
 
 Check graceful shutdown SIGTERM with --detach
@@ -87,7 +87,7 @@ docker run --detach \
   -p 3001:3001 \
   -v node-data:/opt/bcc/data \
   -v node-ipc:/opt/bcc/ipc \
-  blockchainco/bcc-node:dev run
+  tbco/bcc-node:dev run
 
 docker logs -f relay
 ```
@@ -97,7 +97,7 @@ docker logs -f relay
 ```
 alias bcc-cli="docker run --rm -it \
   -v node-ipc:/opt/bcc/ipc \
-  blockchainco/bcc-node:dev cli"
+  tbco/bcc-node:dev cli"
 
 bcc-cli query tip --mainnet
 ```

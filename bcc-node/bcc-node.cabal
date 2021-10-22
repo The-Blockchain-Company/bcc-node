@@ -1,10 +1,10 @@
 cabal-version: 3.0
 
 name:                   bcc-node
-version:                1.30.0
+version:                1.29.0
 description:            The bcc full node
-author:                 BCIO
-maintainer:             operations@iohk.io
+author:                 TBCO
+maintainer:             operations@tbco.org
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE
@@ -122,7 +122,7 @@ library
                       , hostname
                       , iproute
                       , io-classes
-                      , iohk-monitoring
+                      , tbco-monitoring
                       , lobemo-backend-aggregation
                       , lobemo-backend-ekg
                       , lobemo-backend-monitoring
@@ -138,10 +138,9 @@ library
                       , shardagnostic-network
                       , shardagnostic-network-framework
                       , process
-                      , psqueues
                       , safe-exceptions
                       , scientific
-                      , bcc-ledger-sophie
+                      , sophie-spec-ledger
                       , small-steps
                       , stm
                       , text
@@ -149,7 +148,6 @@ library
                       , tracer-transformers
                       , transformers
                       , transformers-except
-                      , typed-protocols
                       , unordered-containers
                       , yaml
 

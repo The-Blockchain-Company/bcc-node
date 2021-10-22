@@ -38,10 +38,6 @@ module Bcc.Api.Block (
 
     -- * Data family instances
     Hash(..),
-
-    chainPointToHeaderHash,
-    chainPointToSlotNo,
-    makeChainTip,
   ) where
 
 import           Prelude
@@ -53,7 +49,7 @@ import qualified Data.ByteString.Short as SBS
 import           Data.Foldable (Foldable (toList))
 
 import           Bcc.Slotting.Block (BlockNo)
-import           Bcc.Slotting.Slot (EpochNo, SlotNo, WithOrigin (..))
+import           Bcc.Slotting.Slot (EpochNo, SlotNo)
 
 import qualified Bcc.Crypto.Hash.Class
 import qualified Bcc.Crypto.Hashing
@@ -70,8 +66,8 @@ import qualified Shardagnostic.Network.Block as Consensus
 import qualified Bcc.Chain.Block as Cole
 import qualified Bcc.Chain.UTxO as Cole
 import qualified Bcc.Ledger.Era as Ledger
-import qualified Bcc.Protocol.TOptimum.BHeader as TOptimum
-import qualified Bcc.Ledger.Block as Ledger
+import qualified Bcc.Protocol.TOptimum.BHeader as Optimum
+import qualified Sophie.Spec.Ledger.BlockChain as Ledger
 
 import           Bcc.Api.Eras
 import           Bcc.Api.HasTypeProxy
@@ -158,7 +154,7 @@ getSophieBlockTxs :: forall era ledgerera.
                       ledgerera ~ SophieLedgerEra era
                    => Consensus.SophieBasedEra ledgerera
                    => SophieBasedEra era
-                   -> Ledger.Block TOptimum.BHeader ledgerera
+                   -> Ledger.Block ledgerera
                    -> [Tx era]
 getSophieBlockTxs era (Ledger.Block _header txs) =
   [ SophieTx era txinblock
@@ -261,7 +257,7 @@ getBlockHeader (SophieBlock sophieEra block) = case sophieEra of
       where
         Consensus.HeaderFields {
             Consensus.headerFieldHash
-              = Consensus.SophieHash (TOptimum.HashHeader (Bcc.Crypto.Hash.Class.UnsafeHash hashSBS)),
+              = Consensus.SophieHash (Optimum.HashHeader (Bcc.Crypto.Hash.Class.UnsafeHash hashSBS)),
             Consensus.headerFieldSlot,
             Consensus.headerFieldBlockNo
           } = Consensus.getHeaderFields block
@@ -347,14 +343,6 @@ fromConsensusPoint (Consensus.BlockPoint slot h) =
     proxy :: Proxy (Consensus.SophieBlock ledgerera)
     proxy = Proxy
 
-chainPointToSlotNo :: ChainPoint -> Maybe SlotNo
-chainPointToSlotNo ChainPointAtGenesis = Nothing
-chainPointToSlotNo (ChainPoint slotNo _) = Just slotNo
-
-chainPointToHeaderHash :: ChainPoint -> Maybe (Hash BlockHeader)
-chainPointToHeaderHash ChainPointAtGenesis = Nothing
-chainPointToHeaderHash (ChainPoint _ blockHeader) = Just blockHeader
-
 
 -- ----------------------------------------------------------------------------
 -- Chain tips
@@ -381,12 +369,6 @@ chainTipToChainPoint :: ChainTip -> ChainPoint
 chainTipToChainPoint ChainTipAtGenesis = ChainPointAtGenesis
 chainTipToChainPoint (ChainTip s h _)  = ChainPoint s h
 
-makeChainTip :: WithOrigin BlockNo -> ChainPoint -> ChainTip
-makeChainTip woBlockNo chainPoint = case woBlockNo of
-  Origin -> ChainTipAtGenesis
-  At blockNo -> case chainPoint of
-    ChainPointAtGenesis -> ChainTipAtGenesis
-    ChainPoint slotNo headerHash -> ChainTip slotNo headerHash blockNo
 
 fromConsensusTip  :: ConsensusBlockForMode mode ~ block
                   => ConsensusMode mode
@@ -434,3 +416,4 @@ fromConsensusTip =
     conv TipGenesis                      = ChainTipAtGenesis
     conv (Tip slot (OneEraHash h) block) = ChainTip slot (HeaderHash h) block
 -}
+

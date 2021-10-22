@@ -5,7 +5,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# OPTIONS_GHC -Wno-incomplete-patterns -Wno-name-shadowing #-}
-module Bcc.Unlog.Sumjen
+module Bcc.Unlog.Summary
   ( AnalysisCmdError
   , renderAnalysisCmdError
   , runAnalysisCommand
@@ -158,26 +158,26 @@ runMachineTimeline chainInfo logfiles MachineTimelineOutputFiles{..} = do
     -- 2. Reprocess the slot stats
     let slotStats = cleanupSlotStats noisySlotStats
 
-    -- 3. Derive the sumjen
+    -- 3. Derive the summary
     let drvVectors0, _drvVectors1 :: [DerivedSlot]
         (,) drvVectors0 _drvVectors1 = computeDerivedVectors slotStats
-        sumjen :: Sumjen
-        sumjen = slotStatsSumjen chainInfo slotStats
+        summary :: Summary
+        summary = slotStatsSummary chainInfo slotStats
         timelineOutput :: LBS.ByteString
-        timelineOutput = Aeson.encode sumjen
+        timelineOutput = Aeson.encode summary
 
     -- 4. Render various outputs
     forM_ mtofTimelinePretty
-      (renderPrettySumjen slotStats sumjen logfiles)
+      (renderPrettySummary slotStats summary logfiles)
     forM_ mtofStatsCsv
-      (renderExportStats runStats sumjen)
+      (renderExportStats runStats summary)
     forM_ mtofTimelineCsv
        (renderExportTimeline slotStats)
     forM_ mtofDerivedVectors0Csv
        (renderDerivedSlots drvVectors0)
     forM_ mtofHistogram
       (renderHistogram "CPU usage spans over 85%" "Span length"
-        (toList $ sort $ sSpanLensCPU85 sumjen))
+        (toList $ sort $ sSpanLensCPU85 summary))
 
     flip (maybe $ LBS.putStrLn timelineOutput) mtofAnalysis $
       \case
@@ -194,19 +194,19 @@ runMachineTimeline chainInfo logfiles MachineTimelineOutputFiles{..} = do
       opts = Opts.title desc $ Opts.yLabel ylab $ Opts.xLabel "Population" $
              Hist.defOpts hist
 
-   renderPrettySumjen ::
-        [SlotStats] -> Sumjen -> [JsonLogfile] -> TextOutputFile -> IO ()
-   renderPrettySumjen xs s srcs o =
+   renderPrettySummary ::
+        [SlotStats] -> Summary -> [JsonLogfile] -> TextOutputFile -> IO ()
+   renderPrettySummary xs s srcs o =
      withFile (unTextOutputFile o) WriteMode $ \hnd -> do
        hPutStrLn hnd . Text.pack $
          printf "--- input: %s" (intercalate " " $ unJsonLogfile <$> srcs)
-       renderSummjenCDF  statsHeadP statsFormatP statsFormatPF s hnd
+       renderSummmaryCDF  statsHeadP statsFormatP statsFormatPF s hnd
        renderSlotTimeline slotHeadP slotFormatP False xs hnd
-   renderExportStats :: RunScalars -> Sumjen -> CsvOutputFile -> IO ()
+   renderExportStats :: RunScalars -> Summary -> CsvOutputFile -> IO ()
    renderExportStats rs s (CsvOutputFile o) =
      withFile o WriteMode $
        \h -> do
-         renderSummjenCDF statsHeadE statsFormatE statsFormatEF s h
+         renderSummmaryCDF statsHeadE statsFormatE statsFormatEF s h
          mapM_ (hPutStrLn h) $
            renderChainInfoExport chainInfo
            <>
@@ -216,10 +216,10 @@ runMachineTimeline chainInfo logfiles MachineTimelineOutputFiles{..} = do
      withFile o WriteMode $
        renderSlotTimeline slotHeadE slotFormatE True xs
 
-   renderSummjenCDF :: Text -> Text -> Text -> Sumjen -> Handle -> IO ()
-   renderSummjenCDF statHead statFmt propFmt sumjen hnd = do
+   renderSummmaryCDF :: Text -> Text -> Text -> Summary -> Handle -> IO ()
+   renderSummmaryCDF statHead statFmt propFmt summary hnd = do
        hPutStrLn hnd statHead
-       forM_ (toDistribLines statFmt propFmt sumjen) $
+       forM_ (toDistribLines statFmt propFmt summary) $
          hPutStrLn hnd
 
    renderDerivedSlots :: [DerivedSlot] -> CsvOutputFile -> IO ()
@@ -234,8 +234,8 @@ dumpLOStream objs o =
   withFile (unJsonOutputFile o) WriteMode $ \hnd -> do
     forM_ objs $ LBS.hPutStrLn hnd . Aeson.encode
 
-data Sumjen
-  = Sumjen
+data Summary
+  = Summary
     { sMaxChecks         :: !Word64
     , sSlotMisses        :: ![Word64]
     , sSpanLensCPU85     :: ![Int]
@@ -265,8 +265,8 @@ renderRunScalars RunScalars{..} =
   ,[ "Submission TPS", maybe "---" (show . sum) rsThreadwiseTps]
   ]
 
-instance ToJSON Sumjen where
-  toJSON Sumjen{..} = Aeson.Array $ Vec.fromList
+instance ToJSON Summary where
+  toJSON Summary{..} = Aeson.Array $ Vec.fromList
     [ Aeson.Object $ HashMap.fromList
         [ "kind" .= String "spanLensCPU85EBnd"
         , "xs" .= toJSON sSpanLensCPU85EBnd]
@@ -299,9 +299,9 @@ instance ToJSON Sumjen where
                                         toJSON sSpanLensCPU85RwdDistrib
     ]
 
-slotStatsSumjen :: ChainInfo -> [SlotStats] -> Sumjen
-slotStatsSumjen CInfo{} slots =
-  Sumjen
+slotStatsSummary :: ChainInfo -> [SlotStats] -> Summary
+slotStatsSummary CInfo{} slots =
+  Summary
   { sMaxChecks        = maxChecks
   , sSlotMisses       = misses
   , sSpanLensCPU85    = spanLensCPU85
@@ -369,13 +369,13 @@ slotStatsSumjen CInfo{} slots =
    missRatio :: Word64 -> Float
    missRatio = (/ fromIntegral maxChecks) . fromIntegral
 
-mapSumjen ::
+mapSummary ::
      Text
-  -> Sumjen
+  -> Summary
   -> Text
   -> (forall a. Num a => Distribution Float a -> Float)
   -> Text
-mapSumjen statsF Sumjen{..} desc f =
+mapSummary statsF Summary{..} desc f =
   distribPropertyLine desc
     (f sMissDistrib)
     (f sSpanCheckDistrib)
@@ -408,8 +408,8 @@ mapSumjen statsF Sumjen{..} desc f =
      printf (Text.unpack statsF)
     descr miss chkdt leaddt blkl dens cpu gc mut majg ming     rss hea liv alc cpu85Sp cpu85SpEBnd cpu85SpRwd
 
-toDistribLines :: Text -> Text -> Sumjen -> [Text]
-toDistribLines statsF distPropsF s@Sumjen{..} =
+toDistribLines :: Text -> Text -> Summary -> [Text]
+toDistribLines statsF distPropsF s@Summary{..} =
   distribLine
    <$> ZipList (pctSpec <$> dPercentiles sMissDistrib)
    <*> ZipList (max 1 . ceiling . (* fromIntegral (dSize sMissDistrib))
@@ -436,8 +436,8 @@ toDistribLines statsF distPropsF s@Sumjen{..} =
    <*> ZipList (pctSample <$> dPercentiles sSpanLensCPU85EBndDistrib)
    <*> ZipList (pctSample <$> dPercentiles sSpanLensCPU85RwdDistrib)
   & getZipList
-  & (<> [ mapSumjen distPropsF s "size" (fromIntegral . dSize)
-        , mapSumjen distPropsF s "avg"  dAverage
+  & (<> [ mapSummary distPropsF s "size" (fromIntegral . dSize)
+        , mapSummary distPropsF s "avg"  dAverage
         ])
  where
    distribLine ::

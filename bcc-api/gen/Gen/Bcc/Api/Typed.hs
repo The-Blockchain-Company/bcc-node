@@ -54,7 +54,7 @@ module Gen.Bcc.Api.Typed
 
 import           Bcc.Api hiding (txIns)
 import qualified Bcc.Api as Api
-import           Bcc.Api.Cole (KeyWitness (ColeKeyWitness),
+import           Bcc.Api.Cole (KeyWitness (ColeKeyWitness), Entropic (Entropic),
                    WitnessNetworkIdOrColeAddress (..))
 import           Bcc.Api.Sophie (Hash (ScriptDataHash), KESPeriod (KESPeriod),
                    OperationalCertificateIssueCounter (OperationalCertificateIssueCounter),
@@ -72,8 +72,8 @@ import           Data.String
 import qualified Bcc.Binary as CBOR
 import qualified Bcc.Crypto.Hash as Crypto
 import qualified Bcc.Crypto.Seed as Crypto
-import qualified Bcc.Ledger.Sophie.TxBody as Ledger (EraIndependentTxBody)
 import qualified Zerepoch.V1.Ledger.Api as Zerepoch
+import qualified Sophie.Spec.Ledger.TxBody as Ledger (EraIndependentTxBody)
 
 import           Hedgehog (Gen, Range)
 import qualified Hedgehog.Gen as Gen
@@ -175,8 +175,7 @@ genScriptData =
     genInteger :: Gen Integer
     genInteger = Gen.integral
                   (Range.linear
-                    0 -- TODO: Aurum should be -> (-fromIntegral (maxBound :: Word64) :: Integer)
-                      -- Wrapping bug needs to be fixed in Zerepoch library
+                    0
                     (fromIntegral (maxBound :: Word64) :: Integer))
 
     genByteString :: Gen ByteString
@@ -243,7 +242,7 @@ genPolicyId =
 
 genAssetId :: Gen AssetId
 genAssetId = Gen.choice [ AssetId <$> genPolicyId <*> genAssetName
-                        , return DafiAssetId
+                        , return BccAssetId
                         ]
 
 genQuantity :: Range Integer -> Gen Quantity
@@ -266,13 +265,13 @@ genValue genAId genQuant =
 genValueDefault :: Gen Value
 genValueDefault = genValue genAssetId genSignedQuantity
 
--- | Generate a 'Value' suitable for minting, i.e. non-DAFI asset ID and a
+-- | Generate a 'Value' suitable for minting, i.e. non-BCC asset ID and a
 -- positive or negative quantity.
 genValueForMinting :: Gen Value
-genValueForMinting = genValue genAssetIdNoDafi genSignedQuantity
+genValueForMinting = genValue genAssetIdNoBcc genSignedQuantity
   where
-    genAssetIdNoDafi :: Gen AssetId
-    genAssetIdNoDafi = AssetId <$> genPolicyId <*> genAssetName
+    genAssetIdNoBcc :: Gen AssetId
+    genAssetIdNoBcc = AssetId <$> genPolicyId <*> genAssetName
 
 -- | Generate a 'Value' suitable for usage in a transaction output, i.e. any
 -- asset ID and a positive quantity.
@@ -289,7 +288,7 @@ genValueNestedRep =
 genValueNestedBundle :: Gen ValueNestedBundle
 genValueNestedBundle =
   Gen.choice
-    [ ValueNestedBundleDafi <$> genSignedQuantity
+    [ ValueNestedBundleBcc <$> genSignedQuantity
     , ValueNestedBundle <$> genPolicyId
                         <*> Gen.map (Range.constant 0 5)
                                     ((,) <$> genAssetName <*> genSignedQuantity)
@@ -384,10 +383,10 @@ genTxIndex = TxIx <$> Gen.word Range.constantBounded
 genTxOutValue :: BccEra era -> Gen (TxOutValue era)
 genTxOutValue era =
   case multiAssetSupportedInEra era of
-    Left dafiOnlyInEra     -> TxOutDafiOnly dafiOnlyInEra <$> genEntropic
+    Left bccOnlyInEra     -> TxOutBccOnly bccOnlyInEra <$> genEntropic
     Right multiAssetInEra -> TxOutValue multiAssetInEra <$> genValueForTxOut
 
-genTxOut :: BccEra era -> Gen (TxOut CtxTx era)
+genTxOut :: BccEra era -> Gen (TxOut era)
 genTxOut era =
   TxOut <$> genAddressInEra era
         <*> genTxOutValue era
@@ -395,7 +394,7 @@ genTxOut era =
 
 genUTxO :: BccEra era -> Gen (UTxO era)
 genUTxO era =
-  UTxO <$> Gen.map (Range.constant 0 5) ((,) <$> genTxIn <*> (toCtxUTxOTxOut <$> genTxOut era))
+  UTxO <$> Gen.map (Range.constant 0 5) ((,) <$> genTxIn <*> genTxOut era)
 
 genTtl :: Gen SlotNo
 genTtl = genSlotNo
@@ -478,7 +477,7 @@ genCertificate =
     [ StakeAddressRegistrationCertificate <$> genStakeCredential
     , StakeAddressDeregistrationCertificate <$> genStakeCredential
     ]
-
+    
 genTxUpdateProposal :: BccEra era -> Gen (TxUpdateProposal era)
 genTxUpdateProposal era =
   case updateProposalSupportedInEra era of
@@ -508,6 +507,7 @@ genTxBodyContent era = do
   txValidityRange <- genTxValidityRange era
   txMetadata <- genTxMetadataInEra era
   txAuxScripts <- genTxAuxScripts era
+  let txExtraScriptData = BuildTxWith TxExtraScriptDataNone --TODO: Aurum era: Generate extra script data
   let txExtraKeyWits = TxExtraKeyWitnessesNone --TODO: Aurum era: Generate witness key hashes
   txProtocolParams <- BuildTxWith <$> Gen.maybe genProtocolParameters
   txWithdrawals <- genTxWithdrawals era
@@ -524,6 +524,7 @@ genTxBodyContent era = do
     , Api.txValidityRange
     , Api.txMetadata
     , Api.txAuxScripts
+    , Api.txExtraScriptData
     , Api.txExtraKeyWits
     , Api.txProtocolParams
     , Api.txWithdrawals
@@ -636,6 +637,7 @@ genSophieWitnessSigningKey =
              , WitnessStakeKey <$>  genSigningKey AsStakeKey
              , WitnessStakePoolKey <$>  genSigningKey AsStakePoolKey
              , WitnessGenesisDelegateKey <$>  genSigningKey AsGenesisDelegateKey
+             , WitnessVestedDelegateKey <$>  genSigningKey AsVestedDelegateKey
              , WitnessGenesisUTxOKey <$>  genSigningKey AsGenesisUTxOKey
              ]
 
@@ -656,7 +658,7 @@ genRational =
     ratioToRational = toRational
 
 -- TODO: consolidate this back to just genRational once this is merged:
--- https://github.com/the-blockchain-company/bcc-ledger-specs/pull/2330
+-- https://github.com/The-Blockchain-Company/bcc-ledger-specs/pull/2330
 genRationalInt64 :: Gen Rational
 genRationalInt64 =
     (\d -> ratioToRational (1 % d)) <$> genDenominator
@@ -768,17 +770,16 @@ genExecutionUnits = ExecutionUnits <$> Gen.integral (Range.constant 0 1000)
 genExecutionUnitPrices :: Gen ExecutionUnitPrices
 genExecutionUnitPrices = ExecutionUnitPrices <$> genRational <*> genRational
 
-genTxOutDatumHash :: BccEra era -> Gen (TxOutDatum CtxTx era)
+genTxOutDatumHash :: BccEra era -> Gen (TxOutDatumHash era)
 genTxOutDatumHash era = case era of
-    ColeEra   -> pure TxOutDatumNone
-    SophieEra -> pure TxOutDatumNone
-    EvieEra -> pure TxOutDatumNone
-    JenEra    -> pure TxOutDatumNone
-    AurumEra  -> Gen.choice
-                    [ pure TxOutDatumNone
-                    , TxOutDatumHash ScriptDataInAurumEra <$> genHashScriptData
-                    , TxOutDatum     ScriptDataInAurumEra <$> genScriptData
-                    ]
+    ColeEra -> pure TxOutDatumHashNone
+    SophieEra -> pure TxOutDatumHashNone
+    EvieEra -> pure TxOutDatumHashNone
+    JenEra -> pure TxOutDatumHashNone
+    AurumEra -> Gen.choice
+      [ pure TxOutDatumHashNone
+      , TxOutDatumHash ScriptDataInAurumEra <$> genHashScriptData
+      ]
 
 mkDummyHash :: forall h a. CRYPTO.HashAlgorithm h => Int -> CRYPTO.Hash h a
 mkDummyHash = coerce . CRYPTO.hashWithSerialiser @h CBOR.toCBOR

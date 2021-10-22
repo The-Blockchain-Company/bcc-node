@@ -39,8 +39,7 @@ renderSophieStakeAddressCmdError err =
 runStakeAddressCmd :: StakeAddressCmd -> ExceptT SophieStakeAddressCmdError IO ()
 runStakeAddressCmd (StakeAddressKeyGen vk sk) = runStakeAddressKeyGen vk sk
 runStakeAddressCmd (StakeAddressKeyHash vk mOutputFp) = runStakeAddressKeyHash vk mOutputFp
-runStakeAddressCmd (StakeAddressBuild stakeVerifier nw mOutputFp) =
-  runStakeAddressBuild stakeVerifier nw mOutputFp
+runStakeAddressCmd (StakeAddressBuild vk nw mOutputFp) = runStakeAddressBuild vk nw mOutputFp
 runStakeAddressCmd (StakeRegistrationCert stakeVerifier outputFp) =
   runStakeCredentialRegistrationCert stakeVerifier outputFp
 runStakeAddressCmd (StakeCredentialDelegationCert stakeVerifier stkPoolVerKeyHashOrFp outputFp) =
@@ -83,36 +82,20 @@ runStakeAddressKeyHash stakeVerKeyOrFile mOutputFp = do
     Just (OutputFile fpath) -> liftIO $ BS.writeFile fpath hexKeyHash
     Nothing -> liftIO $ BS.putStrLn hexKeyHash
 
-runStakeAddressBuild
-  :: StakeVerifier
-  -> NetworkId
-  -> Maybe OutputFile
-  -> ExceptT SophieStakeAddressCmdError IO ()
-runStakeAddressBuild stakeVerifier network mOutputFp =
-  case stakeVerifier of
-    StakeVerifierScriptFile (ScriptFile sFile) -> do
-      ScriptInAnyLang _ script <- firstExceptT SophieStakeAddressCmdReadScriptFileError
-                                    $ readFileScriptInAnyLang sFile
-      let stakeCred = StakeCredentialByScript $ hashScript script
-          stakeAddr = makeStakeAddress network stakeCred
-          stakeAddrText = serialiseAddress stakeAddr
+runStakeAddressBuild :: VerificationKeyOrFile StakeKey -> NetworkId -> Maybe OutputFile
+                     -> ExceptT SophieStakeAddressCmdError IO ()
+runStakeAddressBuild stakeVerKeyOrFile network mOutputFp = do
+    stakeVerKey <- firstExceptT SophieStakeAddressCmdReadKeyFileError
+      . newExceptT
+      $ readVerificationKeyOrFile AsStakeKey stakeVerKeyOrFile
 
-      case mOutputFp of
-        Just (OutputFile fpath) -> liftIO $ Text.writeFile fpath stakeAddrText
-        Nothing -> liftIO $ Text.putStrLn stakeAddrText
+    let stakeCred = StakeCredentialByKey (verificationKeyHash stakeVerKey)
+        stakeAddr = makeStakeAddress network stakeCred
+        stakeAddrText = serialiseAddress stakeAddr
 
-    StakeVerifierKey stakeVerKeyOrFile -> do
-      stakeVerKey <- firstExceptT SophieStakeAddressCmdReadKeyFileError
-                       . newExceptT
-                       $ readVerificationKeyOrFile AsStakeKey stakeVerKeyOrFile
-
-      let stakeCred = StakeCredentialByKey (verificationKeyHash stakeVerKey)
-          stakeAddr = makeStakeAddress network stakeCred
-          stakeAddrText = serialiseAddress stakeAddr
-
-      case mOutputFp of
-        Just (OutputFile fpath) -> liftIO $ Text.writeFile fpath stakeAddrText
-        Nothing -> liftIO $ Text.putStrLn stakeAddrText
+    case mOutputFp of
+      Just (OutputFile fpath) -> liftIO $ Text.writeFile fpath stakeAddrText
+      Nothing -> liftIO $ Text.putStrLn stakeAddrText
 
 
 runStakeCredentialRegistrationCert

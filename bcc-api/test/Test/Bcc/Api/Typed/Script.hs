@@ -4,19 +4,17 @@ module Test.Bcc.Api.Typed.Script
   ( tests
   ) where
 
-import           Bcc.Prelude
-
-import           Data.Aeson
-import           Hedgehog (Property, (===))
-import qualified Hedgehog as H
-import           Hedgehog.Extras.Aeson
-import           Test.Tasty (TestTree)
-import           Test.Tasty.Hedgehog (testProperty)
-import           Test.Tasty.TH (testGroupGenerator)
-
 import           Bcc.Api
 import           Bcc.Api.Sophie
+import           Bcc.Prelude
+import           Data.Aeson
 import           Gen.Bcc.Api.Typed
+import           Gen.Tasty.Hedgehog.Group (fromGroup)
+import           Hedgehog (Property, discover, (===))
+import           Hedgehog.Extras.Aeson
+import           Test.Tasty (TestTree)
+
+import qualified Hedgehog as H
 
 {- HLINT ignore "Use camelCase" -}
 
@@ -131,4 +129,5 @@ prop_roundtrip_ScriptData =
 -- -----------------------------------------------------------------------------
 
 tests :: TestTree
-tests = $testGroupGenerator
+tests = fromGroup $$discover
+

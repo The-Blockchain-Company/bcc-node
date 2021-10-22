@@ -37,4 +37,4 @@ golden_stakePoolMetadataHash = propertyOnce . H.moduleWorkspace "tmp" $ \tempDir
   equivalence expectedStakePoolMetadataHash actualStakePoolMetadataHash
   where
     exampleStakePoolMetadata :: Text
-    exampleStakePoolMetadata = "{\"homepage\":\"https://iohk.io\",\"name\":\"Genesis Pool C\",\"ticker\":\"GPC\",\"description\":\"Lorem Ipsum Dolor Sit Amet.\"}"
+    exampleStakePoolMetadata = "{\"homepage\":\"https://tbco.io\",\"name\":\"Genesis Pool C\",\"ticker\":\"GPC\",\"description\":\"Lorem Ipsum Dolor Sit Amet.\"}"

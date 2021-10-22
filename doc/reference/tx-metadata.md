@@ -43,7 +43,7 @@ transaction_metadata =
 
 ## How to create a transaction with metadata using the bcc-cli
 
-To create a transaction with metadata, first ensure that you have installed the [bcc-node](https://github.com/the-blockchain-company/bcc-node#bcc-node-overview) and follow instructions on how to launch [bcc-CLI](https://github.com/the-blockchain-company/bcc-node/tree/master/bcc-cli#bcc-cli).
+To create a transaction with metadata, first ensure that you have installed the [bcc-node](https://github.com/The-Blockchain-Company/bcc-node#bcc-node-overview) and follow instructions on how to launch [bcc-CLI](https://github.com/The-Blockchain-Company/bcc-node/tree/master/bcc-cli#bcc-cli).
 
 To create a transaction with specified metadata, run this command:
 
@@ -163,5 +163,5 @@ Detailed Schema:
 
 Here are some materials for further reading:
 
-+ Tx metadata motivation and use: [Design Specification for Delegation and Incentives in Bcc](https://hydra.iohk.io/build/3744897/download/1/delegation_design_spec.pdf), p 53.
-+ [Tx metadata in wallet-CLI](https://github.com/the-blockchain-company/bcc-wallet/wiki/TxMetadata).
++ Tx metadata motivation and use: [Design Specification for Delegation and Incentives in Bcc](https://hydra.tbco.io/build/3744897/download/1/delegation_design_spec.pdf), p 53.
++ [Tx metadata in wallet-CLI](https://github.com/The-Blockchain-Company/bcc-wallet/wiki/TxMetadata).

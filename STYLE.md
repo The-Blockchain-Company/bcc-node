@@ -7,7 +7,7 @@ Haskell Style Guide
 
 Principles
 ----------
-* The prijen goal is readability/maintainability with performance as a close second.
+* The primary goal is readability/maintainability with performance as a close second.
 * Always use types to clarify intent and make invalid states unrepresentable.
 * Use type signatures as compiler checked documentation.
 * Break up large functions into smaller sub functions.
@@ -244,9 +244,9 @@ Some clarifications:
 
 Imports should be grouped in the following order:
 
-0. Import of custom prelude (for example [`bcc-prelude`](https://github.com/the-blockchain-company/bcc-prelude)) if used.
+0. Import of custom prelude (for example [`bcc-prelude`](https://github.com/The-Blockchain-Company/bcc-prelude)) if used.
 1. External modules.
-2. External BCIO modules.
+2. External TBCO modules.
 3. Local library modules.
 4. Local test modules
 
@@ -258,7 +258,7 @@ Imports should be grouped in the following order:
 * For local modules, use implicit imports.
 * Always use explicit import lists or `qualified` imports.
   * **Exception**:
-   [`bcc-prelude`](https://github.com/the-blockchain-company/bcc-prelude) (import implicitly)
+   [`bcc-prelude`](https://github.com/The-Blockchain-Company/bcc-prelude) (import implicitly)
 
 If the `import` is unqualified then put _11 spaces_ between the `import` keyword and the module name (i.e. length of `qualified` + 2).
 

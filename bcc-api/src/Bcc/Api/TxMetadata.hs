@@ -70,7 +70,7 @@ import           Control.Monad (guard, when)
 
 import qualified Bcc.Binary as CBOR
 
-import qualified Bcc.Ledger.Sophie.Metadata as Sophie
+import qualified Sophie.Spec.Ledger.Metadata as Sophie
 
 import           Bcc.Api.Eras
 import           Bcc.Api.Error

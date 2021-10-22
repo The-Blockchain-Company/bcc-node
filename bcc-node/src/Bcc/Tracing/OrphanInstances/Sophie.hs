@@ -57,7 +57,6 @@ import qualified Bcc.Ledger.Aurum.Tx as Aurum
 import qualified Bcc.Ledger.Aurum.TxInfo as Aurum
 import qualified Bcc.Ledger.AuxiliaryData as Core
 import           Bcc.Ledger.BaseTypes (strictMaybeToMaybe)
-import           Bcc.Ledger.Chain
 import qualified Bcc.Ledger.Core as Core
 import qualified Bcc.Ledger.Core as Ledger
 import qualified Bcc.Ledger.Crypto as Core
@@ -68,32 +67,31 @@ import qualified Bcc.Ledger.SophieMA.Timelocks as MA
 import           Bcc.Protocol.TOptimum.BHeader (LastAppliedBlock, labBlockNo)
 import           Bcc.Protocol.TOptimum.Rules.OCert
 import           Bcc.Protocol.TOptimum.Rules.Overlay
-import           Bcc.Protocol.TOptimum.Rules.Tickn
 import           Bcc.Protocol.TOptimum.Rules.Updn
 
 -- TODO: this should be exposed via Bcc.Api
-import           Bcc.Ledger.Sophie.API hiding (SophieBasedEra)
+import           Sophie.Spec.Ledger.API hiding (SophieBasedEra)
 
-import           Bcc.Ledger.Sophie.Rules.Bbody
-import           Bcc.Ledger.Sophie.Rules.Deleg
-import           Bcc.Ledger.Sophie.Rules.Delegs
-import           Bcc.Ledger.Sophie.Rules.Delpl
-import           Bcc.Ledger.Sophie.Rules.Epoch
-import           Bcc.Ledger.Sophie.Rules.Ledger
-import           Bcc.Ledger.Sophie.Rules.Ledgers
-import           Bcc.Ledger.Sophie.Rules.Mir
-import           Bcc.Ledger.Sophie.Rules.NewEpoch
-import           Bcc.Ledger.Sophie.Rules.Newpp
-import           Bcc.Ledger.Sophie.Rules.Pool
-import           Bcc.Ledger.Sophie.Rules.PoolReap
-import           Bcc.Ledger.Sophie.Rules.Ppup
-import           Bcc.Ledger.Sophie.Rules.Rupd
-import           Bcc.Ledger.Sophie.Rules.Snap
-import           Bcc.Ledger.Sophie.Rules.Tick
-import           Bcc.Ledger.Sophie.Rules.Upec
-import           Bcc.Ledger.Sophie.Rules.Utxo
-import           Bcc.Ledger.Sophie.Rules.Utxow
-
+import           Sophie.Spec.Ledger.STS.Bbody
+import           Sophie.Spec.Ledger.STS.Chain
+import           Sophie.Spec.Ledger.STS.Deleg
+import           Sophie.Spec.Ledger.STS.Delegs
+import           Sophie.Spec.Ledger.STS.Delpl
+import           Sophie.Spec.Ledger.STS.Epoch
+import           Sophie.Spec.Ledger.STS.Ledger
+import           Sophie.Spec.Ledger.STS.Ledgers
+import           Sophie.Spec.Ledger.STS.Mir
+import           Sophie.Spec.Ledger.STS.NewEpoch
+import           Sophie.Spec.Ledger.STS.Newpp
+import           Sophie.Spec.Ledger.STS.Pool
+import           Sophie.Spec.Ledger.STS.PoolReap
+import           Sophie.Spec.Ledger.STS.Ppup
+import           Sophie.Spec.Ledger.STS.Rupd
+import           Sophie.Spec.Ledger.STS.Snap
+import           Sophie.Spec.Ledger.STS.Tick
+import           Sophie.Spec.Ledger.STS.Upec
+import           Sophie.Spec.Ledger.STS.Utxo
+import           Sophie.Spec.Ledger.STS.Utxow
 
 {- HLINT ignore "Use :" -}
 
@@ -239,6 +237,11 @@ instance ( SophieBasedEra era
                       \understand the new major protocol version. This node \
                       \must be upgraded before it can continue with the new \
                       \protocol version."
+  toObject verb (BbodyFailure f) = toObject verb f
+  toObject verb (TickFailure  f) = toObject verb f
+  toObject verb (TicknFailure  f) = toObject verb f
+  toObject verb (PrtclFailure f) = toObject verb f
+  toObject verb (PrtclSeqFailure f) = toObject verb f
 
 instance ToObject (PrtlSeqFailure crypto) where
   toObject _verb (WrongSlotIntervalPrtclSeq (SlotNo lastSlot) (SlotNo currSlot)) =
@@ -514,8 +517,8 @@ instance ( SophieBasedEra era
              , "outputs" .= badOutputs
              , "error" .= String "The Cole address attributes are too big"
              ]
-  toObject _verb MA.TriesToForgeDAFI =
-    mkObject [ "kind" .= String "TriesToForgeDAFI" ]
+  toObject _verb MA.TriesToForgeBCC =
+    mkObject [ "kind" .= String "TriesToForgeBCC" ]
   toObject _verb (MA.OutputTooBigUTxO badOutputs) =
     mkObject [ "kind" .= String "OutputTooBigUTxO"
              , "outputs" .= badOutputs
@@ -599,10 +602,20 @@ instance Ledger.Era era => ToObject (DelegPredicateFailure era) where
              , "unknownKeyHash" .= String (textShow genesisKeyHash)
              , "error" .= String "This genesis key is not in the delegation mapping"
              ]
+  toObject _verb (VestedKeyNotInMappingDELEG (KeyHash vestedKeyHash)) =
+    mkObject [ "kind" .= String "VestedKeyNotInMappingDELEG"
+             , "unknownKeyHash" .= String (textShow vestedKeyHash)
+             , "error" .= String "This vested key is not in the delegation mapping"
+             ]
   toObject _verb (DuplicateGenesisDelegateDELEG (KeyHash genesisKeyHash)) =
     mkObject [ "kind" .= String "DuplicateGenesisDelegateDELEG"
              , "duplicateKeyHash" .= String (textShow genesisKeyHash)
              , "error" .= String "This genesis key has already been delegated to"
+             ]
+  toObject _verb (DuplicateVestedDelegateDELEG (KeyHash vestedKeyHash)) =
+    mkObject [ "kind" .= String "DuplicateVestedDelegateDELEG"
+             , "duplicateKeyHash" .= String (textShow vestedKeyHash)
+             , "error" .= String "This vested key has already been delegated to"
              ]
   toObject _verb (InsufficientForInstantaneousRewardsDELEG mirpot neededMirAmount reserves) =
     mkObject [ "kind" .= String "InsufficientForInstantaneousRewardsDELEG"
@@ -619,6 +632,10 @@ instance Ledger.Era era => ToObject (DelegPredicateFailure era) where
              ]
   toObject _verb (DuplicateGenesisVRFDELEG vrfKeyHash) =
     mkObject [ "kind" .= String "DuplicateGenesisVRFDELEG"
+             , "keyHash" .= vrfKeyHash
+             ]
+  toObject _verb (DuplicateVestedVRFDELEG vrfKeyHash) =
+    mkObject [ "kind" .= String "DuplicateVestedVRFDELEG"
              , "keyHash" .= vrfKeyHash
              ]
   toObject _verb MIRTransferNotCurrentlyAllowed =
@@ -748,8 +765,8 @@ instance Core.Crypto crypto => ToObject (PrtclPredicateFailure crypto) where
 
 
 instance Core.Crypto crypto => ToObject (OverlayPredicateFailure crypto) where
-  toObject _verb (UnknownGenesisKeyOVERLAY (KeyHash genKeyHash)) =
-    mkObject [ "kind" .= String "UnknownGenesisKeyOVERLAY"
+  toObject _verb (UnknownGenesisVestedKeyOVERLAY (KeyHash genKeyHash)) =
+    mkObject [ "kind" .= String "UnknownGenesisVestedKeyOVERLAY"
              , "unknownKeyHash" .= String (textShow genKeyHash)
              ]
   toObject _verb (VRFKeyBadLeaderValue seedNonce (SlotNo currSlotNo) prevHashNonce leaderElecVal) =
@@ -788,12 +805,12 @@ instance Core.Crypto crypto => ToObject (OverlayPredicateFailure crypto) where
     mkObject [ "kind" .= String "NotActiveSlotOVERLAY"
              , "slot" .= String (textShow notActiveSlotNo)
              ]
-  toObject _verb (WrongGenesisColdKeyOVERLAY actual expected) =
-    mkObject [ "kind" .= String "WrongGenesisColdKeyOVERLAY"
+  toObject _verb (WrongGenesisVestedColdKeyOVERLAY actual expected) =
+    mkObject [ "kind" .= String "WrongGenesisVestedColdKeyOVERLAY"
              , "actual" .= actual
              , "expected" .= expected ]
-  toObject _verb (WrongGenesisVRFKeyOVERLAY issuer actual expected) =
-    mkObject [ "kind" .= String "WrongGenesisVRFKeyOVERLAY"
+  toObject _verb (WrongGenesisVestedVRFKeyOVERLAY issuer actual expected) =
+    mkObject [ "kind" .= String "WrongGenesisVestedVRFKeyOVERLAY"
              , "issuer" .= issuer
              , "actual" .= actual
              , "expected" .= expected ]
@@ -910,8 +927,8 @@ instance ToObject (Aurum.UtxoPredicateFailure (Aurum.AurumEra StandardCrypto)) w
              , "outputs" .= txouts
              , "error" .= String "The Cole address attributes are too big"
              ]
-  toObject _verb Aurum.TriesToForgeDAFI =
-    mkObject [ "kind" .= String "TriesToForgeDAFI" ]
+  toObject _verb Aurum.TriesToForgeBCC =
+    mkObject [ "kind" .= String "TriesToForgeBCC" ]
   toObject _verb (Aurum.OutputTooBigUTxO badOutputs) =
     mkObject [ "kind" .= String "OutputTooBigUTxO"
              , "outputs" .= badOutputs
@@ -931,8 +948,8 @@ instance ToObject (Aurum.UtxoPredicateFailure (Aurum.AurumEra StandardCrypto)) w
              , "maxexunits" .= pParamsMaxExUnits
              , "exunits" .= suppliedExUnits
              ]
-  toObject _verb (Aurum.CollateralContainsNonDAFI inputs) =
-    mkObject [ "kind" .= String "CollateralContainsNonDAFI"
+  toObject _verb (Aurum.CollateralContainsNonBCC inputs) =
+    mkObject [ "kind" .= String "CollateralContainsNonBCC"
              , "inputs" .= inputs
              ]
   toObject _verb (Aurum.WrongNetworkInTxBody actualNetworkId netIdInTxBody) =

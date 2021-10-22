@@ -9,6 +9,7 @@ module Bcc.CLI.Types
   , CBORObject (..)
   , CertificateFile (..)
   , GenesisFile (..)
+  , VestedFile (..)
   , OutputFormat (..)
   , SigningKeyFile (..)
   , SocketPath (..)
@@ -20,7 +21,6 @@ module Bcc.CLI.Types
   , TransferDirection(..)
   , TxOutAnyEra (..)
   , TxOutChangeAddress (..)
-  , TxOutDatumAnyEra (..)
   , UpdateProposalFile (..)
   , VerificationKeyFile (..)
   , Stakes (..)
@@ -39,7 +39,7 @@ import           Bcc.Api
 
 import qualified Bcc.Ledger.Crypto as Crypto
 
-import           Bcc.Ledger.Sophie.TxBody (PoolParams (..))
+import           Sophie.Spec.Ledger.TxBody (PoolParams (..))
 
 -- | Specify what the CBOR file is
 -- i.e a block, a tx, etc
@@ -51,7 +51,7 @@ data CBORObject = CBORBlockCole Cole.EpochSlots
                 deriving Show
 
 -- Encompasses stake certificates, stake pool certificates,
--- genesis delegate certificates and MIR certificates.
+-- genesis delegate certificates vested delegate certificates and MIR certificates.
 newtype CertificateFile = CertificateFile { unCertificateFile :: FilePath }
                           deriving newtype (Eq, Show)
 
@@ -65,6 +65,15 @@ instance FromJSON GenesisFile where
   parseJSON invalid = panic $ "Parsing of GenesisFile failed due to type mismatch. "
                            <> "Encountered: " <> Text.pack (show invalid)
 
+newtype VestedFile = VestedFile
+  { unVestedFile :: FilePath }
+  deriving stock (Eq, Ord)
+  deriving newtype (IsString, Show)
+
+instance FromJSON VestedFile where
+  parseJSON (Aeson.String genFp) = pure . VestedFile $ Text.unpack genFp
+  parseJSON invalid = panic $ "Parsing of VestedFile failed due to type mismatch. "
+                           <> "Encountered: " <> Text.pack (show invalid)
 -- | The desired output format.
 data OutputFormat
   = OutputFormatHex
@@ -180,7 +189,7 @@ data ScriptDatumOrFile witctx where
 deriving instance Show (ScriptDatumOrFile witctx)
 
 
--- | Determines the direction in which the MIR certificate will transfer DAFI.
+-- | Determines the direction in which the MIR certificate will transfer BCC.
 data TransferDirection = TransferToReserves | TransferToTreasury
                          deriving Show
 
@@ -192,13 +201,7 @@ data TransferDirection = TransferToReserves | TransferToTreasury
 data TxOutAnyEra = TxOutAnyEra
                      AddressAny
                      Value
-                     TxOutDatumAnyEra
-  deriving (Eq, Show)
-
-data TxOutDatumAnyEra = TxOutDatumByHashOnly (Hash ScriptData)
-                      | TxOutDatumByHashOf    ScriptDataOrFile
-                      | TxOutDatumByValue     ScriptDataOrFile
-                      | TxOutDatumByNone
+                     (Maybe (Hash ScriptData))
   deriving (Eq, Show)
 
 -- | A partially-specified transaction output indented to use as a change
@@ -215,3 +218,4 @@ newtype TxOutChangeAddress = TxOutChangeAddress AddressAny
 -- | A flag that differentiates between automatically
 -- and manually balancing a tx.
 data BalanceTxExecUnits = AutoBalance | ManualBalance
+

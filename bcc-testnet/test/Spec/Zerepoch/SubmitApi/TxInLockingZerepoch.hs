@@ -244,7 +244,7 @@ hprop_zerepoch = Test.integration . HE.runFinallies . HE.workspace "chairman" $ 
 
   HE.threadDelay 5000000
 
-  -- Querying UTxO at $targetaddress. If there is DAFI at the address the Zerepoch script successfully executed!
+  -- Querying UTxO at $targetaddress. If there is BCC at the address the Zerepoch script successfully executed!
 
   result <- H.evalM $ Text.pack <$> Test.execCli' execConfig
     [ "query", "utxo"
@@ -254,4 +254,4 @@ hprop_zerepoch = Test.integration . HE.runFinallies . HE.workspace "chairman" $ 
 
   HE.note_ $ Text.unpack result
 
-  List.filter (not . Text.null) (Text.splitOn " " (Text.lines result !! 2)) !! 2 === "160000000"
+  List.filter (not . Text.null) (Text.splitOn " " (Text.lines result !! 2)) !! 2 === "193333333"

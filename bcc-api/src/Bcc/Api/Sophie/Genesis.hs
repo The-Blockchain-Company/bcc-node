@@ -19,7 +19,7 @@ import           Bcc.Slotting.Slot (EpochSize (..))
 
 import           Shardagnostic.Consensus.Sophie.Node (SophieGenesis (..), emptyGenesisStaking)
 
-import           Bcc.Ledger.Sophie.PParams as Ledger (PParams' (..), emptyPParams)
+import           Sophie.Spec.Ledger.PParams as Ledger (PParams' (..), emptyPParams)
 
 
 -- | Some reasonable starting defaults for constructing a 'SophieGenesis'.
@@ -49,6 +49,7 @@ sophieGenesisDefaults =
                                   (Ledger.boundRational (1/20))  -- 20s block times on average
     , sgSecurityParam         = k
     , sgEpochLength           = EpochSize (k * 10 * 20) -- 10k/f
+    , sgVestMultiple            = 1
     , sgSlotsPerKESPeriod     = 60 * 60 * 36        -- 1.5 days with 1s slots
     , sgMaxKESEvolutions      = 60                  -- 90 days
     , sgUpdateQuorum          = 5                   -- assuming 7 genesis keys
@@ -67,6 +68,7 @@ sophieGenesisDefaults =
 
       -- genesis keys and initial funds
     , sgGenDelegs             = Map.empty
+    , sgVestedDelegs           = Map.empty
     , sgStaking               = emptyGenesisStaking
     , sgInitialFunds          = Map.empty
     , sgMaxEntropicSupply     = 0

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-# Unofficial bash strict mode.
+# Unoffiical bash strict mode.
 # See: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -u
 set -o pipefail
@@ -54,7 +54,7 @@ INIT_SUPPLY=10020000000
 FUNDS_PER_GENESIS_ADDRESS=$((${INIT_SUPPLY} / ${NUM_BFT_NODES}))
 FUNDS_PER_COLE_ADDRESS=$((${FUNDS_PER_GENESIS_ADDRESS} - 1000000))
 # We need to allow for a fee to transfer the funds out of the genesis.
-# We don't care too much, 1 dafi is more than enough.
+# We don't care too much, 1 bcc is more than enough.
 
 NETWORK_MAGIC=42
 SECURITY_PARAM=10
@@ -310,15 +310,13 @@ bcc-cli genesis create --testnet-magic 42 --genesis-dir sophie
 # and K=10, but we'll keep long KES periods so we don't have to bother
 # cycling KES keys
 sed -i sophie/genesis.spec.json \
-    -e 's/"slotLength": 1/"slotLength": 0.1/' \
+    -e 's/"slotLength": 1/"slotLength": 0.2/' \
     -e 's/"activeSlotsCoeff": 5.0e-2/"activeSlotsCoeff": 0.1/' \
     -e 's/"securityParam": 2160/"securityParam": 10/' \
-    -e 's/"epochLength": 432000/"epochLength": 500/' \
+    -e 's/"epochLength": 432000/"epochLength": 1500/' \
     -e 's/"maxEntropicSupply": 0/"maxEntropicSupply": 1000000000000/' \
     -e 's/"decentralisationParam": 1.0/"decentralisationParam": 0.7/' \
-    -e 's/"major": 0/"major": 5/' \
-    -e 's/"rho": 0.0/"rho": 0.1/' \
-    -e 's/"tau": 0.0/"tau": 0.1/' \
+    -e 's/"major": 0/"major": 2/' \
     -e 's/"updateQuorum": 5/"updateQuorum": 2/'
 
 # Now generate for real:
@@ -328,18 +326,6 @@ bcc-cli genesis create \
     --genesis-dir sophie/ \
     --gen-genesis-keys ${NUM_BFT_NODES} \
     --gen-utxo-keys 1
-
-bcc-cli stake-address key-gen \
-  --verification-key-file sophie/utxo-keys/utxo-stake.vkey \
-  --signing-key-file sophie/utxo-keys/utxo-stake.skey
-
-bcc-cli address key-gen \
-  --verification-key-file sophie/utxo-keys/utxo2.vkey \
-  --signing-key-file sophie/utxo-keys/utxo2.skey
-
-bcc-cli stake-address key-gen \
-  --verification-key-file sophie/utxo-keys/utxo2-stake.vkey \
-  --signing-key-file sophie/utxo-keys/utxo2-stake.skey
 
 echo "====================================================================="
 echo "Generated genesis keys and genesis files:"

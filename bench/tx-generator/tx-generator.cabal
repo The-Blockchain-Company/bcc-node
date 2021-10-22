@@ -1,8 +1,8 @@
 name:                  tx-generator
-version:               1.30
+version:               1.29
 description:           The transaction generator for bcc node
-author:                BCIO
-maintainer:            operations@iohk.io
+author:                TBCO
+maintainer:            operations@tbco.io
 license:               Apache-2.0
 license-files:
   LICENSE
@@ -49,11 +49,9 @@ library
                        Bcc.Benchmarking.Script.Example
                        Bcc.Benchmarking.Script.Setters
                        Bcc.Benchmarking.Script.Store
-                       Bcc.Benchmarking.Script.Types
                        Bcc.Benchmarking.Tracer
                        Bcc.Benchmarking.Types
                        Bcc.Benchmarking.Wallet
-                       Bcc.Benchmarking.ListBufferedSelector
                        Bcc.Benchmarking.ZerepochExample
 
   other-modules:       Paths_tx_generator
@@ -84,7 +82,7 @@ library
                      , generic-monoid
                      , ghc-prim
                      , io-classes
-                     , iohk-monitoring
+                     , tbco-monitoring
                      , ixset-typed
                      , network
                      , network-mux
@@ -97,7 +95,7 @@ library
                      , shardagnostic-network-framework
                      , random
                      , serialise
-                     , bcc-ledger-sophie
+                     , sophie-spec-ledger
                      , stm
                      , text
                      , time

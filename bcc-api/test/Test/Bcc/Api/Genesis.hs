@@ -24,11 +24,11 @@ import           Bcc.Ledger.Credential (Credential (..), PaymentCredential,
                    StakeCredential, StakeReference (..))
 import           Bcc.Ledger.BaseTypes (Network (..))
 import           Bcc.Ledger.Coin (Coin (..))
-import           Bcc.Ledger.Keys (GenDelegPair (..), Hash, KeyHash (..), KeyRole (..),
+import           Bcc.Ledger.Keys (GenDelegPair (..), VestedDelegPair (..), Hash, KeyHash (..), KeyRole (..),
                    VerKeyVRF)
-import           Bcc.Ledger.Sophie.PParams (PParams' (..), emptyPParams)
+import           Sophie.Spec.Ledger.PParams (PParams' (..), emptyPParams)
 
-import           Test.Bcc.Ledger.Sophie.Utils (unsafeBoundRational)
+import           Test.Sophie.Spec.Ledger.VestedSealUtils (unsafeBoundRational)
 
 exampleSophieGenesis :: SophieGenesis StandardSophie
 exampleSophieGenesis =
@@ -38,6 +38,7 @@ exampleSophieGenesis =
     , sgNetworkId = Testnet
     , sgActiveSlotsCoeff = unsafeBoundRational 0.259
     , sgSecurityParam = 120842
+    , sgVestMultiple = 1
     , sgEpochLength = EpochSize 1215
     , sgSlotsPerKESPeriod = 8541
     , sgMaxKESEvolutions = 28899
@@ -53,6 +54,10 @@ exampleSophieGenesis =
                       [( genesisVerKeyHash
                        , GenDelegPair delegVerKeyHash delegVrfKeyHash)
                       ]
+    , sgVestedDelegs = Map.fromList
+                      [( vestedVerKeyHash
+                       , VestedDelegPair vestedDelegVerKeyHash adelegVrfKeyHash)
+                      ]
     , sgInitialFunds = Map.fromList [(initialFundedAddress,initialFunds)]
     , sgStaking = emptyGenesisStaking
     }
@@ -65,6 +70,13 @@ exampleSophieGenesis =
   delegVerKeyHash = KeyHash "839b047f56e50654bdb504832186dc1ee0c73c8de2daec7ae6273827"
   delegVrfKeyHash :: Hash StandardCrypto (VerKeyVRF StandardCrypto)
   delegVrfKeyHash = "231391e7ec1c450a8518134cf6fad1a8e0ed7ffd66d740f8e8271347a6de7bf2"
+  vestedVerKeyHash :: KeyHash Vested StandardCrypto
+  vestedVerKeyHash = KeyHash "13d51e91ae5adc7ae801e6de4cd54175fb7464ec2680b25686bbb194"
+  -- hash of the delegators verification key
+  vestedDelegVerKeyHash :: KeyHash VestedDelegate StandardCrypto
+  vestedDelegVerKeyHash = KeyHash "939b047f56e50654bdb504832186dc1ee0c73c8de2daec7ae6273827"
+  adelegVrfKeyHash :: Hash StandardCrypto (VerKeyVRF StandardCrypto)
+  adelegVrfKeyHash = "431391e7ec1c450a8518134cf6fad1a8e0ed7ffd66d740f8e8271347a6de7bf2"
   initialFundedAddress :: Addr StandardCrypto
   initialFundedAddress = Addr Testnet paymentCredential (StakeRefBase stakingCredential)
     where

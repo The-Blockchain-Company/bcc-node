@@ -16,7 +16,7 @@ import qualified Data.Text as Text
 import           Bcc.BM.Data.Tracer (TracingVerbosity (..))
 import qualified Bcc.Chain.Update as Update
 import           Bcc.Ledger.Crypto (StandardCrypto)
-import qualified Bcc.Ledger.Sophie.CompactAddr as Sophie
+import qualified Sophie.Spec.Ledger.CompactAddr as Sophie
 
 instance FromJSON TracingVerbosity where
   parseJSON (String str) = case str of

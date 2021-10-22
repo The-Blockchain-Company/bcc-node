@@ -27,7 +27,7 @@ optsTestnet :: Parser TestnetOptions
 optsTestnet = TestnetOptions
   <$> OA.option auto
       (   OA.long "num-optimum-nodes"
-      <>  OA.help "Number of optimum nodes"
+      <>  OA.help "Number of PRAOS nodes"
       <>  OA.metavar "COUNT"
       <>  OA.showDefault
       <>  OA.value (numOptimumNodes defaultTestnetOptions)

@@ -30,7 +30,7 @@ let
     ''
       echo "
         Commands:
-          * nix flake lock --update-input <iohkNix|haskellNix> - update nix build input
+          * nix flake lock --update-input <tbcoNix|haskellNix> - update nix build input
           * bcc-cli - used for key generation and other operations tasks
           * wb - cluster workbench
           * start-cluster - start a local development cluster
@@ -52,14 +52,15 @@ let
   haveGlibcLocales = pkgs.glibcLocales != null && stdenv.hostPlatform.libc == "glibc";
 
   # This provides a development environment that can be used with nix-shell or
-  # lorri. See https://the-blockchain-company.github.io/haskell.nix/user-guide/development/
+  # lorri. See https://The-Blockchain-Company.github.io/haskell.nix/user-guide/development/
   # NOTE: due to some cabal limitation,
   #  you have to remove all `source-repository-package` entries from cabal.project
   #  after entering nix-shell for cabal to use nix provided dependencies for them.
   mkCluster =
-    { useCabalRun, profileName ? localCluster.profileName }:
+    { useCabalRun }:
     callPackage ./nix/supervisord-cluster
-      { inherit profileName useCabalRun;
+      { inherit useCabalRun;
+        inherit (localCluster) profileName;
         workbench = pkgs.callPackage ./nix/workbench { inherit useCabalRun; };
       };
 
@@ -79,7 +80,8 @@ let
     tools = {
       haskell-language-server = {
         version = "latest";
-        inherit (bccNodeProject) index-state;
+        index-state = "2021-06-22T00:00:00Z";
+        # inherit (bccNodeProject) index-state;
       };
     };
 
@@ -154,7 +156,7 @@ let
   };
 
   devops =
-    let cluster = mkCluster { useCabalRun = false; profileName = "devops-alzo"; };
+    let cluster = mkCluster { useCabalRun = false; };
     in bccNodeProject.shellFor {
     name = "devops-shell";
 
@@ -199,7 +201,7 @@ let
       ${lib.optionalString (__hasAttr "network" customConfig) ''
         export BCC_NODE_SOCKET_PATH="$PWD/state-node-${customConfig.network}/node.socket"
         ${lib.optionalString (__hasAttr "utxo" pkgs.commonLib.bccLib.environments.${customConfig.network}) ''
-          # Selfnode and other test clusters have public secret keys that we pull from iohk-nix
+          # Selfnode and other test clusters have public secret keys that we pull from tbco-nix
           echo "To access funds use UTXO_SKEY and UTXO_VKEY environment variables"
           export UTXO_SKEY="${pkgs.commonLib.bccLib.environments.${customConfig.network}.utxo.signing}"
           export UTXO_VKEY="${pkgs.commonLib.bccLib.environments.${customConfig.network}.utxo.verification}"

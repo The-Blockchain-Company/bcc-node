@@ -51,21 +51,16 @@ module Bcc.Api.Query (
     -- * Internal conversion functions
     toLedgerUTxO,
     fromLedgerUTxO,
-
   ) where
 
-import           Data.Aeson (FromJSON (..), ToJSON (..), object, withObject, (.=))
-import qualified Data.Aeson as Aeson
-import           Data.Aeson.Types (Parser)
+import           Data.Aeson (ToJSON (..), object, (.=))
 import           Data.Bifunctor (bimap)
-import qualified Data.HashMap.Strict as HMS
 import           Data.Map (Map)
 import qualified Data.Map as Map
 import           Data.Maybe (mapMaybe)
 import           Data.SOP.Strict (SListI)
 import           Data.Set (Set)
 import qualified Data.Set as Set
-import           Data.Text (Text)
 import           Data.Typeable
 import           Prelude
 
@@ -87,15 +82,14 @@ import qualified Shardagnostic.Consensus.Sophie.Ledger as Consensus
 import           Shardagnostic.Network.Block (Serialised)
 
 import           Bcc.Binary
-import           Bcc.Slotting.Slot (WithOrigin (..))
 import           Bcc.Slotting.Time (SystemStart (..))
 
 import qualified Bcc.Chain.Update.Validation.Interface as Cole.Update
 import qualified Bcc.Ledger.Core as Core
 import qualified Bcc.Ledger.Era as Ledger
 
-import qualified Bcc.Ledger.Sophie.API as Sophie
-import qualified Bcc.Ledger.Sophie.LedgerState as Sophie
+import qualified Sophie.Spec.Ledger.API as Sophie
+import qualified Sophie.Spec.Ledger.LedgerState as Sophie
 
 import           Bcc.Api.Address
 import           Bcc.Api.Block
@@ -132,13 +126,6 @@ data QueryInMode mode result where
 
   QuerySystemStart
     :: QueryInMode mode SystemStart
-
-  QueryChainBlockNo
-    :: QueryInMode mode (WithOrigin BlockNo)
-
-  QueryChainPoint
-    :: ConsensusMode mode
-    -> QueryInMode mode ChainPoint
 
 data EraHistory mode where
   EraHistory
@@ -177,6 +164,9 @@ deriving instance Show (QueryInEra era result)
 
 
 data QueryInSophieBasedEra era result where
+     QueryChainPoint
+       :: QueryInSophieBasedEra era ChainPoint
+
      QueryEpoch
        :: QueryInSophieBasedEra era EpochNo
 
@@ -250,7 +240,7 @@ data QueryUTxOFilter =
 newtype ColeUpdateState = ColeUpdateState Cole.Update.State
   deriving Show
 
-newtype UTxO era = UTxO { unUTxO :: Map TxIn (TxOut CtxUTxO era) }
+newtype UTxO era = UTxO (Map TxIn (TxOut era))
   deriving (Eq, Show)
 
 data UTxOInAnyEra where
@@ -262,18 +252,6 @@ deriving instance Show UTxOInAnyEra
 
 instance IsBccEra era => ToJSON (UTxO era) where
   toJSON (UTxO m) = toJSON m
-
-instance (IsBccEra era, IsSophieBasedEra era, FromJSON (TxOut CtxUTxO era))
-  => FromJSON (UTxO era) where
-    parseJSON = withObject "UTxO" $ \hm -> do
-      let l = HMS.toList hm
-      res <- mapM toTxIn l
-      pure . UTxO $ Map.fromList res
-     where
-      toTxIn :: (Text, Aeson.Value) -> Parser (TxIn, TxOut CtxUTxO era)
-      toTxIn (txinText, txOutVal) = do
-        (,) <$> parseJSON (Aeson.String txinText)
-            <*> parseJSON txOutVal
 
 newtype SerialisedDebugLedgerState era
   = SerialisedDebugLedgerState (Serialised (Sophie.NewEpochState (SophieLedgerEra era)))
@@ -396,10 +374,6 @@ toConsensusQuery (QueryEraHistory BccModeIsMultiEra) =
 
 toConsensusQuery QuerySystemStart = Some Consensus.GetSystemStart
 
-toConsensusQuery QueryChainBlockNo = Some Consensus.GetChainBlockNo
-
-toConsensusQuery (QueryChainPoint _) = Some Consensus.GetChainPoint
-
 toConsensusQuery (QueryInEra ColeEraInBccMode QueryColeUpdateState) =
     Some $ Consensus.BlockQuery $
       Consensus.QueryIfCurrentCole
@@ -425,6 +399,9 @@ toConsensusQuerySophieBased
   => EraInMode era mode
   -> QueryInSophieBasedEra era result
   -> Some (Consensus.Query block)
+toConsensusQuerySophieBased erainmode QueryChainPoint =
+    Some (consensusQueryInEraInMode erainmode Consensus.GetLedgerTip)
+
 toConsensusQuerySophieBased erainmode QueryEpoch =
     Some (consensusQueryInEraInMode erainmode Consensus.GetEpochNo)
 
@@ -501,7 +478,8 @@ consensusQueryInEraInMode erainmode =
 -- Conversions of query results from the consensus types.
 --
 
-fromConsensusQueryResult :: forall mode block result result'. ConsensusBlockForMode mode ~ block
+fromConsensusQueryResult :: forall mode block result result'.
+                            ConsensusBlockForMode mode ~ block
                          => QueryInMode mode result
                          -> Consensus.Query block result'
                          -> result'
@@ -516,18 +494,6 @@ fromConsensusQueryResult QuerySystemStart q' r' =
     case q' of
       Consensus.GetSystemStart
         -> r'
-      _ -> fromConsensusQueryResultMismatch
-
-fromConsensusQueryResult QueryChainBlockNo q' r' =
-    case q' of
-      Consensus.GetChainBlockNo
-        -> r'
-      _ -> fromConsensusQueryResultMismatch
-
-fromConsensusQueryResult (QueryChainPoint mode) q' r' =
-    case q' of
-      Consensus.GetChainPoint
-        -> fromConsensusPointInMode mode r'
       _ -> fromConsensusQueryResultMismatch
 
 fromConsensusQueryResult (QueryCurrentEra BccModeIsMultiEra) q' r' =
@@ -612,12 +578,18 @@ fromConsensusQueryResult (QueryInEra AurumEraInBccMode
 fromConsensusQueryResultSophieBased
   :: forall era ledgerera result result'.
      SophieLedgerEra era ~ ledgerera
+  => Consensus.SophieBasedEra ledgerera
   => Ledger.Crypto ledgerera ~ Consensus.StandardCrypto
   => SophieBasedEra era
   -> QueryInSophieBasedEra era result
   -> Consensus.BlockQuery (Consensus.SophieBlock ledgerera) result'
   -> result'
   -> result
+fromConsensusQueryResultSophieBased _ QueryChainPoint q' point =
+    case q' of
+      Consensus.GetLedgerTip -> fromConsensusPoint point
+      _                      -> fromConsensusQueryResultMismatch
+
 fromConsensusQueryResultSophieBased _ QueryEpoch q' epoch =
     case q' of
       Consensus.GetEpochNo -> epoch
@@ -712,3 +684,4 @@ fromConsensusQueryResultMismatch =
 fromConsensusEraMismatch :: SListI xs
                          => Consensus.MismatchEraInfo xs -> EraMismatch
 fromConsensusEraMismatch = Consensus.mkEraMismatch
+

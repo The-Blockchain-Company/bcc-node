@@ -1,54 +1,8 @@
 # Changelog for bcc-node
 
-## 1.30 -- September 2021
-
-### node changes
-
-- Miscellaneous documentation updates. (#3060, #3120, #3142)
-- Fix the verbosity of some log messages, which was causing excess detail in the
-  node logs. (#3046)
-- Various build, testing and infrastructure improvements. (#2821, #3005, #3127,
-  #3157, #3159, #3189, #3194, #3200, #3203)
-
-### consensus changes
-
-- Improved documentation. (#2957, #3279)
-- Removed strictness annotations in traces. (#3244)
-- Exposing the ledger event logger. (#3292)
-- Supporting Aurum protocol version. (#3347)
-- Overhauling the db analyser tool. This will allow the ledger team to run micro
-  benchmarks without noise from other layers (like networking). (#3337)
-
-### network changes
-
-- Adding more information to trace events. (#3333)
-- Fixed a bug that could cause a node to become unresponsive to new connections.
-  (#3335)
-
-### ledger changes
-
-- Correctly translate time for Zerepoch (from protocol version 6 onwards). (#2451)
-- Various build, testing and infrastructure improvements. (#2429, #2435, #2440,
-  #2447, #2455, #2481)
-- Changed the computation of the stake distribution to be done incrementally, so
-  as to spread the CPU load over time. Unfortunately, we had to revert this for
-  now, due to a performance regression. Hope to include that in a later update
-  again (#2371, #2484)
-- Additions and corrections in the event logger. (#2441, #2487)
-- Memory optimisations. (#2442)
-- Updates to the Aurum formal specification. (#2418, #2448)
-- Additional exports needed for db-sync integration. (#2450)
-- Moved protocol related types to a new module, `bcc-protocol-toptimum`.
-  (#2445)
-- Preparatory work for storing the ledger state on disk. (#2449)
-- Updated the CHAINHEAD rule in the Sophie formal spec. (#2313)
-- Providing more information about the reward calculation inside of the reward
-  provenance. (#2433)
-
 ## 1.29 -- August 2021
 
 ### node changes
-
 - Various build, testing and infrastructure improvements. (#2940, #2943, #2947,
   #2956, #2968, #2979, #2983, #2988, #2991, #2993, #2997, #3004, #3006, #3013,
   #3029, #3034, #3053, #3058, #3062, #3087, #3098)
@@ -212,13 +166,13 @@
 - Add details about registering relays on-chain to SPO documentation. (#2591)
 - Improved installation documentation. (#2624)
 - Preparatory support for Aurum. (#2547)
-- Preparatory support for Jack. (#2498)
+- Preparatory support for David. (#2498)
 - Add a docker image option for downloading bcc-node. (#2632)
 - Miscellaneous internal improvements. (#2644, #2645, #2646)
 
 ### consensus changes
 
-- Some preparation for upcoming work on Jack. (#2978)
+- Some preparation for upcoming work on David. (#2978)
 - Drop support for GHC 8.6.5. Note that support had already been dropped in the
   node. (#3004)
 - Introduce an option to configure the snapshot interval. This will primarily be
@@ -249,9 +203,9 @@
   resulting "pause" in normal operation. (#2240, #2241, #2250, #2262)
 - Added formal definitions for much of the crypto used to the Sophie spec.
   (#2236, #2252)
-- Expose DafiPots for use in downstream projects. (#2208)
+- Expose BccPots for use in downstream projects. (#2208)
 - Some Cole-era serialisation testing. (#2217)
-- Some preparation for upcoming work on Jack. (#2135)
+- Some preparation for upcoming work on David. (#2135)
 
 ### network changes
 
@@ -272,7 +226,7 @@
 - Disable the "uncoupled blocks" metric. This was shown in profiling to have an
   unfortunately large overhead. This reverts the change introduced in #2321.
   (#2510)
-- Update the iohk-monitoring framework to fix a file descriptor leak. (#2518)
+- Update the tbco-monitoring framework to fix a file descriptor leak. (#2518)
 
 ### ledger changes
 - Fix an unevalutated thunk error in reward computation. (#2183)
@@ -398,12 +352,12 @@
   the allowed range was -2^64..2^64-1 (#2092)
 - Rename fields in the ledger's CDDL binary specification for clarity and
   consistency, but no actual changes to the binary format (#2045)
-- Change the minimum dafi UTxO value formula for multi-asset values to better
+- Change the minimum bcc UTxO value formula for multi-asset values to better
   reflect the resource costs and to pass on savings (in the form of a lower
-  minimum dafi UTxO value) for applications that use smaller asset bundles by
+  minimum bcc UTxO value) for applications that use smaller asset bundles by
   sharing policy ids or using shorter asset names (#2107)
 - Improvements to the size of the internal storage format of multi-asset values,
-  enabling a lower minimum dafi UTxO value for multi-asset output values (#2083)
+  enabling a lower minimum bcc UTxO value for multi-asset output values (#2083)
 - Restrict the maximum size of multi-asset output values (#2099)
 - Fix the conversion of Evie era txs to Jen era txs (#2054)
 - Internal refactoring to simplify some of the types and make fewer types be
@@ -1242,7 +1196,7 @@ No changes in the node. There were changes in the bcc-api and bcc-cli.
 - API improvements for the local node IPC protocol (#1950, #1959, #1962)
 - DNS error handling improvements during temporary network outages (#1961)
 - Add timeouts on message sends, rather than just receive (#1953)
-- Unified library API docs https://the-blockchain-company.github.io/shardagnostic-network/
+- Unified library API docs https://The-Blockchain-Company.github.io/shardagnostic-network/
 
 ## 1.10.1 -- April 2020
 

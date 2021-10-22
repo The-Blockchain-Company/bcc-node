@@ -1,5 +1,4 @@
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -43,8 +42,6 @@ import           Prelude
 import           Bcc.Api.Eras
 import           Bcc.Ledger.Crypto (StandardCrypto)
 
-import           Data.Aeson (Value, FromJSON (parseJSON), ToJSON (toJSON))
-import           Data.Aeson.Types (Parser, prependFailure, typeMismatch)
 import           Data.SOP.Strict (K (K), NS (S, Z))
 import           Data.Text (Text)
 
@@ -140,6 +137,7 @@ toEraInMode JenEra    BccMode = Just JenEraInBccMode
 toEraInMode AurumEra  BccMode = Just AurumEraInBccMode
 toEraInMode _ _                    = Nothing
 
+
 -- | A representation of which 'BccEra's are included in each
 -- 'ConsensusMode'.
 --
@@ -156,70 +154,6 @@ data EraInMode era mode where
 
 deriving instance Show (EraInMode era mode)
 
-deriving instance Eq (EraInMode era mode)
-
-instance FromJSON (EraInMode ColeEra ColeMode) where
-  parseJSON "ColeEraInColeMode" = pure ColeEraInColeMode
-  parseJSON invalid =
-      invalidJSONFailure "ColeEraInColeMode"
-                         "parsing 'EraInMode ColeEra ColeMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode SophieEra SophieMode) where
-  parseJSON "SophieEraInSophieMode" = pure SophieEraInSophieMode
-  parseJSON invalid =
-      invalidJSONFailure "SophieEraInSophieMode"
-                         "parsing 'EraInMode SophieEra SophieMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode ColeEra BccMode) where
-  parseJSON "ColeEraInBccMode" = pure ColeEraInBccMode
-  parseJSON invalid =
-      invalidJSONFailure "ColeEraInBccMode"
-                         "parsing 'EraInMode ColeEra BccMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode SophieEra BccMode) where
-  parseJSON "SophieEraInBccMode" = pure SophieEraInBccMode
-  parseJSON invalid =
-      invalidJSONFailure "SophieEraInBccMode"
-                         "parsing 'EraInMode SophieEra BccMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode EvieEra BccMode) where
-  parseJSON "EvieEraInBccMode" = pure EvieEraInBccMode
-  parseJSON invalid =
-      invalidJSONFailure "EvieEraInBccMode"
-                         "parsing 'EraInMode EvieEra BccMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode JenEra BccMode) where
-  parseJSON "JenEraInBccMode" = pure JenEraInBccMode
-  parseJSON invalid =
-      invalidJSONFailure "JenEraInBccMode"
-                         "parsing 'EraInMode JenEra BccMode' failed, "
-                         invalid
-
-instance FromJSON (EraInMode AurumEra BccMode) where
-  parseJSON "AurumEraInBccMode" = pure AurumEraInBccMode
-  parseJSON invalid =
-      invalidJSONFailure "AurumEraInBccMode"
-                         "parsing 'EraInMode AurumEra BccMode' failed, "
-                         invalid
-
-invalidJSONFailure :: String -> String -> Value -> Parser a
-invalidJSONFailure expectedType errorMsg invalidValue =
-    prependFailure errorMsg
-                   (typeMismatch expectedType invalidValue)
-
-instance ToJSON (EraInMode era mode) where
-  toJSON ColeEraInColeMode = "ColeEraInColeMode"
-  toJSON SophieEraInSophieMode  = "SophieEraInSophieMode"
-  toJSON ColeEraInBccMode  = "ColeEraInBccMode"
-  toJSON SophieEraInBccMode = "SophieEraInBccMode"
-  toJSON EvieEraInBccMode = "EvieEraInBccMode"
-  toJSON JenEraInBccMode = "JenEraInBccMode"
-  toJSON AurumEraInBccMode = "AurumEraInBccMode"
 
 eraInModeToEra :: EraInMode era mode -> BccEra era
 eraInModeToEra ColeEraInColeMode     = ColeEra

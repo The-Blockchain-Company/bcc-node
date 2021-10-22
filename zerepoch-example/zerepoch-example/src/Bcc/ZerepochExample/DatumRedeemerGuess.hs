@@ -6,7 +6,6 @@
 
 module Bcc.ZerepochExample.DatumRedeemerGuess
   ( guessScript
-  , guessScriptStake
   , datumRedeemerGuessScriptShortBs
   ) where
 
@@ -21,7 +20,7 @@ import qualified Data.ByteString.Short as SBS
 import qualified Zerepoch.V1.Ledger.Scripts as Zerepoch
 import           ZerepochTx (toBuiltinData)
 import qualified ZerepochTx
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 
 {-# INLINABLE mkValidator #-}
 mkValidator :: BuiltinData -> BuiltinData -> BuiltinData  -> ()
@@ -42,20 +41,3 @@ datumRedeemerGuessScriptShortBs = SBS.toShort . LBS.toStrict $ serialise script
 guessScript :: ZerepochScript ZerepochScriptV1
 guessScript = ZerepochScriptSerialised datumRedeemerGuessScriptShortBs
 
-{-# INLINEABLE mkValidatorStake #-}
-mkValidatorStake :: BuiltinData -> BuiltinData -> ()
-mkValidatorStake redeemer _txContext
-  | redeemer == toBuiltinData (42 :: Integer) = ()
-  | otherwise = traceError "Incorrect datum. Expected 42."
-
-validatorStake :: Zerepoch.StakeValidator
-validatorStake = Zerepoch.mkStakeValidatorScript $$(ZerepochTx.compile [||mkValidatorStake||])
-
-scriptStake :: Zerepoch.Script
-scriptStake = Zerepoch.unStakeValidatorScript validatorStake
-
-datumRedeemerGuessScriptStakeShortBs :: SBS.ShortByteString
-datumRedeemerGuessScriptStakeShortBs = SBS.toShort . LBS.toStrict $ serialise scriptStake
-
-guessScriptStake :: ZerepochScript ZerepochScriptV1
-guessScriptStake = ZerepochScriptSerialised datumRedeemerGuessScriptStakeShortBs

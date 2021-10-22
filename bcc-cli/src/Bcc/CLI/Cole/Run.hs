@@ -197,7 +197,7 @@ runSpendGenesisUTxO
   -> NewTxFile
   -> SigningKeyFile
   -> Address ColeAddr
-  -> [TxOut CtxTx ColeEra]
+  -> [TxOut ColeEra]
   -> ExceptT ColeClientCmdError IO ()
 runSpendGenesisUTxO genesisFile nw bKeyFormat (NewTxFile ctTx) ctKey genRichAddr outs = do
     genesis <- firstExceptT ColeCmdGenesisError $ readGenesis genesisFile nw
@@ -212,7 +212,7 @@ runSpendUTxO
   -> NewTxFile
   -> SigningKeyFile
   -> [TxIn]
-  -> [TxOut CtxTx ColeEra]
+  -> [TxOut ColeEra]
   -> ExceptT ColeClientCmdError IO ()
 runSpendUTxO nw bKeyFormat (NewTxFile ctTx) ctKey ins outs = do
     sk <- firstExceptT ColeCmdKeyFailure $ readColeSigningKey bKeyFormat ctKey

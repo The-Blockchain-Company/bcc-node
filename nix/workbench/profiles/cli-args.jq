@@ -26,7 +26,8 @@ def profile_cli_args($p):
                                     , $p.genesis.delegators ]
                                      | max)
      , "--testnet-magic",          $p.genesis.network_magic
-     , "--num-stuffed-utxo",       $p.genesis.utxo
+     , "--num-stuffed-utxo",       ($p.genesis.utxo - $p.genesis.delegators - 1)
+                                   ## 1 is for the generator's very own funds.
      ] +
      if $p.composition.dense_pool_density != 1
      then

@@ -14,8 +14,9 @@ import           Bcc.Prelude
 import           Bcc.Chain.Update (InstallerHash (..), ProtocolVersion (..),
                      SoftwareVersion (..), SystemTag (..))
 
-import           Bcc.Api       hiding (GenesisParameters)
-import           Bcc.Api.Cole hiding (GenesisParameters)
+import           Bcc.Api (NetworkId, TxIn)
+import           Bcc.Api.Cole (Address (..), ColeAddr, ColeEra,
+                     ColeProtocolParametersUpdate (..), TxOut)
 
 import           Bcc.CLI.Cole.Genesis
 import           Bcc.CLI.Cole.Key
@@ -81,7 +82,7 @@ data ColeCommand =
         -- ^ Signing key of genesis UTxO owner.
         (Address ColeAddr)
         -- ^ Genesis UTxO address.
-        [TxOut CtxTx ColeEra]
+        [TxOut ColeEra]
         -- ^ Tx output.
   | SpendUTxO
         NetworkId
@@ -92,7 +93,7 @@ data ColeCommand =
         -- ^ Signing key of Tx underwriter.
         [TxIn]
         -- ^ Inputs available for spending to the Tx underwriter's key.
-        [TxOut CtxTx ColeEra]
+        [TxOut ColeEra]
         -- ^ Genesis UTxO output Address.
 
   | GetTxId TxFile

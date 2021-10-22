@@ -1,6 +1,6 @@
 # Installing the node from source
 
-The **latest** version of the node may be downloaded from the [bcc-node GitHub Releases](https://github.com/the-blockchain-company/bcc-node/releases) page.
+The **latest** version of the node may be downloaded from the [bcc-node GitHub Releases](https://github.com/The-Blockchain-Company/bcc-node/releases) page.
 
 #### Prerequisites
 
@@ -103,7 +103,7 @@ Create a working directory for your builds:
 
 Download and install libsodium:
 
-    git clone https://github.com/the-blockchain-company/libsodium
+    git clone https://github.com/The-Blockchain-Company/libsodium
     cd libsodium
     git checkout 66f017f1
     ./autogen.sh
@@ -125,7 +125,7 @@ Create a working directory for your builds:
 
 Download the Bcc node sources:
 
-    git clone https://github.com/the-blockchain-company/bcc-node.git
+    git clone https://github.com/The-Blockchain-Company/bcc-node.git
 
 Change the working directory to the downloaded source code folder:
 

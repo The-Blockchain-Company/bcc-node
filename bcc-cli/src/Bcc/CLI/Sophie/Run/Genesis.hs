@@ -65,8 +65,8 @@ import qualified Bcc.Ledger.Aurum.Scripts as Aurum
 import qualified Bcc.Ledger.BaseTypes as Ledger
 import           Bcc.Ledger.Coin (Coin (..))
 import qualified Bcc.Ledger.Keys as Ledger
-import qualified Bcc.Ledger.Sophie.API as Ledger
-import qualified Bcc.Ledger.Sophie.PParams as Sophie
+import qualified Sophie.Spec.Ledger.API as Ledger
+import qualified Sophie.Spec.Ledger.PParams as Sophie
 
 import           Bcc.Ledger.Crypto (ADDRHASH, Crypto, StandardCrypto)
 import           Bcc.Ledger.Era ()
@@ -75,6 +75,7 @@ import           Bcc.CLI.Helpers (textShow)
 import           Bcc.CLI.Sophie.Commands
 import           Bcc.CLI.Sophie.Key
 import           Bcc.CLI.Sophie.Orphans ()
+import           Bcc.CLI.Sophie.Parsers (renderTxIn)
 import           Bcc.CLI.Sophie.Run.Address
 import           Bcc.CLI.Sophie.Run.Node (SophieNodeCmdError (..), renderSophieNodeCmdError,
                    runNodeIssueOpCert, runNodeKeyGenCold, runNodeKeyGenKES, runNodeKeyGenVRF)
@@ -91,6 +92,7 @@ data SophieGenesisCmdError
   | SophieGenesisCmdGenesisFileError !(FileError ())
   | SophieGenesisCmdFileError !(FileError ())
   | SophieGenesisCmdMismatchedGenesisKeyFiles [Int] [Int] [Int]
+  | SophieGenesisCmdMismatchedVestedKeyFiles [Int] [Int] [Int]
   | SophieGenesisCmdFilesNoIndex [FilePath]
   | SophieGenesisCmdFilesDupIndex [FilePath]
   | SophieGenesisCmdTextEnvReadFileError !(FileError TextEnvelopeError)
@@ -115,6 +117,11 @@ renderSophieGenesisCmdError err =
         <> "Genesis key file indexes:      " <> textShow gfiles <> "\n"
         <> "Delegate key file indexes:     " <> textShow dfiles <> "\n"
         <> "Delegate VRF key file indexes: " <> textShow vfiles
+    SophieGenesisCmdMismatchedVestedKeyFiles afiles adfiles avfiles ->
+      "Mismatch between the files found:\n"
+        <> "Vested key file indexes:      " <> textShow afiles <> "\n"
+        <> "VestedDelegate key file indexes:     " <> textShow adfiles <> "\n"
+        <> "VestedDelegate VRF key file indexes: " <> textShow avfiles
     SophieGenesisCmdFilesNoIndex files ->
       "The genesis keys files are expected to have a numeric index but these do not:\n"
         <> Text.unlines (map Text.pack files)
@@ -141,6 +148,8 @@ renderSophieGenesisCmdError err =
 runGenesisCmd :: GenesisCmd -> ExceptT SophieGenesisCmdError IO ()
 runGenesisCmd (GenesisKeyGenGenesis vk sk) = runGenesisKeyGenGenesis vk sk
 runGenesisCmd (GenesisKeyGenDelegate vk sk ctr) = runGenesisKeyGenDelegate vk sk ctr
+runGenesisCmd (GenesisKeyGenVested vk sk) = runGenesisKeyGenVested vk sk
+runGenesisCmd (GenesisKeyGenVestedDelegate vk sk ctr) = runGenesisKeyGenVestedDelegate vk sk ctr
 runGenesisCmd (GenesisKeyGenUTxO vk sk) = runGenesisKeyGenUTxO vk sk
 runGenesisCmd (GenesisCmdKeyHash vk) = runGenesisKeyHash vk
 runGenesisCmd (GenesisVerKey vk sk) = runGenesisVerKey vk sk
@@ -221,6 +230,72 @@ runGenesisKeyGenDelegateVRF (VerificationKeyFile vkeyPath)
     skeyDesc = "VRF Signing Key"
     vkeyDesc = "VRF Verification Key"
 
+runGenesisKeyGenVested :: VerificationKeyFile -> SigningKeyFile
+                        -> ExceptT SophieGenesisCmdError IO ()
+runGenesisKeyGenVested (VerificationKeyFile vkeyPath)
+                        (SigningKeyFile skeyPath) = do
+    skey <- liftIO $ generateSigningKey AsVestedKey
+    let vkey = getVerificationKey skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope skeyPath (Just skeyDesc) skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope vkeyPath (Just vkeyDesc) vkey
+  where
+    skeyDesc, vkeyDesc :: TextEnvelopeDescr
+    skeyDesc = "Vested Signing Key"
+    vkeyDesc = "Vested Verification Key"
+
+
+runGenesisKeyGenVestedDelegate :: VerificationKeyFile
+                         -> SigningKeyFile
+                         -> OpCertCounterFile
+                         -> ExceptT SophieGenesisCmdError IO ()
+runGenesisKeyGenVestedDelegate (VerificationKeyFile vkeyPath)
+                         (SigningKeyFile skeyPath)
+                         (OpCertCounterFile ocertCtrPath) = do
+    skey <- liftIO $ generateSigningKey AsVestedDelegateKey
+    let vkey = getVerificationKey skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope skeyPath (Just skeyDesc) skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope vkeyPath (Just vkeyDesc) vkey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope ocertCtrPath (Just certCtrDesc)
+      $ OperationalCertificateIssueCounter
+          initialCounter
+          (castVerificationKey vkey)  -- Cast to a 'StakePoolKey'
+  where
+    skeyDesc, vkeyDesc, certCtrDesc :: TextEnvelopeDescr
+    skeyDesc = "Vested delegate operator key"
+    vkeyDesc = "Vested delegate operator key"
+    certCtrDesc = "Next certificate issue number: "
+               <> fromString (show initialCounter)
+
+    initialCounter :: Word64
+    initialCounter = 0
+
+
+runGenesisKeyGenVestedDelegateVRF :: VerificationKeyFile -> SigningKeyFile
+                            -> ExceptT SophieGenesisCmdError IO ()
+runGenesisKeyGenVestedDelegateVRF (VerificationKeyFile vkeyPath)
+                            (SigningKeyFile skeyPath) = do
+    skey <- liftIO $ generateSigningKey AsVrfKey
+    let vkey = getVerificationKey skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope skeyPath (Just skeyDesc) skey
+    firstExceptT SophieGenesisCmdGenesisFileError
+      . newExceptT
+      $ writeFileTextEnvelope vkeyPath (Just vkeyDesc) vkey
+  where
+    skeyDesc, vkeyDesc :: TextEnvelopeDescr
+    skeyDesc = "VRF Signing Key"
+    vkeyDesc = "VRF Verification Key"
 
 runGenesisKeyGenUTxO :: VerificationKeyFile -> SigningKeyFile
                      -> ExceptT SophieGenesisCmdError IO ()
@@ -257,6 +332,8 @@ runGenesisKeyHash (VerificationKeyFile vkeyPath) = do
     renderKeyHash :: SomeGenesisKey VerificationKey -> ByteString
     renderKeyHash (AGenesisKey         vk) = renderVerificationKeyHash vk
     renderKeyHash (AGenesisDelegateKey vk) = renderVerificationKeyHash vk
+    renderKeyHash (AGenesisVestedKey         vk) = renderVerificationKeyHash vk
+    renderKeyHash (AGenesisVestedDelegateKey vk) = renderVerificationKeyHash vk
     renderKeyHash (AGenesisUTxOKey     vk) = renderVerificationKeyHash vk
 
     renderVerificationKeyHash :: Key keyrole => VerificationKey keyrole -> ByteString
@@ -273,6 +350,10 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
                              AGenesisKey
               , FromSomeType (AsSigningKey AsGenesisDelegateKey)
                              AGenesisDelegateKey
+              , FromSomeType (AsSigningKey AsGenesisVestedKey)
+                             AGenesisVestedKey
+              , FromSomeType (AsSigningKey AsGenesisVestedDelegateKey)
+                             AGenesisVestedDelegateKey 
               , FromSomeType (AsSigningKey AsGenesisUTxOKey)
                              AGenesisUTxOKey
               ]
@@ -282,17 +363,23 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
         vkey = case skey of
           AGenesisKey         sk -> AGenesisKey         (getVerificationKey sk)
           AGenesisDelegateKey sk -> AGenesisDelegateKey (getVerificationKey sk)
+          AGenesisVestedKey    sk -> AGenesisVestedKey    (getVerificationKey sk)
+          AGenesisVestedDelegateKey sk -> AGenesisVestedDelegateKey (getVerificationKey sk)
           AGenesisUTxOKey     sk -> AGenesisUTxOKey     (getVerificationKey sk)
 
     firstExceptT SophieGenesisCmdGenesisFileError . newExceptT . liftIO $
       case vkey of
         AGenesisKey         vk -> writeFileTextEnvelope vkeyPath Nothing vk
         AGenesisDelegateKey vk -> writeFileTextEnvelope vkeyPath Nothing vk
+        AGenesisVestedKey         vk -> writeFileTextEnvelope vkeyPath Nothing vk
+        AGenesisVestedDelegateKey vk -> writeFileTextEnvelope vkeyPath Nothing vk
         AGenesisUTxOKey     vk -> writeFileTextEnvelope vkeyPath Nothing vk
 
 data SomeGenesisKey f
      = AGenesisKey         (f GenesisKey)
      | AGenesisDelegateKey (f GenesisDelegateKey)
+     | AGenesisVestedKey    (f GenesisVestedKey)
+     | AGenesisVestedDelegateKey (f GenesisVestedDelegateKey)
      | AGenesisUTxOKey     (f GenesisUTxOKey)
 
 
@@ -332,12 +419,14 @@ runGenesisCreate :: GenesisDir
                  -> NetworkId
                  -> ExceptT SophieGenesisCmdError IO ()
 runGenesisCreate (GenesisDir rootdir)
-                 genNumGenesisKeys genNumUTxOKeys
+                 genNumGenesisKeys genNumVestedKeys genNumUTxOKeys
                  mStart mAmount network = do
   liftIO $ do
     createDirectoryIfMissing False rootdir
     createDirectoryIfMissing False gendir
     createDirectoryIfMissing False deldir
+    createDirectoryIfMissing False vesteddir
+    createDirectoryIfMissing False vesteddeldir
     createDirectoryIfMissing False utxodir
 
   template <- readSophieGenesis (rootdir </> "genesis.spec.json") adjustTemplate
@@ -345,18 +434,23 @@ runGenesisCreate (GenesisDir rootdir)
   forM_ [ 1 .. genNumGenesisKeys ] $ \index -> do
     createGenesisKeys  gendir  index
     createDelegateKeys deldir index
+  
+  forM_ [ 1 .. genNumVestedKeys ] $ \index -> do
+    createVestedKeys  vesteddir  index
+    createVestedDelegateKeys vesteddeldir index
 
   forM_ [ 1 .. genNumUTxOKeys ] $ \index ->
     createUtxoKeys utxodir index
 
   genDlgs <- readGenDelegsMap gendir deldir
+  vestedDlgs <- readVestedDelegsMap vesteddir vesteddeldir
   utxoAddrs <- readInitialFundAddresses utxodir network
   start <- maybe (SystemStart <$> getCurrentTimePlus30) pure mStart
 
   let (sophieGenesis, aurumGenesis) =
         updateTemplate
           -- Sophie genesis parameters
-          start genDlgs mAmount utxoAddrs mempty (Entropic 0) [] [] template
+          start genDlgs vestedDlgs mAmount utxoAddrs mempty (Entropic 0) [] [] template
           -- Aurum genesis parameters
           -- TODO aurum: parameterize these, don't just use defaults
           aurumGenesisDefaultEntropicPerUtxoWord
@@ -374,11 +468,14 @@ runGenesisCreate (GenesisDir rootdir)
     adjustTemplate t = t { sgNetworkMagic = unNetworkMagic (toNetworkMagic network) }
     gendir  = rootdir </> "genesis-keys"
     deldir  = rootdir </> "delegate-keys"
+    vesteddir  = rootdir </> "vested-keys"
+    vesteddeldir  = rootdir </> "vesteddelegate-keys"
     utxodir = rootdir </> "utxo-keys"
 
 runGenesisCreateStaked
   :: GenesisDir
   -> Word           -- ^ num genesis & delegate keys to make
+  -> Word           -- ^ num vested & vesteddelegate keys to make
   -> Word           -- ^ num utxo keys to make
   -> Word           -- ^ num pools to make
   -> Word           -- ^ num delegators to make
@@ -391,13 +488,15 @@ runGenesisCreateStaked
   -> Word           -- ^ num stuffed UTxO entries
   -> ExceptT SophieGenesisCmdError IO ()
 runGenesisCreateStaked (GenesisDir rootdir)
-                 genNumGenesisKeys genNumUTxOKeys genNumPools genNumStDelegs
+                 genNumGenesisKeys genNumVestedKeys genNumUTxOKeys genNumPools genNumStDelegs
                  mStart mNonDlgAmount stDlgAmount network
                  bulkPoolCredFiles bulkPoolsPerFile numStuffedUtxo = do
   liftIO $ do
     createDirectoryIfMissing False rootdir
     createDirectoryIfMissing False gendir
     createDirectoryIfMissing False deldir
+    createDirectoryIfMissing False vesteddir
+    createDirectoryIfMissing False vesteddeldir
     createDirectoryIfMissing False pooldir
     createDirectoryIfMissing False stdeldir
     createDirectoryIfMissing False utxodir
@@ -407,6 +506,10 @@ runGenesisCreateStaked (GenesisDir rootdir)
   forM_ [ 1 .. genNumGenesisKeys ] $ \index -> do
     createGenesisKeys  gendir  index
     createDelegateKeys deldir index
+  
+  forM_ [ 1 .. genNumVestedKeys ] $ \index -> do
+    createVestedKeys  vesteddir  index
+    createVestedDelegateKeys vesteddeldir index
 
   forM_ [ 1 .. genNumUTxOKeys ] $ \index ->
     createUtxoKeys utxodir index
@@ -441,6 +544,7 @@ runGenesisCreateStaked (GenesisDir rootdir)
       uncurry (computeDelegation network stdeldir)
 
   genDlgs <- readGenDelegsMap gendir deldir
+  vestedDlgs <- readVestedDelegsMap vesteddir vesteddeldir
   nonDelegAddrs <- readInitialFundAddresses utxodir network
   start <- maybe (SystemStart <$> getCurrentTimePlus30) pure mStart
 
@@ -453,7 +557,7 @@ runGenesisCreateStaked (GenesisDir rootdir)
       (sophieGenesis, aurumGenesis) =
         updateTemplate
           -- Sophie genesis parameters
-          start genDlgs mNonDlgAmount nonDelegAddrs poolMap
+          start genDlgs vestedDlgs mNonDlgAmount nonDelegAddrs poolMap
           stDlgAmount delegAddrs stuffedUtxoAddrs template
           -- Aurum genesis parameters
           -- TODO aurum: parameterize these, don't just use defaults
@@ -472,6 +576,7 @@ runGenesisCreateStaked (GenesisDir rootdir)
   liftIO $ Text.putStrLn $ mconcat $
     [ "generated genesis with: "
     , textShow genNumGenesisKeys, " genesis keys, "
+    , textShow genNumVestedKeys, " vested keys, "
     , textShow genNumUTxOKeys, " non-delegating UTxO keys, "
     , textShow genNumPools, " stake pools, "
     , textShow genNumStDelegs, " delegating UTxO keys, "
@@ -497,6 +602,8 @@ runGenesisCreateStaked (GenesisDir rootdir)
 
     gendir   = rootdir </> "genesis-keys"
     deldir   = rootdir </> "delegate-keys"
+    vesteddir = rootdir </> "vested-keys"
+    vesteddeldir   = rootdir </> "vesteddelegate-keys"
     pooldir  = rootdir </> "pools"
     stdeldir = rootdir </> "stake-delegator-keys"
     utxodir  = rootdir </> "utxo-keys"
@@ -532,6 +639,13 @@ createDelegateKeys dir index = do
   runGenesisKeyGenDelegateVRF
         (VerificationKeyFile $ dir </> "delegate" ++ strIndex ++ ".vrf.vkey")
         (SigningKeyFile $ dir </> "delegate" ++ strIndex ++ ".vrf.skey")
+  runGenesisKeyGenVestedDelegate
+        (VerificationKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vkey")
+        coldSK
+        opCertCtr
+  runGenesisKeyGenVestedDelegateVRF
+        (VerificationKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vrf.vkey")
+        (SigningKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vrf.skey")
   firstExceptT SophieGenesisCmdNodeCmdError $ do
     runNodeKeyGenKES
         kesVK
@@ -556,6 +670,13 @@ createGenesisKeys dir index = do
         (VerificationKeyFile $ dir </> "genesis" ++ strIndex ++ ".vkey")
         (SigningKeyFile $ dir </> "genesis" ++ strIndex ++ ".skey")
 
+createVestedKeys :: FilePath -> Word -> ExceptT SophieGenesisCmdError IO ()
+createVestedKeys dir index = do
+  liftIO $ createDirectoryIfMissing False dir
+  let strIndex = show index
+  runGenesisKeyGenVested
+        (VerificationKeyFile $ dir </> "vested" ++ strIndex ++ ".vkey")
+        (SigningKeyFile $ dir </> "vested" ++ strIndex ++ ".skey")
 
 createUtxoKeys :: FilePath -> Word -> ExceptT SophieGenesisCmdError IO ()
 createUtxoKeys dir index = do
@@ -740,6 +861,8 @@ updateTemplate
     :: SystemStart
     -- Genesis delegation (not stake-based):
     -> Map (Hash GenesisKey) (Hash GenesisDelegateKey, Hash VrfKey)
+    -- Vested delegation (not stake-based):
+    -> Map (Hash VestedKey)   (Hash VestedDelegateKey, Hash VrfKey)
     -- Non-delegated initial UTxO spec:
     -> Maybe Entropic
     -> [AddressInEra SophieEra]
@@ -750,7 +873,7 @@ updateTemplate
     -> [AddressInEra SophieEra]
     -> SophieGenesis StandardSophie
     -- Aurum genesis parameters
-    -> Entropic            -- ^ Dafi per UTxO word
+    -> Entropic            -- ^ Bcc per UTxO word
     -> ExecutionUnitPrices -- ^ Execution prices (memory, steps)
     -> ExecutionUnits      -- ^ Max Tx execution units
     -> ExecutionUnits      -- ^ Max block execution units
@@ -759,7 +882,7 @@ updateTemplate
     -> Natural             -- ^ Max collateral inputs
     -> (SophieGenesis StandardSophie, Aurum.AurumGenesis)
 updateTemplate (SystemStart start)
-               genDelegMap mAmountNonDeleg utxoAddrsNonDeleg
+               genDelegMap vestedDelegMap mAmountNonDeleg utxoAddrsNonDeleg
                poolSpecs (Entropic amountDeleg) utxoAddrsDeleg stuffedUtxoAddrs
                template coinsPerUTxOWord prices maxTxExUnits maxBlockExUnits
                maxValueSize collateralPercentage maxCollateralInputs = do
@@ -768,11 +891,12 @@ updateTemplate (SystemStart start)
           { sgSystemStart = start
           , sgMaxEntropicSupply = fromIntegral $ nonDelegCoin + delegCoin
           , sgGenDelegs = sophieDelKeys
+          , sgVestedDelegs = sophieVestedDelKeys
           , sgInitialFunds = Map.fromList
                               [ (toSophieAddr addr, toSophieEntropic v)
                               | (addr, v) <-
-                                distribute (nonDelegCoin - subtractForTreasury) utxoAddrsNonDeleg ++
-                                distribute (delegCoin - subtractForTreasury)    utxoAddrsDeleg ++
+                                distribute nonDelegCoin utxoAddrsNonDeleg ++
+                                distribute delegCoin    utxoAddrsDeleg ++
                                 mkStuffedUtxo stuffedUtxoAddrs ]
           , sgStaking =
             SophieGenesisStaking
@@ -806,13 +930,8 @@ updateTemplate (SystemStart start)
           }
     (sophieGenesis, aurumGenesis)
   where
-    maximumEntropicSupply :: Word64
-    maximumEntropicSupply = sgMaxEntropicSupply template
-    -- If the initial funds are equal to the maximum funds, rewards cannot be created.
-    subtractForTreasury :: Integer
-    subtractForTreasury = nonDelegCoin `quot` 10
     nonDelegCoin, delegCoin :: Integer
-    nonDelegCoin = fromIntegral (fromMaybe maximumEntropicSupply (unEntropic <$> mAmountNonDeleg))
+    nonDelegCoin = fromIntegral $ fromMaybe (sgMaxEntropicSupply template) (unEntropic <$> mAmountNonDeleg)
     delegCoin = fromIntegral amountDeleg
 
     distribute :: Integer -> [AddressInEra SophieEra] -> [(AddressInEra SophieEra, Entropic)]
@@ -841,6 +960,12 @@ updateTemplate (SystemStart start)
         [ (gh, Ledger.GenDelegPair gdh h)
         | (GenesisKeyHash gh,
            (GenesisDelegateKeyHash gdh, VrfKeyHash h)) <- Map.toList genDelegMap
+        ]
+    sophieVestedDelKeys =
+      Map.fromList
+        [ (ah, Ledger.VestedDelegPair adh h)
+        | (VestedKeyHash ah,
+           (VestedDelegateKeyHash adh, VrfKeyHash h)) <- Map.toList vestedDelegMap
         ]
 
     unEntropic :: Integral a => Entropic -> a
@@ -934,6 +1059,96 @@ readDelegateVrfKeys :: FilePath -> ExceptT SophieGenesisCmdError IO
 readDelegateVrfKeys deldir = do
   files <- liftIO (listDirectory deldir)
   fileIxs <- extractFileNameIndexes [ deldir </> file
+                                    | file <- files
+                                    , takeExtensions file == ".vrf.vkey" ]
+  firstExceptT SophieGenesisCmdTextEnvReadFileError $
+    Map.fromList <$>
+      sequence
+        [ (,) ix <$> readKey file
+        | (file, ix) <- fileIxs ]
+  where
+    readKey = newExceptT
+            . readFileTextEnvelope (AsVerificationKey AsVrfKey)
+
+-- ----------------------------------------------------------------------------
+
+readVestedDelegsMap :: FilePath -> FilePath
+                 -> ExceptT SophieGenesisCmdError IO
+                            (Map (Hash VestedKey)
+                                 (Hash VestedDelegateKey, Hash VrfKey))
+readVestedDelegsMap vesteddir vesteddeldir = do
+    akm <- readVestedKeys vesteddir
+    dkm <- readVestedDelegateKeys vesteddeldir
+    vkm <- readVestedDelegateVrfKeys vesteddeldir
+
+    let combinedMap :: Map Int (VerificationKey VestedKey,
+                                (VerificationKey VestedDelegateKey,
+                                 VerificationKey VrfKey))
+        combinedMap =
+          Map.intersectionWith (,)
+            akm
+            (Map.intersectionWith (,)
+               dkm vkm)
+
+    -- All the maps should have an identical set of keys. Complain if not.
+    let akmExtra = akm Map.\\ combinedMap
+        dkmExtra = dkm Map.\\ combinedMap
+        vkmExtra = vkm Map.\\ combinedMap
+    unless (Map.null akmExtra && Map.null dkmExtra && Map.null vkmExtra) $
+      throwError $ SophieGenesisCmdMismatchedVestedKeyFiles
+                     (Map.keys akm) (Map.keys dkm) (Map.keys vkm)
+
+    let vestedDelegsMap :: Map (Hash VestedKey)
+                         (Hash VestedDelegateKey, Hash VrfKey)
+        vesteddelegsMap =
+          Map.fromList [ (ah, (dh, vh))
+                       | (a,(d,v)) <- Map.elems combinedMap
+                       , let ah = verificationKeyHash a
+                             dh = verificationKeyHash d
+                             vh = verificationKeyHash v
+                       ]
+
+    pure vestedDelegsMap
+
+
+readVestedKeys :: FilePath -> ExceptT SophieGenesisCmdError IO
+                                       (Map Int (VerificationKey VestedKey))
+readVestedKeys vesteddir = do
+  files <- liftIO (listDirectory vesteddir)
+  fileIxs <- extractFileNameIndexes [ vesteddir </> file
+                                    | file <- files
+                                    , takeExtension file == ".vkey" ]
+  firstExceptT SophieGenesisCmdTextEnvReadFileError $
+    Map.fromList <$>
+      sequence
+        [ (,) ix <$> readKey file
+        | (file, ix) <- fileIxs ]
+  where
+    readKey = newExceptT
+              . readFileTextEnvelope (AsVerificationKey AsVestedKey)
+
+readVestedDelegateKeys :: FilePath
+                 -> ExceptT SophieGenesisCmdError IO
+                            (Map Int (VerificationKey VestedDelegateKey))
+readVestedDelegateKeys vesteddeldir = do
+  files <- liftIO (listDirectory vesteddeldir)
+  fileIxs <- extractFileNameIndexes [ vesteddeldir </> file
+                                    | file <- files
+                                    , takeExtensions file == ".vkey" ]
+  firstExceptT SophieGenesisCmdTextEnvReadFileError $
+    Map.fromList <$>
+      sequence
+        [ (,) ix <$> readKey file
+        | (file, ix) <- fileIxs ]
+  where
+    readKey = newExceptT
+            . readFileTextEnvelope (AsVerificationKey AsVestedDelegateKey)
+
+readVestedDelegateVrfKeys :: FilePath -> ExceptT SophieGenesisCmdError IO
+                                           (Map Int (VerificationKey VrfKey))
+readVestedDelegateVrfKeys vesteddeldir = do
+  files <- liftIO (listDirectory vesteddeldir)
+  fileIxs <- extractFileNameIndexes [ vesteddeldir </> file
                                     | file <- files
                                     , takeExtensions file == ".vrf.vkey" ]
   firstExceptT SophieGenesisCmdTextEnvReadFileError $

@@ -33,7 +33,7 @@ elif [ "$1" == "" ]; then
  zerepochscriptinuse="$BASE/scripts/zerepoch/scripts/always-succeeds-spending.zerepoch"
  # This datum hash is the hash of the untyped 42
  scriptdatumhash="9e1199a988ba72ffd6e9c269cadb3b53b5f360ff99f112d9b2ee30c4d74ad88b"
- datumfilepath="$BASE/scripts/zerepoch/data/42.datum"
+ #ExUnits {exUnitsMem = 11300, exUnitsSteps = 45070000}))
  redeemerfilepath="$BASE/scripts/zerepoch/data/42.redeemer"
  echo "Always succeeds Zerepoch script in use. Any datum and redeemer combination will succeed."
  echo "Script at: $zerepochscriptinuse"
@@ -54,7 +54,7 @@ utxoaddr=$($BCC_CLI address build --testnet-magic "$TESTNET_MAGIC" --payment-ver
 $BCC_CLI query utxo --address "$utxoaddr" --bcc-mode --testnet-magic "$TESTNET_MAGIC" --out-file $WORK/utxo-1.json
 cat $WORK/utxo-1.json
 
-txin=$(jq -r 'keys[0]' $WORK/utxo-1.json)
+txin=$(jq -r 'keys[]' $WORK/utxo-1.json)
 entropicattxin=$(jq -r ".[\"$txin\"].value.entropic" $WORK/utxo-1.json)
 entropicattxindiv3=$(expr $entropicattxin / 3)
 
@@ -131,7 +131,7 @@ echo "Submit the tx with zerepoch script and wait 5 seconds..."
 $BCC_CLI transaction submit --tx-file $WORK/aurum.tx --testnet-magic "$TESTNET_MAGIC"
 sleep 5
 echo ""
-echo "Querying UTxO at $dummyaddress. If there is DAFI at the address the Zerepoch script successfully executed!"
+echo "Querying UTxO at $dummyaddress. If there is BCC at the address the Zerepoch script successfully executed!"
 echo ""
 $BCC_CLI query utxo --address "$dummyaddress"  --testnet-magic "$TESTNET_MAGIC" \
   | tee "$RESULT_FILE"

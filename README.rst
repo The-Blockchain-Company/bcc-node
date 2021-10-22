@@ -1,16 +1,16 @@
 .. raw:: html
 
   <p align="center">
-    <a href="https://github.com/the-blockchain-company/bcc-node/releases"><img src="https://img.shields.io/github/release-pre/the-blockchain-company/bcc-node.svg?style=for-the-badge" /></a>
-    <a href="https://buildkite.com/the-blockchain-company/bcc-node"><img src="https://img.shields.io/buildkite/a978cbb4def7018be3d0a004127da356f4db32f1c318c1a48a/master?label=BUILD&style=for-the-badge"/></a>
+    <a href="https://github.com/The-Blockchain-Company/bcc-node/releases"><img src="https://img.shields.io/github/release-pre/The-Blockchain-Company/bcc-node.svg?style=for-the-badge" /></a>
+    <a href="https://buildkite.com/The-Blockchain-Company/bcc-node"><img src="https://img.shields.io/buildkite/a978cbb4def7018be3d0a004127da356f4db32f1c318c1a48a/master?label=BUILD&style=for-the-badge"/></a>
   </p>
 
   <table align="center">
-    <tr><td colspan="2" align="center">GitHub Actions</td></tr>
+    <tr><td colspan="2" align="center">Github Actions</td></tr>
     <tr>
       <td>
-        <a href="https://github.com/the-blockchain-company/bcc-node/actions/workflows/haskell.yml"><img alt="GitHub Workflow Status (master)" src="https://img.shields.io/github/workflow/status/the-blockchain-company/bcc-node/Haskell%20CI/master" /></a>
-        <a href="https://github.com/the-blockchain-company/bcc-node/actions/workflows/haskell.yml"><img alt="GitHub Workflow Status (branch)" src="https://img.shields.io/github/workflow/status/the-blockchain-company/bcc-node/Haskell%20CI/nightly?label=nightly" /></a>
+        <a href="https://github.com/The-Blockchain-Company/bcc-node/actions/workflows/haskell.yml"><img alt="GitHub Workflow Status (master)" src="https://img.shields.io/github/workflow/status/The-Blockchain-Company/bcc-node/Haskell%20CI/master" /></a>
+        <a href="https://github.com/The-Blockchain-Company/bcc-node/actions/workflows/haskell.yml"><img alt="GitHub Workflow Status (branch)" src="https://img.shields.io/github/workflow/status/The-Blockchain-Company/bcc-node/Haskell%20CI/nightly?label=nightly" /></a>
       </td>
     </tr>
   </table>
@@ -19,12 +19,12 @@
 ``bcc-node`` Overview
 *************************
 
-Integration of the `ledger <https://github.com/the-blockchain-company/bcc-ledger-specs>`_, `consensus <https://github.com/the-blockchain-company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
-`networking <https://github.com/the-blockchain-company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
-`node shell <https://github.com/the-blockchain-company/bcc-shell>`_ repositories.
+Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
+`networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
+`node shell <https://github.com/The-Blockchain-Company/bcc-shell>`_ repositories.
 
-`Logging <https://github.com/the-blockchain-company/iohk-monitoring-framework>`_ is provided as a
-`feature <https://github.com/the-blockchain-company/bcc-shell/blob/master/app/Bcc/Shell/Features/Logging.hs>`_ by the node shell to the other packages.
+`Logging <https://github.com/The-Blockchain-Company/tbco-monitoring-framework>`_ is provided as a
+`feature <https://github.com/The-Blockchain-Company/bcc-shell/blob/master/app/Bcc/Shell/Features/Logging.hs>`_ by the node shell to the other packages.
 
 - The bcc-node is the top level for the node and
   aggregates the other components from other packages: consensus, ledger and
@@ -37,7 +37,7 @@ Integration of the `ledger <https://github.com/the-blockchain-company/bcc-ledger
 Network Configuration, Genesis and Topology Files
 =================================================
 
-The latest supported networks can be found at `<https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
+The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
 How to build
 ============
@@ -49,9 +49,9 @@ Linux Executable
 
 You can download the latest version of ``bcc-node`` and ``bcc-cli``:
 
-* `linux <https://hydra.iohk.io/job/Bcc/bcc-node/bcc-node-linux/latest-finished>`_
-* `win64 <https://hydra.iohk.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_
-* `macos <https://hydra.iohk.io/job/Bcc/bcc-node/bcc-node-macos/latest-finished>`_
+* `linux <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-linux/latest-finished>`_
+* `win64 <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_
+* `macos <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-macos/latest-finished>`_
 
 Windows Executable
 ==================
@@ -59,7 +59,7 @@ Windows Executable
 Download
 --------
 
-You can download `here <https://hydra.iohk.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_.
+You can download `here <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_.
 
 Instructions
 ------------
@@ -73,11 +73,11 @@ The download includes bcc-node.exe and a .dll. To run the node with bcc-node run
 Docker image
 ============
 
-You can pull the docker image with the latest version of bcc-node from `here <https://hub.docker.com/r/blockchainco/bcc-node>`_.
+You can pull the docker image with the latest version of bcc-node from `here <https://hub.docker.com/r/tbco/bcc-node>`_.
 
 .. code-block:: console
 
-    docker pull blockchainco/bcc-node
+    docker pull tbco/bcc-node
 
 ``bcc-node``
 ================
@@ -132,7 +132,7 @@ Configuration ``.yaml`` files
 =============================
 
 The ``--config`` flag points to a ``.yaml`` file that is responsible to configuring the logging & other important settings for the node. E.g. see the Cole mainnet configuration in this
-`configuration.yaml <https://github.com/the-blockchain-company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml>`_.
+`configuration.yaml <https://github.com/The-Blockchain-Company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml>`_.
 Some of the more important settings are as follows:
 
 * ``Protocol: RealPBFT`` -- Protocol the node will execute
@@ -206,7 +206,7 @@ The Cole genesis generation operations will create a directory that contains:
   The genesis JSON file itself.
 
 * ``avvm-seed.*.seed``:
-  Dafi Voucher Vending Machine seeds (secret). Affected by ``--avvm-entry-count`` and ``--avvm-entry-balance``.
+  Bcc Voucher Vending Machine seeds (secret). Affected by ``--avvm-entry-count`` and ``--avvm-entry-balance``.
 
 * ``delegate-keys.*.key``:
   Delegate private keys. Affected by: ``--n-delegate-addresses``.
@@ -224,7 +224,7 @@ More details on the Cole Genesis ``JSON`` file can be found in ``docs/reference/
 
  Cole genesis delegation and related concepts are described in detail in:
 
-  `<https://hydra.iohk.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
+  `<https://hydra.tbco.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
 
 The canned ``scripts/benchmarking/genesis.sh`` example provides a nice set of defaults and
 illustrates available options.
@@ -367,7 +367,7 @@ The remaining arguments are optional parameters you want to update in your updat
 
 You can also check your proposal's validity using the `validate-cbor` command. See: `Validate CBOR files`_.
 
-See the `Cole specification <https://hydra.iohk.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
+See the `Cole specification <https://hydra.tbco.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
 for more details on update proposals.
 
 Update proposal submission
@@ -385,7 +385,7 @@ Example:
                (--mainnet | --testnet-magic NATURAL)
                --filepath my-update-proposal
 
-See the `Cole specification <https://hydra.iohk.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
+See the `Cole specification <https://hydra.tbco.io/job/Bcc/bcc-ledger-specs/coleLedgerSpec/latest/download-by-type/doc-pdf/ledger-spec>`_
 for more deatils on update proposals.
 
 Update proposal voting
@@ -462,7 +462,7 @@ You can validate Cole era blocks, delegation certificates, txs and update propos
 Native Tokens 
 =======================================
 
-Native tokens is a new feature that enables the transacting of multi-assets on Bcc. Native tokens are now supported on mainnet and users can transact with dafi, and an unlimited number of user-defined (custom) tokens natively.
+Native tokens is a new feature that enables the transacting of multi-assets on Bcc. Native tokens are now supported on mainnet and users can transact with bcc, and an unlimited number of user-defined (custom) tokens natively.
 
 To help you get started we have compiled a handy list of resources:
 
@@ -470,11 +470,11 @@ To help you get started we have compiled a handy list of resources:
 
 `Documentation for native tokens <https://docs.bcc.org/native-tokens/learn>`_
 
-You can also read more about `native tokens and how they compare to dafi and ERC20 <https://github.com/the-blockchain-company/bcc-ledger-specs/blob/master/doc/explanations/features.rst>`_. Browse native tokens created on the Bcc blockchain and see their transactions in an interactive dashboard that allows filtering and searching: nativetokens.da.iogservices.io.
+You can also read more about `native tokens and how they compare to bcc and ERC20 <https://github.com/The-Blockchain-Company/bcc-ledger-specs/blob/master/doc/explanations/features.rst>`_. Browse native tokens created on the Bcc blockchain and see their transactions in an interactive dashboard that allows filtering and searching: nativetokens.da.iogservices.io.
 
 API Documentation
 =================
-The API documentation is published `here <https://the-blockchain-company.github.io/bcc-node/>`_.
+The API documentation is published `here <https://The-Blockchain-Company.github.io/bcc-node/>`_.
 
 The documentation is built with each push, but is only published from `master` branch.  In order to
 test if the documentation is working, build the documentation locally with `./scripts/haddocs.sh` and

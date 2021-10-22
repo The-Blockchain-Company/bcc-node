@@ -40,8 +40,8 @@ import           Shardagnostic.Consensus.Sophie.Node (Nonce (..), ProtocolParams
                    ProtocolParamsSophieBased (..), TOptimumLeaderCredentials (..))
 import           Shardagnostic.Consensus.Sophie.Protocol (TOptimumCanBeLeader (..))
 
-import           Bcc.Ledger.BaseTypes (ProtVer (..))
-import qualified Bcc.Ledger.Sophie.Genesis as Sophie
+import qualified Sophie.Spec.Ledger.Genesis as Sophie
+import           Sophie.Spec.Ledger.PParams (ProtVer (..))
 
 import qualified Bcc.Api as Api (FileError (..))
 import           Bcc.Api.Orphans ()

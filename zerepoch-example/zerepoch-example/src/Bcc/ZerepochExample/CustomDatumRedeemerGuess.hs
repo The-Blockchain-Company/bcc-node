@@ -23,7 +23,7 @@ import           Ledger.Contexts (ScriptContext (..))
 import qualified Ledger.Typed.Scripts as Scripts
 import qualified Zerepoch.V1.Ledger.Scripts as Zerepoch
 import qualified ZerepochTx
-import           ZerepochTx.Prelude hiding (Semigroup (..), unless, (.))
+import           ZerepochTx.Prelude hiding (Semigroup (..), unless)
 
 newtype MyCustomDatum = MyCustomDatum Integer
 newtype MyCustomRedeemer = MyCustomRedeemer Integer

@@ -2,8 +2,6 @@ module Test.Process
   ( bashPath
   , execCli
   , execCli'
-  , execCreateScriptContext
-  , execCreateScriptContext'
   , procCli
   , procNode
   , procSubmitApi
@@ -37,7 +35,7 @@ bashPath = IO.unsafePerformIO $ do
     Just "" -> return "bash"
     Just value -> return value
     Nothing -> return "bash"
-
+  
 {-# NOINLINE bashPath #-}
 
 -- | Run bcc-cli, returning the stdout
@@ -54,23 +52,6 @@ execCli'
   -> [String]
   -> m String
 execCli' execConfig = GHC.withFrozenCallStack $ H.execFlex' execConfig "bcc-cli" "BCC_CLI"
-
--- | Run create-script-context, returning the stdout.
-execCreateScriptContext
-  :: (MonadTest m, MonadCatch m, MonadIO m, HasCallStack)
-  => [String]
-  -> m String
-execCreateScriptContext =
-  GHC.withFrozenCallStack $ H.execFlex "create-script-context" "CREATE_SCRIPT_CONTEXT"
-
--- | Run create-script-context, returning the stdout.
-execCreateScriptContext'
-  :: (MonadTest m, MonadCatch m, MonadIO m, HasCallStack)
-  => ExecConfig
-  -> [String]
-  -> m String
-execCreateScriptContext' execConfig =
-  GHC.withFrozenCallStack $ H.execFlex' execConfig "create-script-context" "CREATE_SCRIPT_CONTEXT"
 
 -- | Create a 'CreateProcess' describing how to start the bcc-cli process
 -- and an argument list.

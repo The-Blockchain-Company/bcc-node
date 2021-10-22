@@ -1,25 +1,5 @@
 # Changelog for bcc-cli
 
-## 1.30 -- September 2021
-
-- Allow the user to specify a signature as required when spending from a
-  multisig/timelock script using the `build` or `build-raw` commands. Required
-  signers *must* be present in the witnesses, and only required signers are
-  visible to Zerepoch scripts. (#3123)
-- Use a separate connection for the `query tip` command. This fixes an
-  occasional bug where the `query tip` command would fail. (#3130)
-- Print the Tx fee when using the `tx build` command. (#3032)
-- The `tx build` command now validates its inputs (ensuring they are in the UTxO
-  and that only basic VKey-locked inputs are used as collateral.) (#3151)
-- Add a new comment to query the stake pools. (#3152)
-- `tx build` now uses the set of existing stake pools to determing if a pool is
-  already registered (and hence whether it must pay a deposit). (#3152)
-- `calculate-min-req-utxo` now requires a transaction output, not just a value
-  as before. This is required in the Aurum era, and the change is made
-  everywhere for consistency. (#3181)
-- Allow the `tx build` command to spend the entirety of a UTxO and create no
-  change output. (#3188)
-- Add withdrawls to the `tx view` command. (#2613)
 ## 1.29 -- August 2021
 
 - Add a "tx build" command to the CLI. This command takes care of calculating
@@ -77,7 +57,7 @@
   - Auxiliary scripts (i.e. those included in the Tx auxiliary data, which are
     not required as transaction signers) must now be included with
     `--auxiliary-script-file` rather than with `--script-file`.
-  - Scripts witnessing txins, certificates, withdrawals and minting must now be
+  - Scripts witnessing txins, certificates, withdrawls and minting must now be
     paired with the thing they are witnessing. E.g.
     ```
     --certificate-file  $certfile --certificate-script-file $scriptfile
@@ -92,7 +72,7 @@
 - Removed support for Cole addresses using the Bech32 encoding. The only
   supported way to use Cole-era addresses is through a file, using the text
   envelope format. (#2605)
-- Add a new command which computes the minimum DAFI value/deposit for a
+- Add a new command which computes the minimum BCC value/deposit for a
   multi-asset value. (#2612)
 - Add two new query commands:
   - `query stake-snapshot` allows querying the three stake snapshots for a given

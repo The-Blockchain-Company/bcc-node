@@ -14949,11 +14949,11 @@ testnet_launch: &testnet_launch
             poors:        100
             richmen: 7
             richmenShare: 0.95
-            totalBalance: 42000000000000000 # 42e9 DAFI
+            totalBalance: 42000000000000000 # 42e9 BCC
             useHDAddresses: True
           fakeAvvmBalance:
             count: 100
-            oneBalance: 20000000000000 # 2e7 DAFI
+            oneBalance: 20000000000000 # 2e7 BCC
           avvmBalanceFactor: 1
           useHeavyDlg: True
           seed: 0 # should be overridden using --configuration-seed
@@ -15025,11 +15025,11 @@ sophie_staging_launch: &sophie_staging_launch
             poors:        100
             richmen: 7
             richmenShare: 0.95
-            totalBalance: 42000000000000000 # 42e9 DAFI
+            totalBalance: 42000000000000000 # 42e9 BCC
             useHDAddresses: True
           fakeAvvmBalance:
             count: 100
-            oneBalance: 20000000000000 # 2e7 DAFI
+            oneBalance: 20000000000000 # 2e7 BCC
           avvmBalanceFactor: 1
           useHeavyDlg: True
           seed: 0 # should be overridden using --configuration-seed
@@ -15100,11 +15100,11 @@ sophie_staging_short_launch: &sophie_staging_short_launch
             poors:        100
             richmen: 7
             richmenShare: 0.95
-            totalBalance: 42000000000000000 # 42e9 DAFI
+            totalBalance: 42000000000000000 # 42e9 BCC
             useHDAddresses: True
           fakeAvvmBalance:
             count: 100
-            oneBalance: 20000000000000 # 2e7 DAFI
+            oneBalance: 20000000000000 # 2e7 BCC
           avvmBalanceFactor: 1
           useHeavyDlg: True
           seed: 0 # should be overridden using --configuration-seed
@@ -15387,7 +15387,7 @@ internal_staging_gen: &internal_staging_gen
             useHDAddresses: True
           fakeAvvmBalance:
             count: 100
-            oneBalance: 1000000000000 # 1e6 DAFI
+            oneBalance: 1000000000000 # 1e6 BCC
           avvmBalanceFactor: 0.1
           useHeavyDlg: True
           seed: 0 # should be overridden using --configuration-seed

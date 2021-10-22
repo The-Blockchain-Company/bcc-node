@@ -77,6 +77,10 @@ module Bcc.Api.Sophie
       , WitnessGenesisExtendedKey
       , WitnessGenesisDelegateKey
       , WitnessGenesisDelegateExtendedKey
+      , WitnessVestedKey
+      , WitnessVestedExtendedKey
+      , WitnessVestedDelegateKey
+      , WitnessVestedDelegateExtendedKey
       ),
     SophieSigningKey(..),
     getSophieKeyWitnessVerificationKey,
@@ -153,7 +157,7 @@ module Bcc.Api.Sophie
 
     -- ** Stake pool operator's keys
     StakePoolKey,
-    PoolId,
+    PoolId,  
 
     -- ** KES keys
     KesKey,

@@ -8,26 +8,24 @@ Starting the node and connecting it to the network requires 3 configuration file
 
 You can download the configuration files from:
 
- [https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html](https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html)
+ [https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html](https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html)
 
 
 From the CLI you can use
 
 For Bcc testnet
 
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-config.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-cole-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-sophie-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-aurum-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-topology.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-config.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-cole-genesis.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-sophie-genesis.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-topology.json
 
 For Mainnet:
 
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-config.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-cole-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-sophie-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-aurum-genesis.json
-    wget https://hydra.iohk.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-topology.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-config.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-cole-genesis.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-sophie-genesis.json
+    wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-topology.json
 
 Starting the node uses the command `bcc-node run` and a set of options.
 

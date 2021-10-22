@@ -14,8 +14,8 @@ Below is an example that shows how to use a Zerepoch spending script. This is a 
 process involving:
 
 + the creation of the `AlwaysSucceeds` Zerepoch txin script
-+ sending DAFI to the Zerepoch script address
-+ spending DAFI at the Zerepoch script address
++ sending BCC to the Zerepoch script address
++ spending BCC at the Zerepoch script address
 
 In this example we will use the [AlwaysSucceeds](../../../zerepoch-example/zerepoch-example/src/Bcc/ZerepochExample/AlwaysSucceeds.hs) Zerepoch spending script. In order to execute a Zerepoch spending script, we require the following:
 
@@ -51,7 +51,7 @@ cabal install bcc-node
 
 Follow the instructions displayed in the terminal to start your Aurum cluster.
 
-#### Sending DAFI to the script address
+#### Sending BCC to the script address
 
 In order to require a Zerepoch script to validate the spending of a tx ouput, we must put the tx output at the script address of the said Zerepoch script. However, before we do that, we must create a datum hash:
 
@@ -66,7 +66,7 @@ In this example, the script we are using always succeeds so we can use any datum
 > addr_test1wzeqkp6ne3xm6gz39l874va4ujgl4kr0e46pf3ey8xsu3jsgkpcj2
 ```
 
-Now, we should create the tx that will send DAFI to the script address of our `AlwaysSucceeds` script:
+Now, we should create the tx that will send BCC to the script address of our `AlwaysSucceeds` script:
 
 ```bash
 bcc-cli transaction build-raw \
@@ -84,9 +84,9 @@ bcc-cli transaction sign \
   --out-file create-datum-output.tx
 ```
 
-#### Spending DAFI at the script address
+#### Spending BCC at the script address
 
-Now that there is DAFI at our script address, we must construct the appropriate transaction in order to spend it.
+Now that there is BCC at our script address, we must construct the appropriate transaction in order to spend it.
 
 `$zerepochutxotxin` - This is the tx input that sits at the Zerepoch script address (NB: It has a datum hash).
 `$zerepochrequiredtime` and `$zerepochrequiredspace` - These make up the Zerepoch script execution budget and are part of the `$txfee`
@@ -113,7 +113,7 @@ bcc-cli transaction sign \
   --out-file aurum.tx
 ```
 
-If there is DAFI at `$dummyaddress` then the Zerepoch script was successfully executed. Conversely, if the Zerepoch script failed, the collateral input would have been consumed.
+If there is BCC at `$dummyaddress` then the Zerepoch script was successfully executed. Conversely, if the Zerepoch script failed, the collateral input would have been consumed.
 
 You can use the [example-txin-locking-zerepoch-script.sh](../../../scripts/zerepoch/example-txin-locking-zerepoch-script.sh) in conjunction with [mkfiles.sh aurum](../../../scripts/cole-to-aurum/mkfiles.sh) script to automagically run the `AlwaysSucceeds` script.
 

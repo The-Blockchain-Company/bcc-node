@@ -5,12 +5,12 @@
 # override scripts with custom configuration
 , customConfig ? {}
 # allows to override dependencies of the project without modifications,
-# eg. to test build against local checkout of nixpkgs and iohk-nix:
+# eg. to test build against local checkout of nixpkgs and tbco-nix:
 # nix build -f default.nix bcc-node --arg sourcesOverride '{
-#   iohk-nix = ../iohk-nix;
+#   tbco-nix = ../tbco-nix;
 # }'
 , sourcesOverride ? {}
-# pinned version of nixpkgs augmented with overlays (iohk-nix and our packages).
+# pinned version of nixpkgs augmented with overlays (tbco-nix and our packages).
 , pkgs ? import ./nix/default.nix { inherit system crossSystem config customConfig sourcesOverride gitrev; }
 # Git sha1 hash, to be passed when not building from a git work tree.
 , gitrev ? null
@@ -45,9 +45,7 @@ let
 
     inherit (haskellPackages.bcc-node.identifier) version;
 
-    exes = collectComponents' "exes" haskellPackages;
-
-    inherit zerepoch-scripts;
+    exes = mapAttrsRecursiveCond (as: !(isDerivation as)) rewriteStatic (collectComponents' "exes" haskellPackages);
 
     # `tests` are the test suites which have been built.
     tests = collectComponents' "tests" haskellPackages;
@@ -59,7 +57,7 @@ let
       tests = collectChecks haskellPackages;
 
       hlint = callPackage hlintCheck {
-        inherit (bccNodeProject) src;
+        inherit (bccNodeProject.projectModule) src;
       };
     };
 

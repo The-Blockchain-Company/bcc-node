@@ -27,6 +27,11 @@ module Bcc.Api.KeysSophie (
     GenesisDelegateKey,
     GenesisDelegateExtendedKey,
     GenesisUTxOKey,
+    VestedKey,
+    VestedExtendedKey,
+    VestedDelegateKey,
+    VestedDelegateExtendedKey,
+    VestedUTxOKey,
 
     -- * Data family instances
     AsType(..),
@@ -645,13 +650,13 @@ instance HasTextEnvelope (SigningKey GenesisKey) where
 
 
 --
--- Sophie genesis extended ed25519 keys
+-- Sophie vested extended ed25519 keys
 --
 
--- | Sophie-era genesis keys using extended ed25519 cryptographic keys.
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
 --
--- These serve the same role as normal genesis keys, but are here to support
--- legacy Cole genesis keys which used extended keys.
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
 --
 -- The extended verification keys can be converted (via 'castVerificationKey')
 -- to ordinary keys (i.e. 'VerificationKey' 'GenesisKey') but this is /not/ the
@@ -879,13 +884,13 @@ instance CastSigningKeyRole GenesisDelegateKey StakePoolKey where
 
 
 --
--- Sophie genesis delegate extended ed25519 keys
+-- Sophie vested delegate extended ed25519 keys
 --
 
--- | Sophie-era genesis keys using extended ed25519 cryptographic keys.
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
 --
--- These serve the same role as normal genesis keys, but are here to support
--- legacy Cole genesis keys which used extended keys.
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
 --
 -- The extended verification keys can be converted (via 'castVerificationKey')
 -- to ordinary keys (i.e. 'VerificationKey' 'GenesisKey') but this is /not/ the
@@ -1113,6 +1118,562 @@ instance CastSigningKeyRole GenesisUTxOKey PaymentKey where
     castSigningKey (GenesisUTxOSigningKey skey) =
       PaymentSigningKey skey
 
+
+-- | Vested UTxO keys
+data VestedUTxOKey
+
+instance HasTypeProxy VestedUTxOKey where
+    data AsType VestedUTxOKey = AsVestedUTxOKey
+    proxyToAsType _ = AsVestedUTxOKey
+
+
+instance Key VestedUTxOKey where
+
+    newtype VerificationKey VestedUTxOKey =
+        VestedUTxOVerificationKey (Sophie.VKey Sophie.Payment StandardCrypto)
+      deriving stock (Eq)
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey VestedUTxOKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    newtype SigningKey VestedUTxOKey =
+        VestedUTxOSigningKey (Sophie.SignKeyDSIGN StandardCrypto)
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey VestedUTxOKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    deterministicSigningKey :: AsType VestedUTxOKey -> Crypto.Seed -> SigningKey VestedUTxOKey
+    deterministicSigningKey AsVestedUTxOKey seed =
+        VestedUTxOSigningKey (Crypto.genKeyDSIGN seed)
+
+    deterministicSigningKeySeedSize :: AsType VestedUTxOKey -> Word
+    deterministicSigningKeySeedSize AsVestedUTxOKey =
+        Crypto.seedSizeDSIGN proxy
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+    getVerificationKey :: SigningKey VestedUTxOKey -> VerificationKey VestedUTxOKey
+    getVerificationKey (VestedUTxOSigningKey sk) =
+        VestedUTxOVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
+
+    verificationKeyHash :: VerificationKey VestedUTxOKey -> Hash VestedUTxOKey
+    verificationKeyHash (VestedUTxOVerificationKey vkey) =
+        VestedUTxOKeyHash (Sophie.hashKey vkey)
+
+
+instance SerialiseAsRawBytes (VerificationKey VestedUTxOKey) where
+    serialiseToRawBytes (VestedUTxOVerificationKey (Sophie.VKey vk)) =
+      Crypto.rawSerialiseVerKeyDSIGN vk
+
+    deserialiseFromRawBytes (AsVerificationKey AsVestedUTxOKey) bs =
+      VestedUTxOVerificationKey . Sophie.VKey <$>
+        Crypto.rawDeserialiseVerKeyDSIGN bs
+
+instance SerialiseAsRawBytes (SigningKey VestedUTxOKey) where
+    serialiseToRawBytes (VestedUTxOSigningKey sk) =
+      Crypto.rawSerialiseSignKeyDSIGN sk
+
+    deserialiseFromRawBytes (AsSigningKey AsVestedUTxOKey) bs =
+      VestedUTxOSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+
+
+newtype instance Hash VestedUTxOKey =
+    VestedUTxOKeyHash (Sophie.KeyHash Sophie.Payment StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash VestedUTxOKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash VestedUTxOKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash VestedUTxOKey) where
+    serialiseToRawBytes (VestedUTxOKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsVestedUTxOKey) bs =
+      VestedUTxOKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey VestedUTxOKey) where
+    textEnvelopeType _ = "VestedUTxOVerificationKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance HasTextEnvelope (SigningKey VestedUTxOKey) where
+    textEnvelopeType _ = "VestedUTxOSigningKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+    -- TODO: use a different type from the stake pool key, since some operations
+    -- need a genesis key specifically
+
+instance CastVerificationKeyRole VestedUTxOKey PaymentKey where
+    castVerificationKey (VestedUTxOVerificationKey (Sophie.VKey vkey)) =
+      PaymentVerificationKey (Sophie.VKey vkey)
+
+instance CastSigningKeyRole VestedUTxOKey PaymentKey where
+    castSigningKey (VestedUTxOSigningKey skey) =
+      PaymentSigningKey skey
+
+
+
+-- Vested keys
+--
+
+data VestedKey
+
+instance HasTypeProxy VestedKey where
+    data AsType VestedKey = AsVestedKey
+    proxyToAsType _ = AsVestedKey
+
+instance Key VestedKey where
+
+    newtype VerificationKey VestedKey =
+        VestedVerificationKey (Sophie.VKey Sophie.Vested StandardCrypto)
+      deriving stock (Eq)
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey VestedKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    newtype SigningKey VestedKey =
+        VestedSigningKey (Sophie.SignKeyDSIGN StandardCrypto)
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey VestedKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    deterministicSigningKey :: AsType VestedKey -> Crypto.Seed -> SigningKey VestedKey
+    deterministicSigningKey AsVestedKey seed =
+        VestedSigningKey (Crypto.genKeyDSIGN seed)
+
+    deterministicSigningKeySeedSize :: AsType VestedKey -> Word
+    deterministicSigningKeySeedSize AsVestedKey =
+        Crypto.seedSizeDSIGN proxy
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+    getVerificationKey :: SigningKey VestedKey -> VerificationKey VestedKey
+    getVerificationKey (VestedSigningKey sk) =
+        VestedVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
+
+    verificationKeyHash :: VerificationKey VestedKey -> Hash VestedKey
+    verificationKeyHash (VestedVerificationKey vkey) =
+        VestedKeyHash (Sophie.hashKey vkey)
+
+
+instance SerialiseAsRawBytes (VerificationKey VestedKey) where
+    serialiseToRawBytes (VestedVerificationKey (Sophie.VKey vk)) =
+      Crypto.rawSerialiseVerKeyDSIGN vk
+
+    deserialiseFromRawBytes (AsVerificationKey AsVestedKey) bs =
+      VestedVerificationKey . Sophie.VKey <$>
+        Crypto.rawDeserialiseVerKeyDSIGN bs
+
+instance SerialiseAsRawBytes (SigningKey VestedKey) where
+    serialiseToRawBytes (VestedSigningKey sk) =
+      Crypto.rawSerialiseSignKeyDSIGN sk
+
+    deserialiseFromRawBytes (AsSigningKey AsVestedKey) bs =
+      VestedSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+
+
+newtype instance Hash VestedKey =
+    VestedKeyHash (Sophie.KeyHash Sophie.Vested StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash VestedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash VestedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash VestedKey) where
+    serialiseToRawBytes (VestedKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsVestedKey) bs =
+      VestedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey VestedKey) where
+    textEnvelopeType _ = "VestedVerificationKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance HasTextEnvelope (SigningKey VestedKey) where
+    textEnvelopeType _ = "VestedSigningKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+
+--
+-- Sophie vested extended ed25519 keys
+--
+
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
+--
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
+--
+-- The extended verification keys can be converted (via 'castVerificationKey')
+-- to ordinary keys (i.e. 'VerificationKey' 'VestedKey') but this is /not/ the
+-- case for the signing keys. The signing keys can be used to witness
+-- transactions directly, with verification via their non-extended verification
+-- key ('VerificationKey' 'VestedKey').
+--
+-- This is a type level tag, used with other interfaces like 'Key'.
+--
+data VestedExtendedKey
+
+instance HasTypeProxy VestedExtendedKey where
+    data AsType VestedExtendedKey = AsVestedExtendedKey
+    proxyToAsType _ = AsVestedExtendedKey
+
+instance Key VestedExtendedKey where
+
+    newtype VerificationKey VestedExtendedKey =
+        VestedExtendedVerificationKey Crypto.HD.XPub
+      deriving stock (Eq)
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey VestedExtendedKey)
+
+    newtype SigningKey VestedExtendedKey =
+        VestedExtendedSigningKey Crypto.HD.XPrv
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey VestedExtendedKey)
+
+    deterministicSigningKey :: AsType VestedExtendedKey
+                            -> Crypto.Seed
+                            -> SigningKey VestedExtendedKey
+    deterministicSigningKey AsVestedExtendedKey seed =
+        VestedExtendedSigningKey
+          (Crypto.HD.generate seedbs BS.empty)
+      where
+       (seedbs, _) = Crypto.getBytesFromSeedT 32 seed
+
+    deterministicSigningKeySeedSize :: AsType VestedExtendedKey -> Word
+    deterministicSigningKeySeedSize AsVestedExtendedKey = 32
+
+    getVerificationKey :: SigningKey VestedExtendedKey
+                       -> VerificationKey VestedExtendedKey
+    getVerificationKey (VestedExtendedSigningKey sk) =
+        VestedExtendedVerificationKey (Crypto.HD.toXPub sk)
+
+    -- | We use the hash of the normal non-extended pub key so that it is
+    -- consistent with the one used in addresses and signatures.
+    --
+    verificationKeyHash :: VerificationKey VestedExtendedKey
+                        -> Hash VestedExtendedKey
+    verificationKeyHash (VestedExtendedVerificationKey vk) =
+        VestedExtendedKeyHash
+      . Sophie.KeyHash
+      . Crypto.castHash
+      $ Crypto.hashWith Crypto.HD.xpubPublicKey vk
+
+
+instance ToCBOR (VerificationKey VestedExtendedKey) where
+    toCBOR (VestedExtendedVerificationKey xpub) =
+      toCBOR (Crypto.HD.unXPub xpub)
+
+instance FromCBOR (VerificationKey VestedExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . VestedExtendedVerificationKey)
+             (Crypto.HD.xpub (bs :: ByteString))
+
+instance ToCBOR (SigningKey VestedExtendedKey) where
+    toCBOR (VestedExtendedSigningKey xprv) =
+      toCBOR (Crypto.HD.unXPrv xprv)
+
+instance FromCBOR (SigningKey VestedExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . VestedExtendedSigningKey)
+             (Crypto.HD.xprv (bs :: ByteString))
+
+instance SerialiseAsRawBytes (VerificationKey VestedExtendedKey) where
+    serialiseToRawBytes (VestedExtendedVerificationKey xpub) =
+      Crypto.HD.unXPub xpub
+
+    deserialiseFromRawBytes (AsVerificationKey AsVestedExtendedKey) bs =
+      either (const Nothing) (Just . VestedExtendedVerificationKey)
+             (Crypto.HD.xpub bs)
+
+instance SerialiseAsRawBytes (SigningKey VestedExtendedKey) where
+    serialiseToRawBytes (VestedExtendedSigningKey xprv) =
+      Crypto.HD.unXPrv xprv
+
+    deserialiseFromRawBytes (AsSigningKey AsVestedExtendedKey) bs =
+      either (const Nothing) (Just . VestedExtendedSigningKey)
+             (Crypto.HD.xprv bs)
+
+
+newtype instance Hash VestedExtendedKey =
+    VestedExtendedKeyHash (Sophie.KeyHash Sophie.Staking StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash VestedExtendedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash VestedExtendedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash VestedExtendedKey) where
+    serialiseToRawBytes (VestedExtendedKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsVestedExtendedKey) bs =
+      VestedExtendedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey VestedExtendedKey) where
+    textEnvelopeType _ = "VestedExtendedVerificationKey_ed25519_bip32"
+
+instance HasTextEnvelope (SigningKey VestedExtendedKey) where
+    textEnvelopeType _ = "VestedExtendedSigningKey_ed25519_bip32"
+
+instance CastVerificationKeyRole VestedExtendedKey VestedKey where
+    castVerificationKey (VestedExtendedVerificationKey vk) =
+        VestedVerificationKey
+      . Sophie.VKey
+      . fromMaybe impossible
+      . Crypto.rawDeserialiseVerKeyDSIGN
+      . Crypto.HD.xpubPublicKey
+      $ vk
+      where
+        impossible =
+          error "castVerificationKey: cole and sophie key sizes do not match!"
+
+
+--
+-- Vested delegate keys
+--
+
+data VestedDelegateKey
+
+instance HasTypeProxy VestedDelegateKey where
+    data AsType VestedDelegateKey = AsVestedDelegateKey
+    proxyToAsType _ = AsVestedDelegateKey
+
+
+instance Key VestedDelegateKey where
+
+    newtype VerificationKey VestedDelegateKey =
+        VestedDelegateVerificationKey (Sophie.VKey Sophie.VestedDelegate StandardCrypto)
+      deriving stock (Eq)
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey VestedDelegateKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    newtype SigningKey VestedDelegateKey =
+        VestedDelegateSigningKey (Sophie.SignKeyDSIGN StandardCrypto)
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey VestedDelegateKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    deterministicSigningKey :: AsType VestedDelegateKey -> Crypto.Seed -> SigningKey VestedDelegateKey
+    deterministicSigningKey AsVestedDelegateKey seed =
+        VestedDelegateSigningKey (Crypto.genKeyDSIGN seed)
+
+    deterministicSigningKeySeedSize :: AsType VestedDelegateKey -> Word
+    deterministicSigningKeySeedSize AsVestedDelegateKey =
+        Crypto.seedSizeDSIGN proxy
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+    getVerificationKey :: SigningKey VestedDelegateKey -> VerificationKey VestedDelegateKey
+    getVerificationKey (VestedDelegateSigningKey sk) =
+        VestedDelegateVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
+
+    verificationKeyHash :: VerificationKey VestedDelegateKey -> Hash VestedDelegateKey
+    verificationKeyHash (VestedDelegateVerificationKey vkey) =
+        VestedDelegateKeyHash (Sophie.hashKey vkey)
+
+
+instance SerialiseAsRawBytes (VerificationKey VestedDelegateKey) where
+    serialiseToRawBytes (VestedDelegateVerificationKey (Sophie.VKey vk)) =
+      Crypto.rawSerialiseVerKeyDSIGN vk
+
+    deserialiseFromRawBytes (AsVerificationKey AsVestedDelegateKey) bs =
+      VestedDelegateVerificationKey . Sophie.VKey <$>
+        Crypto.rawDeserialiseVerKeyDSIGN bs
+
+instance SerialiseAsRawBytes (SigningKey VestedDelegateKey) where
+    serialiseToRawBytes (VestedDelegateSigningKey sk) =
+      Crypto.rawSerialiseSignKeyDSIGN sk
+
+    deserialiseFromRawBytes (AsSigningKey AsVestedDelegateKey) bs =
+      VestedDelegateSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+
+
+newtype instance Hash VestedDelegateKey =
+    VestedDelegateKeyHash (Sophie.KeyHash Sophie.VestedDelegate StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash VestedDelegateKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash VestedDelegateKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash VestedDelegateKey) where
+    serialiseToRawBytes (VestedDelegateKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsVestedDelegateKey) bs =
+      VestedDelegateKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey VestedDelegateKey) where
+    textEnvelopeType _ = "VestedDelegateVerificationKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance HasTextEnvelope (SigningKey VestedDelegateKey) where
+    textEnvelopeType _ = "VestedDelegateSigningKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance CastVerificationKeyRole VestedDelegateKey StakePoolKey where
+    castVerificationKey (VestedDelegateVerificationKey (Sophie.VKey vkey)) =
+      StakePoolVerificationKey (Sophie.VKey vkey)
+
+instance CastSigningKeyRole VestedDelegateKey StakePoolKey where
+    castSigningKey (VestedDelegateSigningKey skey) =
+      StakePoolSigningKey skey
+
+
+--
+-- Sophie vested delegate extended ed25519 keys
+--
+
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
+--
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
+--
+-- The extended verification keys can be converted (via 'castVerificationKey')
+-- to ordinary keys (i.e. 'VerificationKey' 'VestedKey') but this is /not/ the
+-- case for the signing keys. The signing keys can be used to witness
+-- transactions directly, with verification via their non-extended verification
+-- key ('VerificationKey' 'VestedKey').
+--
+-- This is a type level tag, used with other interfaces like 'Key'.
+--
+data VestedDelegateExtendedKey
+
+instance HasTypeProxy VestedDelegateExtendedKey where
+    data AsType VestedDelegateExtendedKey = AsVestedDelegateExtendedKey
+    proxyToAsType _ = AsVestedDelegateExtendedKey
+
+instance Key VestedDelegateExtendedKey where
+
+    newtype VerificationKey VestedDelegateExtendedKey =
+        VestedDelegateExtendedVerificationKey Crypto.HD.XPub
+      deriving stock (Eq)
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey VestedDelegateExtendedKey)
+
+    newtype SigningKey VestedDelegateExtendedKey =
+        VestedDelegateExtendedSigningKey Crypto.HD.XPrv
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey VestedDelegateExtendedKey)
+
+    deterministicSigningKey :: AsType VestedDelegateExtendedKey
+                            -> Crypto.Seed
+                            -> SigningKey VestedDelegateExtendedKey
+    deterministicSigningKey AsVestedDelegateExtendedKey seed =
+        VestedDelegateExtendedSigningKey
+          (Crypto.HD.generate seedbs BS.empty)
+      where
+       (seedbs, _) = Crypto.getBytesFromSeedT 32 seed
+
+    deterministicSigningKeySeedSize :: AsType VestedDelegateExtendedKey -> Word
+    deterministicSigningKeySeedSize AsVestedDelegateExtendedKey = 32
+
+    getVerificationKey :: SigningKey VestedDelegateExtendedKey
+                       -> VerificationKey VestedDelegateExtendedKey
+    getVerificationKey (VestedDelegateExtendedSigningKey sk) =
+        VestedDelegateExtendedVerificationKey (Crypto.HD.toXPub sk)
+
+    -- | We use the hash of the normal non-extended pub key so that it is
+    -- consistent with the one used in addresses and signatures.
+    --
+    verificationKeyHash :: VerificationKey VestedDelegateExtendedKey
+                        -> Hash VestedDelegateExtendedKey
+    verificationKeyHash (VestedDelegateExtendedVerificationKey vk) =
+        VestedDelegateExtendedKeyHash
+      . Sophie.KeyHash
+      . Crypto.castHash
+      $ Crypto.hashWith Crypto.HD.xpubPublicKey vk
+
+
+instance ToCBOR (VerificationKey VestedDelegateExtendedKey) where
+    toCBOR (VestedDelegateExtendedVerificationKey xpub) =
+      toCBOR (Crypto.HD.unXPub xpub)
+
+instance FromCBOR (VerificationKey VestedDelegateExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . VestedDelegateExtendedVerificationKey)
+             (Crypto.HD.xpub (bs :: ByteString))
+
+instance ToCBOR (SigningKey VestedDelegateExtendedKey) where
+    toCBOR (VestedDelegateExtendedSigningKey xprv) =
+      toCBOR (Crypto.HD.unXPrv xprv)
+
+instance FromCBOR (SigningKey VestedDelegateExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . VestedDelegateExtendedSigningKey)
+             (Crypto.HD.xprv (bs :: ByteString))
+
+instance SerialiseAsRawBytes (VerificationKey VestedDelegateExtendedKey) where
+    serialiseToRawBytes (VestedDelegateExtendedVerificationKey xpub) =
+      Crypto.HD.unXPub xpub
+
+    deserialiseFromRawBytes (AsVerificationKey AsVestedDelegateExtendedKey) bs =
+      either (const Nothing) (Just . VestedDelegateExtendedVerificationKey)
+             (Crypto.HD.xpub bs)
+
+instance SerialiseAsRawBytes (SigningKey VestedDelegateExtendedKey) where
+    serialiseToRawBytes (VestedDelegateExtendedSigningKey xprv) =
+      Crypto.HD.unXPrv xprv
+
+    deserialiseFromRawBytes (AsSigningKey AsVestedDelegateExtendedKey) bs =
+      either (const Nothing) (Just . VestedDelegateExtendedSigningKey)
+             (Crypto.HD.xprv bs)
+
+
+newtype instance Hash VestedDelegateExtendedKey =
+    VestedDelegateExtendedKeyHash (Sophie.KeyHash Sophie.Staking StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash VestedDelegateExtendedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash VestedDelegateExtendedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash VestedDelegateExtendedKey) where
+    serialiseToRawBytes (VestedDelegateExtendedKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsVestedDelegateExtendedKey) bs =
+      VestedDelegateExtendedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey VestedDelegateExtendedKey) where
+    textEnvelopeType _ = "VestedDelegateExtendedVerificationKey_ed25519_bip32"
+
+instance HasTextEnvelope (SigningKey VestedDelegateExtendedKey) where
+    textEnvelopeType _ = "VestedDelegateExtendedSigningKey_ed25519_bip32"
+
+instance CastVerificationKeyRole VestedDelegateExtendedKey VestedDelegateKey where
+    castVerificationKey (VestedDelegateExtendedVerificationKey vk) =
+        VestedDelegateVerificationKey
+      . Sophie.VKey
+      . fromMaybe impossible
+      . Crypto.rawDeserialiseVerKeyDSIGN
+      . Crypto.HD.xpubPublicKey
+      $ vk
+      where
+        impossible =
+          error "castVerificationKey: cole and sophie key sizes do not match!"
 
 --
 -- stake pool keys

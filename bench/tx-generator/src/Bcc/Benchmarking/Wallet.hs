@@ -11,14 +11,14 @@ import           Control.Concurrent.MVar
 
 import           Bcc.Api
 
-import           Bcc.Benchmarking.FundSet as FundSet
+import           Bcc.Benchmarking.Types (NumberOfTxs(..))
 import           Bcc.Benchmarking.GeneratorTx.Tx as Tx hiding (Fund)
-import           Bcc.Benchmarking.Types (NumberOfTxs (..))
+import           Bcc.Benchmarking.FundSet as FundSet
 
 type WalletRef = MVar Wallet
 
-type TxGenerator era = [Fund] -> [TxOut CtxTx era] -> Either String (Tx era, TxId)
-type ToUTxO era = [Entropic] -> ([TxOut CtxTx era], TxId -> [Fund])
+type TxGenerator era = [Fund] -> [TxOut era] -> Either String (Tx era, TxId)
+type ToUTxO era = [Entropic] -> ([TxOut era], TxId -> [Fund])
 
 data Wallet = Wallet {
     walletNetworkId :: !NetworkId
@@ -112,30 +112,22 @@ mkUTxO :: forall era. IsSophieBasedEra era
   -> SigningKey PaymentKey
   -> Validity
   -> ToUTxO era
-mkUTxO = mkUTxOVariant PlainOldFund
-
-mkUTxOVariant :: forall era. IsSophieBasedEra era
-  => Variant
-  -> NetworkId
-  -> SigningKey PaymentKey
-  -> Validity
-  -> ToUTxO era
-mkUTxOVariant variant networkId key validity values
+mkUTxO networkId key validity values
   = ( map mkTxOut values
     , newFunds
     )
  where
-  mkTxOut v = TxOut (Tx.keyAddress @ era networkId key) (mkTxOutValueDafiOnly v) TxOutDatumNone
+  mkTxOut v = TxOut (Tx.keyAddress @ era networkId key) (mkTxOutValueBccOnly v) TxOutDatumHashNone
 
   newFunds txId = zipWith (mkNewFund txId) [TxIx 0 ..] values
 
   mkNewFund :: TxId -> TxIx -> Entropic -> Fund
   mkNewFund txId txIx val = Fund $ InAnyBccEra (bccEra @ era) $ FundInEra {
       _fundTxIn = TxIn txId txIx
-    , _fundVal = mkTxOutValueDafiOnly val
+    , _fundVal = mkTxOutValueBccOnly val
     , _fundSigningKey = key
     , _fundValidity = validity
-    , _fundVariant = variant
+    , _fundVariant = PlainOldFund
     }
 
 genTx :: forall era. IsSophieBasedEra era
@@ -157,6 +149,7 @@ genTx fee metadata inFunds outputs
     , txValidityRange = (TxValidityNoLowerBound, upperBound)
     , txMetadata = metadata
     , txAuxScripts = TxAuxScriptsNone
+    , txExtraScriptData = BuildTxWith TxExtraScriptDataNone
     , txExtraKeyWits = TxExtraKeyWitnessesNone
     , txProtocolParams = BuildTxWith Nothing
     , txWithdrawals = TxWithdrawalsNone
@@ -180,9 +173,6 @@ data WalletStep era
   | NextTx !(WalletScript era) !(Tx era)
   | Error String
 
--- TODO:
--- use explicit tx- counter for each walletscript
--- Do not rely on global walletSeqNum
 benchmarkWalletScript :: forall era .
      IsSophieBasedEra era
   => WalletRef

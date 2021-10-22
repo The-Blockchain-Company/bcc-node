@@ -20,7 +20,6 @@ import           Bcc.Benchmarking.Script.Action
 import           Bcc.Benchmarking.Script.Aeson (parseScriptFile)
 import           Bcc.Benchmarking.Script.Env
 import           Bcc.Benchmarking.Script.Store
-import           Bcc.Benchmarking.Script.Types
 
 type Script = [Action]
 

@@ -13,12 +13,12 @@
 
   1. using Nix -- the most reliable way (as CI ensures the buildability),
      but not necessarily provides fastest iteration (although it benefits
-     from the BCIO binary cache for the dependencies).
+     from the TBCO binary cache for the dependencies).
      This can be used by passing `--nix` to the scripts.  It's also the default,
      if the `dist-newstyle` directory is absent.
 
      Before you can use `--nix`, you'll need to set up Nix -- please see
-     the `Building under Nix` section [here](https://github.com/the-blockchain-company/bcc-node/blob/master/doc/building-running.md#building-under-nix)
+     the `Building under Nix` section [here](https://github.com/The-Blockchain-Company/bcc-node/blob/master/doc/building-running.md#building-under-nix)
 
   2. using Cabal -- if you already have the development context set up
      (dependencies, GHC, etc.), then this is the fastest way to iterate.
@@ -57,7 +57,7 @@
          spending a genesis UTxO entry, given a key owning it
 - <span><b>issue-utxo-expenditure.sh</b></span> <br/> Write a file with a transaction spending a
          normal UTxO entry, given a key owning it
-- <span><b>mainnet.sh</b></span> <br/> Run a node against Bcc Mainnet (the [configuration file](https://github.com/the-blockchain-company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml) contains documentation how to change options
+- <span><b>mainnet.sh</b></span> <br/> Run a node against Bcc Mainnet (the [configuration file](https://github.com/The-Blockchain-Company/bcc-node/blob/master/configuration/defaults/cole-mainnet/configuration.yaml) contains documentation how to change options
 	 and turn on/off different features)
 - <span><b>mainnet-via-fetcher.sh</b></span> <br/> Works in two phases, 1) prefetch - preload the prefetcher's
 	 ChainDB, up to desired limit and 2) benchmark - run the second node as the benchmark, up to desired
@@ -132,7 +132,7 @@ Connect with all the core nodes and store the forks from a common prefix.  If an
 
 Run `./scripts/benchmarking/mainnet.sh`
 
-This script connects to several BCIO nodes on mainnet.
+This script connects to several TBCO nodes on mainnet.
 
 ## Submit a tx to the testnet
 
@@ -162,14 +162,14 @@ You can run:
 `./scripts/benchmarking/sophie-testnet-dns.sh`
 
 instead of `sophie-testnet.sh`.
-It requires that the addresses `local.iohk.io` and `local6.iohk.io` resolve to `127.0.0.1` and `::1` respectively.
+It requires that the addresses `local.tbco.io` and `local6.tbco.io` resolve to `127.0.0.1` and `::1` respectively.
 
 You can use [unbound](https://github.com/NLnetLabs/unbound) dns server. You can use the following `/etc/unbound/unbound.conf` file:
 ```
 server:
   verbosity: 1
-  local-data: "local.iohk.io A 127.0.0.1"
-  local-data: "local6.iohk.io AAAA ::1"
+  local-data: "local.tbco.io A 127.0.0.1"
+  local-data: "local6.tbco.io AAAA ::1"
 ```
 
 ## CI cluster

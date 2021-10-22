@@ -5,7 +5,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
 
 #if !defined(mingw32_HOST_OS)
 #define UNIX
@@ -86,7 +85,7 @@ runNode
   :: PartialNodeConfiguration
   -> IO ()
 runNode cmdPc = do
-    -- TODO: Remove sodiumInit: https://github.com/the-blockchain-company/bcc-base/issues/175
+    -- TODO: Remove sodiumInit: https://github.com/The-Blockchain-Company/bcc-base/issues/175
     Crypto.sodiumInit
 
     configYamlPc <- parseNodeConfigurationFP . getLast $ pncConfigFile cmdPc
@@ -94,8 +93,6 @@ runNode cmdPc = do
     nc <- case makeNodeConfiguration $ defaultPartialNodeConfiguration <> configYamlPc <> cmdPc of
             Left err -> panic $ "Error in creating the NodeConfiguration: " <> Text.pack err
             Right nc' -> return nc'
-
-    putStrLn $ "Node configuration: " <> show @_ @Text nc
 
     case sophieVRFFile $ ncProtocolFiles nc of
       Just vrfFp -> do vrf <- runExceptT $ checkVRFFilePermissions vrfFp
@@ -286,16 +283,15 @@ handleSimpleNode scp runP trace nodeTracers nc onKernel = do
            onKernel nodeKernel
        }
      StdRunNodeArgs
-       { srnBfcMaxConcurrencyBulkSync    = unMaxConcurrencyBulkSync <$> ncMaxConcurrencyBulkSync nc
-       , srnBfcMaxConcurrencyDeadline    = unMaxConcurrencyDeadline <$> ncMaxConcurrencyDeadline nc
-       , srnChainDbValidateOverride      = ncValidateDB nc
-       , srnSnapshotInterval             = ncSnapshotInterval nc
-       , srnDatabasePath                 = dbPath
-       , srnDiffusionArguments           = diffusionArguments
-       , srnDiffusionTracers             = diffusionTracers
-       , srnEnableInDevelopmentVersions  = ncTestEnableDevelopmentNetworkProtocols nc
-       , srnTraceChainDB                 = chainDBTracer nodeTracers
-       , srnMaybeMempoolCapacityOverride = ncMaybeMempoolCapacityOverride nc
+       { srnBfcMaxConcurrencyBulkSync   = unMaxConcurrencyBulkSync <$> ncMaxConcurrencyBulkSync nc
+       , srnBfcMaxConcurrencyDeadline   = unMaxConcurrencyDeadline <$> ncMaxConcurrencyDeadline nc
+       , srnChainDbValidateOverride     = ncValidateDB nc
+       , srnSnapshotInterval            = ncSnapshotInterval nc
+       , srnDatabasePath                = dbPath
+       , srnDiffusionArguments          = diffusionArguments
+       , srnDiffusionTracers            = diffusionTracers
+       , srnEnableInDevelopmentVersions = ncTestEnableDevelopmentNetworkProtocols nc
+       , srnTraceChainDB                = chainDBTracer nodeTracers
        }
  where
   createDiffusionTracers :: Tracers RemoteConnectionId LocalConnectionId blk
@@ -417,7 +413,7 @@ createDiffusionArguments publicIPv4SocketsOrAddrs
     , daIpProducers  = ipProducers
     , daDnsProducers = dnsProducers
     -- TODO: these limits are arbitrary at the moment;
-    -- issue: https://github.com/the-blockchain-company/shardagnostic-network/issues/1836
+    -- issue: https://github.com/The-Blockchain-Company/shardagnostic-network/issues/1836
     , daAcceptedConnectionsLimit = AcceptedConnectionsLimit {
         acceptedConnectionsHardLimit = 512
       , acceptedConnectionsSoftLimit = 384

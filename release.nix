@@ -39,14 +39,14 @@
 # Dependencies overrides
 , sourcesOverride ? {}
 
-# Import pkgs, including BCIO common nix lib
+# Import pkgs, including TBCO common nix lib
 , pkgs ? import ./nix { inherit sourcesOverride; }
 
 }:
 with pkgs.lib;
 
 let
-  linuxRelease = (import pkgs.iohkNix.release-lib) {
+  linuxRelease = (import pkgs.tbcoNix.release-lib) {
     inherit pkgs;
     supportedSystems = [ "x86_64-linux" ];
     supportedCrossSystems = filter (s: s == "x86_64-linux") supportedCrossSystems;
@@ -54,7 +54,7 @@ let
     packageSet = import bcc-node;
     gitrev = bcc-node.rev;
   };
-  macosRelease = (import pkgs.iohkNix.release-lib) {
+  macosRelease = (import pkgs.tbcoNix.release-lib) {
     inherit pkgs;
     supportedSystems = [ "x86_64-darwin" ];
     supportedCrossSystems = filter (s: s == "x86_64-darwin") supportedCrossSystems;
@@ -102,7 +102,7 @@ let
 
   extraBuilds = {
     # Environments listed in Network Configuration page
-    bcc-deployment = pkgs.iohkNix.bccLib.mkConfigHtml { inherit (pkgs.iohkNix.bccLib.environments) mainnet testnet; };
+    bcc-deployment = pkgs.tbcoNix.bccLib.mkConfigHtml { inherit (pkgs.tbcoNix.bccLib.environments) mainnet testnet; };
   } // (builtins.listToAttrs (map makeRelease environments));
 
   # restrict supported systems to a subset where tests (if exist) are required to pass:
@@ -136,7 +136,6 @@ let
     [ "haskellPackages" "bcc-testnet" ]
     [ "checks" "tests" "bcc-testnet" ]
     [ "tests" "bcc-testnet" ]
-    [ "exes" "zerepoch-example" ] [ "haskellPackages" "zerepoch-example" ] [ "tests" "zerepoch-example" ] [ "checks" "tests" "zerepoch-example"]
   ] ++ onlyBuildOnDefaultSystem;
   noMusl64Build = [ ["checks"] ["tests"] ["benchmarks"] ["haskellPackages"] ["plan-nix"]]
     ++ noCrossBuild;
@@ -154,7 +153,7 @@ let
   jobs = {
     inherit dockerImages;
     ifd-pins = mkPins {
-      inherit (sources) iohk-nix "haskell.nix";
+      inherit (sources) tbco-nix "haskell.nix";
       inherit nixpkgs;
       inherit (pkgs.haskell-nix) hackageSrc stackageSrc;
     };

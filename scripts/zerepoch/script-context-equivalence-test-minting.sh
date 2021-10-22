@@ -14,7 +14,7 @@ set -o pipefail
 work=example/minting
 mkdir -p $work
 
-# Step 1 - Send DAFI to token script owner
+# Step 1 - Send BCC to token script owner
 export WORKD="${WORKD:-example/work}"
 export BCC_NODE_SOCKET_PATH="${BCC_NODE_SOCKET_PATH:-example/node-bft1/node.sock}"
 mkdir -p "$WORKD"
@@ -105,14 +105,13 @@ bcc-cli transaction sign \
   --out-file "$work/zerepochmint.tx"
 
 # Generate the "real" redeeemer!
-correctredeemer="$work/script-context.redeemer"
 
 create-script-context \
   --generate-tx "$work/zerepochmint.tx" \
   --bcc-mode \
   --testnet-magic 42 \
-  --out-file "$correctredeemer" \
 
+correctredeemer="$work/script-context.redeemer"
 
 bcc-cli transaction build \
   --aurum-era \

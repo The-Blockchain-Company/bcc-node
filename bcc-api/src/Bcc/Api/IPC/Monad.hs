@@ -22,7 +22,7 @@ import Control.Monad.Trans.Cont
 import Data.Either
 import Data.Function
 import Data.Maybe
-import Bcc.Ledger.Sophie.Scripts ()
+import Sophie.Spec.Ledger.Scripts ()
 import System.IO
 
 import qualified Shardagnostic.Network.Protocol.ChainSync.Client as Net.Sync

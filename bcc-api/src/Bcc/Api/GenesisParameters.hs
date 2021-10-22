@@ -20,10 +20,12 @@ import           Prelude
 
 import           Data.Time (NominalDiffTime, UTCTime)
 
+import           Data.Word (Word64)
+
 import           Bcc.Slotting.Slot (EpochSize (..))
 
 import qualified Bcc.Ledger.BaseTypes as Ledger
-import qualified Bcc.Ledger.Sophie.Genesis as Sophie
+import qualified Sophie.Spec.Ledger.Genesis as Sophie
 
 import           Bcc.Api.NetworkId
 import           Bcc.Api.ProtocolParameters
@@ -59,6 +61,10 @@ data GenesisParameters =
        -- the node switching forks up to this long.
        --
        protocolParamSecurity :: Int,
+
+       -- | The Vested Seal Protocol vestMultiple 
+       -- 
+       protocolVestMultiple :: Word64,
 
        -- | The number of Shardagnostic time slots in an Shardagnostic epoch.
        --
@@ -98,7 +104,7 @@ data GenesisParameters =
 
 
 -- ----------------------------------------------------------------------------
--- Conversion functions
+-- Conversion functions #TODO conversion fx VestedDelegs verify pertinenance
 --
 
 fromSophieGenesis :: Sophie.SophieGenesis era -> GenesisParameters
@@ -109,6 +115,7 @@ fromSophieGenesis
     , Sophie.sgNetworkId
     , Sophie.sgActiveSlotsCoeff
     , Sophie.sgSecurityParam
+    , Sophie.sgVestMultiple
     , Sophie.sgEpochLength
     , Sophie.sgSlotsPerKESPeriod
     , Sophie.sgMaxKESEvolutions
@@ -117,6 +124,7 @@ fromSophieGenesis
     , Sophie.sgMaxEntropicSupply
     , Sophie.sgProtocolParams
     , Sophie.sgGenDelegs    = _  -- unused, might be of interest
+    , Sophie.sgVestedDelegs  = _  -- unused, might be if interest
     , Sophie.sgInitialFunds = _  -- unused, not retained by the node
     , Sophie.sgStaking      = _  -- unused, not retained by the node
     } =
@@ -127,12 +135,13 @@ fromSophieGenesis
     , protocolParamActiveSlotsCoefficient = Ledger.unboundRational
                                               sgActiveSlotsCoeff
     , protocolParamSecurity               = fromIntegral sgSecurityParam
+    , protocolVestMultiple                  = sgVestMultiple
     , protocolParamEpochLength            = sgEpochLength
     , protocolParamSlotLength             = sgSlotLength
     , protocolParamSlotsPerKESPeriod      = fromIntegral sgSlotsPerKESPeriod
     , protocolParamMaxKESEvolutions       = fromIntegral sgMaxKESEvolutions
     , protocolParamUpdateQuorum           = fromIntegral sgUpdateQuorum
-    , protocolParamMaxEntropicSupply      = Entropic
+    , protocolParamMaxEntropicSupply         = Entropic
                                               (fromIntegral sgMaxEntropicSupply)
     , protocolInitialUpdateableProtocolParameters = fromSophiePParams
                                                       sgProtocolParams

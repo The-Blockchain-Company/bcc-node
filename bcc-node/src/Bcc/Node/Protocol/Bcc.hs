@@ -73,8 +73,7 @@ mkSomeConsensusProtocolBcc NodeColeProtocolConfiguration {
                              npcColeApplicationName,
                              npcColeApplicationVersion,
                              npcColeSupportedProtocolVersionMajor,
-                             npcColeSupportedProtocolVersionMinor,
-                             npcColeSupportedProtocolVersionAlt
+                             npcColeSupportedProtocolVersionSeal
                            }
                            NodeSophieProtocolConfiguration {
                              npcSophieGenesisFile,
@@ -145,8 +144,7 @@ mkSomeConsensusProtocolBcc NodeColeProtocolConfiguration {
           coleProtocolVersion =
             Cole.ProtocolVersion
               npcColeSupportedProtocolVersionMajor
-              npcColeSupportedProtocolVersionMinor
-              npcColeSupportedProtocolVersionAlt,
+              npcColeSupportedProtocolVersionSeal,
           coleSoftwareVersion =
             Cole.SoftwareVersion
               npcColeApplicationName

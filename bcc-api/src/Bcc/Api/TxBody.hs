@@ -19,7 +19,7 @@
 -- | Transaction bodies
 --
 module Bcc.Api.TxBody (
-    parseTxId,
+
     -- * Transaction bodies
     TxBody(.., TxBody),
     makeTransactionBody,
@@ -47,16 +47,14 @@ module Bcc.Api.TxBody (
     genesisUTxOPseudoTxIn,
 
     -- * Transaction outputs
-    CtxTx, CtxUTxO,
     TxOut(..),
     TxOutValue(..),
-    TxOutDatum(TxOutDatumNone, TxOutDatumHash, TxOutDatum),
-    toCtxUTxOTxOut,
     entropicToTxOutValue,
     prettyRenderTxOut,
     txOutValueToEntropic,
     txOutValueToValue,
-    parseHashScriptData,
+    serialiseAddressForTxOut,
+    TxOutDatumHash(..),
     TxOutInAnyEra(..),
     txOutInAnyEra,
 
@@ -67,6 +65,7 @@ module Bcc.Api.TxBody (
     TxValidityUpperBound(..),
     TxMetadataInEra(..),
     TxAuxScripts(..),
+    TxExtraScriptData(..),
     TxExtraKeyWitnesses(..),
     TxWithdrawals(..),
     TxCertificates(..),
@@ -81,7 +80,7 @@ module Bcc.Api.TxBody (
     -- * Era-dependent transaction body features
     CollateralSupportedInEra(..),
     MultiAssetSupportedInEra(..),
-    OnlyDafiSupportedInEra(..),
+    OnlyBccSupportedInEra(..),
     TxFeesExplicitInEra(..),
     TxFeesImplicitInEra(..),
     ValidityUpperBoundSupportedInEra(..),
@@ -123,7 +122,6 @@ module Bcc.Api.TxBody (
     toSophieTxId,
     toSophieTxIn,
     toSophieTxOut,
-    toSophieTxOutAny,
     fromSophieTxId,
     fromSophieTxIn,
     fromSophieTxOut,
@@ -140,35 +138,27 @@ module Bcc.Api.TxBody (
 import           Prelude
 
 import           Control.Monad (guard)
-import           Data.Aeson (object, withObject, withText, (.:), (.:?), (.=))
+import           Data.Aeson (object, (.=))
 import qualified Data.Aeson as Aeson
 import           Data.Aeson.Types (ToJSONKey (..), toJSONKeyText)
-import qualified Data.Aeson.Types as Aeson
 import           Data.Bifunctor (first)
 import           Data.ByteString (ByteString)
-import qualified Data.ByteString.Char8 as BSC
 import qualified Data.ByteString.Lazy as LBS
 import           Data.Foldable (toList)
 import           Data.Function (on)
-import qualified Data.HashMap.Strict as HMS
 import           Data.List (intercalate, sortBy)
 import qualified Data.List.NonEmpty as NonEmpty
 import           Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import           Data.Maybe (fromMaybe, maybeToList)
-import           Data.Scientific (toBoundedInteger)
 import qualified Data.Sequence.Strict as Seq
 import           Data.Set (Set)
 import qualified Data.Set as Set
-import           Data.String
+import           Data.String (IsString)
 import           Data.Text (Text)
 import qualified Data.Text as Text
 import           Data.Word (Word64)
 import           GHC.Generics
-import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.Language as Parsec
-import qualified Text.Parsec.String as Parsec
-import qualified Text.Parsec.Token as Parsec
 
 import           Bcc.Binary (Annotated (..), reAnnotate, recoverBytes)
 import qualified Bcc.Binary as CBOR
@@ -191,13 +181,12 @@ import qualified Bcc.Ledger.Keys as Sophie
 import qualified Bcc.Ledger.SafeHash as SafeHash
 import qualified Bcc.Ledger.Sophie.Constraints as Ledger
 
-import qualified Bcc.Ledger.Sophie.Genesis as Sophie
-import qualified Bcc.Ledger.Sophie.Metadata as Sophie
-import qualified Bcc.Ledger.Sophie.Tx as Sophie
-import qualified Bcc.Ledger.Sophie.TxBody as Sophie
-import qualified Bcc.Ledger.TxIn as Ledger
+import qualified Sophie.Spec.Ledger.Genesis as Sophie
+import qualified Sophie.Spec.Ledger.Metadata as Sophie
+import qualified Sophie.Spec.Ledger.Tx as Sophie
+import qualified Sophie.Spec.Ledger.TxBody as Sophie
+import qualified Sophie.Spec.Ledger.UTxO as Sophie
 
-import qualified Bcc.Ledger.Jen.Value as Jen
 import qualified Bcc.Ledger.SophieMA.AuxiliaryData as Evie
 import qualified Bcc.Ledger.SophieMA.AuxiliaryData as Jen
 import qualified Bcc.Ledger.SophieMA.TxBody as Evie
@@ -226,7 +215,7 @@ import           Bcc.Api.KeysSophie
 import           Bcc.Api.NetworkId
 import           Bcc.Api.ProtocolParameters
 import           Bcc.Api.Script
-import           Bcc.Api.ScriptData
+import           Bcc.Api.SerialiseBech32
 import           Bcc.Api.SerialiseCBOR
 import           Bcc.Api.SerialiseJSON
 import           Bcc.Api.SerialiseRaw
@@ -235,7 +224,6 @@ import           Bcc.Api.SerialiseUsing
 import           Bcc.Api.TxMetadata
 import           Bcc.Api.Utils
 import           Bcc.Api.Value
-import           Bcc.Api.ValueParser
 import           Bcc.Ledger.Crypto (StandardCrypto)
 
 {- HLINT ignore "Redundant flip" -}
@@ -337,12 +325,12 @@ toColeTxId :: TxId -> Cole.TxId
 toColeTxId (TxId h) =
     Cole.unsafeHashFromBytes (Crypto.hashToBytes h)
 
-toSophieTxId :: TxId -> Ledger.TxId StandardCrypto
+toSophieTxId :: TxId -> Sophie.TxId StandardCrypto
 toSophieTxId (TxId h) =
-    Ledger.TxId (SafeHash.unsafeMakeSafeHash (Crypto.castHash h))
+    Sophie.TxId (SafeHash.unsafeMakeSafeHash (Crypto.castHash h))
 
-fromSophieTxId :: Ledger.TxId StandardCrypto -> TxId
-fromSophieTxId (Ledger.TxId h) =
+fromSophieTxId :: Sophie.TxId StandardCrypto -> TxId
+fromSophieTxId (Sophie.TxId h) =
     TxId (Crypto.castHash (SafeHash.extractHash h))
 
 -- | Calculate the transaction identifier for a 'TxBody'.
@@ -380,8 +368,8 @@ getTxIdSophie
 getTxIdSophie _ tx =
     TxId
   . Crypto.castHash
-  . (\(Ledger.TxId txhash) -> SafeHash.extractHash txhash)
-  $ Ledger.txid tx
+  . (\(Sophie.TxId txhash) -> SafeHash.extractHash txhash)
+  $ Sophie.txid tx
 
 
 -- ----------------------------------------------------------------------------
@@ -396,26 +384,6 @@ instance ToJSON TxIn where
 
 instance ToJSONKey TxIn where
   toJSONKey = toJSONKeyText renderTxIn
-
-instance FromJSON TxIn where
-  parseJSON = withText "TxIn" $ \txinStr -> runParsecParser parseTxIn txinStr
-
-parseTxId :: Parsec.Parser TxId
-parseTxId = do
-  str <- Parsec.many1 Parsec.hexDigit Parsec.<?> "transaction id (hexadecimal)"
-  case deserialiseFromRawBytesHex AsTxId (BSC.pack str) of
-    Just addr -> return addr
-    Nothing -> fail $ "Incorrect transaction id format:: " ++ show str
-
-parseTxIn :: Parsec.Parser TxIn
-parseTxIn = TxIn <$> parseTxId <*> (Parsec.char '#' *> parseTxIx)
-
-parseTxIx :: Parsec.Parser TxIx
-parseTxIx = TxIx . fromIntegral <$> decimal
-
-decimal :: Parsec.Parser Integer
-Parsec.TokenParser { Parsec.decimal = decimal } = Parsec.haskell
-
 
 renderTxIn :: TxIn -> Text
 renderTxIn (TxIn txId (TxIx ix)) =
@@ -439,12 +407,12 @@ toColeTxIn :: TxIn -> Cole.TxIn
 toColeTxIn (TxIn txid (TxIx txix)) =
     Cole.TxInUtxo (toColeTxId txid) (fromIntegral txix)
 
-toSophieTxIn :: TxIn -> Ledger.TxIn StandardCrypto
+toSophieTxIn :: TxIn -> Sophie.TxIn StandardCrypto
 toSophieTxIn (TxIn txid (TxIx txix)) =
-    Ledger.TxIn (toSophieTxId txid) (fromIntegral txix)
+    Sophie.TxIn (toSophieTxId txid) (fromIntegral txix)
 
-fromSophieTxIn :: Ledger.TxIn StandardCrypto -> TxIn
-fromSophieTxIn (Ledger.TxIn txid txix) =
+fromSophieTxIn :: Sophie.TxIn StandardCrypto -> TxIn
+fromSophieTxIn (Sophie.TxIn txid txix) =
     TxIn (fromSophieTxId txid) (TxIx (fromIntegral txix))
 
 
@@ -452,113 +420,54 @@ fromSophieTxIn (Ledger.TxIn txid txix) =
 -- Transaction outputs
 --
 
--- | The context is a transaction body
-data CtxTx
--- | The context is the UTxO
-data CtxUTxO
+data TxOut era = TxOut (AddressInEra era)
+                       (TxOutValue era)
+                       (TxOutDatumHash era)
+  deriving Generic
 
-data TxOut ctx era = TxOut (AddressInEra   era)
-                           (TxOutValue     era)
-                           (TxOutDatum ctx era)
-
-deriving instance Eq   (TxOut ctx era)
-deriving instance Show (TxOut ctx era)
+deriving instance Eq   (TxOut era)
+deriving instance Show (TxOut era)
 
 data TxOutInAnyEra where
      TxOutInAnyEra :: BccEra era
-                   -> TxOut CtxTx era
+                   -> TxOut era
                    -> TxOutInAnyEra
 
 deriving instance Show TxOutInAnyEra
 
 -- | Convenience constructor for 'TxOutInAnyEra'
-txOutInAnyEra :: IsBccEra era => TxOut CtxTx era -> TxOutInAnyEra
+txOutInAnyEra :: IsBccEra era => TxOut era -> TxOutInAnyEra
 txOutInAnyEra = TxOutInAnyEra bccEra
 
-toCtxUTxOTxOut :: TxOut CtxTx  era -> TxOut CtxUTxO era
-toCtxUTxOTxOut (TxOut addr val d) =
-  let dat = case d of
-              TxOutDatumNone -> TxOutDatumNone
-              TxOutDatumHash s h -> TxOutDatumHash s h
-              TxOutDatum' s h _ -> TxOutDatumHash s h
-  in TxOut addr val dat
-
-instance IsBccEra era => ToJSON (TxOut ctx era) where
-  toJSON (TxOut addr val TxOutDatumNone) =
-    object [ "address" .= addr
-           , "value"   .= val
+instance IsBccEra era => ToJSON (TxOut era) where
+  toJSON (TxOut addr val TxOutDatumHashNone) =
+    object [ "address" .= serialiseAddressForTxOut addr
+           , "value"   .= toJSON val
            ]
-  toJSON (TxOut addr val (TxOutDatumHash _ h)) =
-    object [ "address"   .= addr
-           , "value"     .= val
-           , "datumhash" .= h
-           ]
-  toJSON (TxOut addr val (TxOutDatum' _ h d)) =
-    object [ "address"   .= addr
-           , "value"     .= val
-           , "datumhash" .= h
-           , "datum"     .= scriptDataToJson ScriptDataJsonDetailedSchema d
+  toJSON (TxOut addr val (TxOutDatumHash _ d)) =
+    object [ "address" .= serialiseAddressForTxOut addr
+           , "value"   .= toJSON val
+           , "data"    .= toJSON d
            ]
 
-instance (IsSophieBasedEra era, IsBccEra era)
-  => FromJSON (TxOut CtxTx era) where
-      parseJSON = withObject "TxOut" $ \o -> do
-        addr <- o .: "address"
-        val <- o .: "value"
-        case scriptDataSupportedInEra bccEra of
-          Just supported -> do
-            mData <- o .:? "datum"
-            mDatumHash <- o .:? "datumhash"
-            case (mData, mDatumHash) of
-              (Nothing, Nothing) ->
-                pure $ TxOut addr val TxOutDatumNone
-              (Nothing, Just (Aeson.String dHashTxt))  -> do
-                dh <- runParsecParser parseHashScriptData dHashTxt
-                pure $ TxOut addr val $ TxOutDatumHash supported dh
-              (Just sDataVal, Just (Aeson.String dHashTxt)) ->
-                case scriptDataFromJson ScriptDataJsonDetailedSchema sDataVal of
-                  Left err ->
-                    fail $ "Error parsing TxOut JSON: " <> displayError err
-                  Right sData -> do
-                    dHash <- runParsecParser parseHashScriptData dHashTxt
-                    pure . TxOut addr val $ TxOutDatum' supported dHash sData
-              (mDatVal, wrongDatumHashFormat) ->
-                fail $ "Error parsing TxOut's datum hash/data: " <>
-                       "\nData value:" <> show mDatVal <>
-                       "\nDatumHash: " <> show wrongDatumHashFormat
+serialiseAddressForTxOut :: AddressInEra era -> Text
+serialiseAddressForTxOut (AddressInEra addrType addr) =
+  case addrType of
+    ColeAddressInAnyEra  -> serialiseToRawBytesHexText addr
+    SophieAddressInEra _ -> serialiseToBech32 addr
 
-          Nothing -> pure $ TxOut addr val TxOutDatumNone
 
-instance (IsSophieBasedEra era, IsBccEra era)
-  => FromJSON (TxOut CtxUTxO era) where
-      parseJSON = withObject "TxOut" $ \o -> do
-        addr <- o .: "address"
-        val <- o .: "value"
-        case scriptDataSupportedInEra bccEra of
-          Just supported -> do
-            mDatumHash <- o .:? "datumhash"
-            case mDatumHash of
-              Nothing ->
-                pure $ TxOut addr val TxOutDatumNone
-              Just (Aeson.String dHashTxt)  -> do
-                dh <- runParsecParser parseHashScriptData dHashTxt
-                pure $ TxOut addr val $ TxOutDatumHash supported dh
-              Just wrongDatumHashFormat ->
-                fail $ "Error parsing TxOut's datum hash: " <>
-                       "\nDatumHash: " <> show wrongDatumHashFormat
-          Nothing -> pure $ TxOut addr val TxOutDatumNone
-
-fromColeTxOut :: Cole.TxOut -> TxOut ctx ColeEra
+fromColeTxOut :: Cole.TxOut -> TxOut ColeEra
 fromColeTxOut (Cole.TxOut addr value) =
   TxOut
     (AddressInEra ColeAddressInAnyEra (ColeAddress addr))
-    (TxOutDafiOnly DafiOnlyInColeEra (fromColeEntropic value))
-     TxOutDatumNone
+    (TxOutBccOnly BccOnlyInColeEra (fromColeEntropic value))
+     TxOutDatumHashNone
 
 
-toColeTxOut :: TxOut ctx ColeEra -> Maybe Cole.TxOut
+toColeTxOut :: TxOut ColeEra -> Maybe Cole.TxOut
 toColeTxOut (TxOut (AddressInEra ColeAddressInAnyEra (ColeAddress addr))
-                    (TxOutDafiOnly DafiOnlyInColeEra value) _) =
+                    (TxOutBccOnly BccOnlyInColeEra value) _) =
     Cole.TxOut addr <$> toColeEntropic value
 
 toColeTxOut (TxOut (AddressInEra ColeAddressInAnyEra (ColeAddress _))
@@ -571,15 +480,15 @@ toColeTxOut (TxOut (AddressInEra (SophieAddressInEra era) SophieAddress{})
 toSophieTxOut :: forall era ledgerera.
                   SophieLedgerEra era ~ ledgerera
                => SophieBasedEra era
-               -> TxOut CtxUTxO era
+               -> TxOut era
                -> Ledger.TxOut ledgerera
-toSophieTxOut era (TxOut _ (TxOutDafiOnly DafiOnlyInColeEra _) _) =
+toSophieTxOut era (TxOut _ (TxOutBccOnly BccOnlyInColeEra _) _) =
     case era of {}
 
-toSophieTxOut _ (TxOut addr (TxOutDafiOnly DafiOnlyInSophieEra value) _) =
+toSophieTxOut _ (TxOut addr (TxOutBccOnly BccOnlyInSophieEra value) _) =
     Sophie.TxOut (toSophieAddr addr) (toSophieEntropic value)
 
-toSophieTxOut _ (TxOut addr (TxOutDafiOnly DafiOnlyInEvieEra value) _) =
+toSophieTxOut _ (TxOut addr (TxOutBccOnly BccOnlyInEvieEra value) _) =
     Sophie.TxOut (toSophieAddr addr) (toSophieEntropic value)
 
 toSophieTxOut _ (TxOut addr (TxOutValue MultiAssetInJenEra value) _) =
@@ -592,22 +501,22 @@ toSophieTxOut _ (TxOut addr (TxOutValue MultiAssetInAurumEra value) txoutdata) =
 fromSophieTxOut :: SophieLedgerEra era ~ ledgerera
                  => SophieBasedEra era
                  -> Core.TxOut ledgerera
-                 -> TxOut ctx era
+                 -> TxOut era
 fromSophieTxOut era ledgerTxOut =
   case era of
     SophieBasedEraSophie ->
         TxOut (fromSophieAddr addr)
-              (TxOutDafiOnly DafiOnlyInSophieEra
+              (TxOutBccOnly BccOnlyInSophieEra
                             (fromSophieEntropic value))
-               TxOutDatumNone
+               TxOutDatumHashNone
       where
         Sophie.TxOut addr value = ledgerTxOut
 
     SophieBasedEraEvie ->
         TxOut (fromSophieAddr addr)
-              (TxOutDafiOnly DafiOnlyInEvieEra
+              (TxOutBccOnly BccOnlyInEvieEra
                             (fromSophieEntropic value))
-               TxOutDatumNone
+               TxOutDatumHashNone
       where
         Sophie.TxOut addr value = ledgerTxOut
 
@@ -615,7 +524,7 @@ fromSophieTxOut era ledgerTxOut =
         TxOut (fromSophieAddr addr)
               (TxOutValue MultiAssetInJenEra
                           (fromJenValue value))
-               TxOutDatumNone
+               TxOutDatumHashNone
       where
         Sophie.TxOut addr value = ledgerTxOut
 
@@ -627,15 +536,15 @@ fromSophieTxOut era ledgerTxOut =
       where
         Aurum.TxOut addr value datahash = ledgerTxOut
 
-toAurumTxOutDataHash :: TxOutDatum CtxUTxO era
+toAurumTxOutDataHash :: TxOutDatumHash era
                       -> StrictMaybe (Aurum.DataHash StandardCrypto)
-toAurumTxOutDataHash  TxOutDatumNone                        = SNothing
+toAurumTxOutDataHash TxOutDatumHashNone    = SNothing
 toAurumTxOutDataHash (TxOutDatumHash _ (ScriptDataHash dh)) = SJust dh
 
 fromAurumTxOutDataHash :: ScriptDataSupportedInEra era
                         -> StrictMaybe (Aurum.DataHash StandardCrypto)
-                        -> TxOutDatum ctx era
-fromAurumTxOutDataHash _    SNothing  = TxOutDatumNone
+                        -> TxOutDatumHash era
+fromAurumTxOutDataHash _    SNothing  = TxOutDatumHashNone
 fromAurumTxOutDataHash era (SJust dh) = TxOutDatumHash era (ScriptDataHash dh)
 
 
@@ -668,7 +577,7 @@ collateralSupportedInEra AurumEra  = Just CollateralInAurumEra
 --
 -- The Jen and subsequent eras support multi-asset transactions.
 --
--- The negation of this is 'OnlyDafiSupportedInEra'.
+-- The negation of this is 'OnlyBccSupportedInEra'.
 --
 data MultiAssetSupportedInEra era where
 
@@ -684,29 +593,29 @@ deriving instance Show (MultiAssetSupportedInEra era)
 instance ToJSON (MultiAssetSupportedInEra era) where
   toJSON = Aeson.String . Text.pack . show
 
--- | A representation of whether the era supports only dafi transactions.
+-- | A representation of whether the era supports only bcc transactions.
 --
--- Prior to the Jen era only dafi transactions are supported. Multi-assets are
+-- Prior to the Jen era only bcc transactions are supported. Multi-assets are
 -- supported from the Jen era onwards.
 --
 -- This is the negation of 'MultiAssetSupportedInEra'. It exists since we need
 -- evidence to be positive.
 --
-data OnlyDafiSupportedInEra era where
+data OnlyBccSupportedInEra era where
 
-     DafiOnlyInColeEra   :: OnlyDafiSupportedInEra ColeEra
-     DafiOnlyInSophieEra :: OnlyDafiSupportedInEra SophieEra
-     DafiOnlyInEvieEra :: OnlyDafiSupportedInEra EvieEra
+     BccOnlyInColeEra   :: OnlyBccSupportedInEra ColeEra
+     BccOnlyInSophieEra :: OnlyBccSupportedInEra SophieEra
+     BccOnlyInEvieEra :: OnlyBccSupportedInEra EvieEra
 
-deriving instance Eq   (OnlyDafiSupportedInEra era)
-deriving instance Show (OnlyDafiSupportedInEra era)
+deriving instance Eq   (OnlyBccSupportedInEra era)
+deriving instance Show (OnlyBccSupportedInEra era)
 
 multiAssetSupportedInEra :: BccEra era
-                         -> Either (OnlyDafiSupportedInEra era)
+                         -> Either (OnlyBccSupportedInEra era)
                                    (MultiAssetSupportedInEra era)
-multiAssetSupportedInEra ColeEra   = Left DafiOnlyInColeEra
-multiAssetSupportedInEra SophieEra = Left DafiOnlyInSophieEra
-multiAssetSupportedInEra EvieEra = Left DafiOnlyInEvieEra
+multiAssetSupportedInEra ColeEra   = Left BccOnlyInColeEra
+multiAssetSupportedInEra SophieEra = Left BccOnlyInSophieEra
+multiAssetSupportedInEra EvieEra = Left BccOnlyInEvieEra
 multiAssetSupportedInEra JenEra    = Right MultiAssetInJenEra
 multiAssetSupportedInEra AurumEra  = Right MultiAssetInAurumEra
 
@@ -902,7 +811,7 @@ extraKeyWitnessesSupportedInEra AurumEra  = Just ExtraKeyWitnessesInAurumEra
 --
 -- The Jen and subsequent eras support multi-asset transactions.
 --
--- The negation of this is 'OnlyDafiSupportedInEra'.
+-- The negation of this is 'OnlyBccSupportedInEra'.
 --
 data ScriptDataSupportedInEra era where
 
@@ -1035,7 +944,7 @@ deriving instance Show (TxInsCollateral era)
 
 data TxOutValue era where
 
-     TxOutDafiOnly :: OnlyDafiSupportedInEra era -> Entropic -> TxOutValue era
+     TxOutBccOnly :: OnlyBccSupportedInEra era -> Entropic -> TxOutValue era
 
      TxOutValue   :: MultiAssetSupportedInEra era -> Value -> TxOutValue era
 
@@ -1044,66 +953,26 @@ deriving instance Show (TxOutValue era)
 deriving instance Generic (TxOutValue era)
 
 instance ToJSON (TxOutValue era) where
-  toJSON (TxOutDafiOnly _ ll) = toJSON ll
+  toJSON (TxOutBccOnly _ ll) = toJSON ll
   toJSON (TxOutValue _ val) = toJSON val
 
-instance IsBccEra era => FromJSON (TxOutValue era) where
-  parseJSON = withObject "TxOutValue" $ \o -> do
-    case multiAssetSupportedInEra bccEra of
-      Left onlyDafi -> do
-        ll <- o .: "entropic"
-        pure $ TxOutDafiOnly onlyDafi $ selectEntropic ll
-      Right maSupported -> do
-        let l = HMS.toList o
-        vals <- mapM decodeAssetId l
-        pure $ TxOutValue maSupported $ mconcat vals
-    where
-     decodeAssetId :: (Text, Aeson.Value) -> Aeson.Parser Value
-     decodeAssetId (polid, Aeson.Object assetNameHm) = do
-       let polId = fromString $ Text.unpack polid
-       aNameQuantity <- decodeAssets assetNameHm
-       pure . valueFromList
-         $ map (first $ AssetId polId) aNameQuantity
-
-     decodeAssetId ("entropic", Aeson.Number sci) =
-       case toBoundedInteger sci of
-         Just (ll :: Word64) ->
-           pure $ valueFromList [(DafiAssetId, Quantity $ toInteger ll)]
-         Nothing ->
-           fail $ "Expected a Bounded number but got: " <> show sci
-     decodeAssetId wrong = fail $ "Expected a policy id and a JSON object but got: " <> show wrong
-
-     decodeAssets :: Aeson.Object -> Aeson.Parser [(AssetName, Quantity)]
-     decodeAssets assetNameHm =
-       let l = HMS.toList assetNameHm
-       in mapM (\(aName, q) -> (,) <$> parseAssetName aName <*> decodeQuantity q) l
-
-     parseAssetName :: Text -> Aeson.Parser AssetName
-     parseAssetName aName = runParsecParser assetName aName
-
-     decodeQuantity :: Aeson.Value -> Aeson.Parser Quantity
-     decodeQuantity (Aeson.Number sci) =
-       case toBoundedInteger sci of
-         Just (ll :: Word64) -> return . Quantity $ toInteger ll
-         Nothing -> fail $ "Expected a Bounded number but got: " <> show sci
-     decodeQuantity wrong = fail $ "Expected aeson Number but got: " <> show wrong
 
 entropicToTxOutValue :: IsBccEra era => Entropic -> TxOutValue era
 entropicToTxOutValue l =
     case multiAssetSupportedInEra bccEra of
-      Left dafiOnly     -> TxOutDafiOnly dafiOnly  l
+      Left bccOnly     -> TxOutBccOnly bccOnly  l
       Right multiAsset -> TxOutValue multiAsset (entropicToValue l)
 
 txOutValueToEntropic :: TxOutValue era -> Entropic
 txOutValueToEntropic tv =
   case tv of
-    TxOutDafiOnly _ l -> l
+    TxOutBccOnly _ l -> l
     TxOutValue _ v -> selectEntropic v
 
 txOutValueToValue :: TxOutValue era -> Value
 txOutValueToValue tv =
   case tv of
-    TxOutDafiOnly _ l -> entropicToValue l
+    TxOutBccOnly _ l -> entropicToValue l
     TxOutValue _ v -> v
 
 prettyRenderTxOut :: TxOutInAnyEra -> Text
@@ -1115,46 +984,18 @@ prettyRenderTxOut (TxOutInAnyEra _ (TxOut (AddressInEra _ addr) txOutVal _)) =
 -- Transaction output datum (era-dependent)
 --
 
-data TxOutDatum ctx era where
+data TxOutDatumHash era where
 
-     TxOutDatumNone :: TxOutDatum ctx era
+     TxOutDatumHashNone :: TxOutDatumHash era
 
-     -- | A transaction output that only specifies the hash of the datum, but
-     -- not the full datum value.
-     --
-     TxOutDatumHash :: ScriptDataSupportedInEra era
-                    -> Hash ScriptData
-                    -> TxOutDatum ctx era
+     TxOutDatumHash     :: ScriptDataSupportedInEra era
+                        -> Hash ScriptData
+                        -> TxOutDatumHash era
 
-     -- | A transaction output that specifies the whole datum value. This can
-     -- only be used in the context of the transaction body, and does not occur
-     -- in the UTxO. The UTxO only contains the datum hash.
-     --
-     TxOutDatum'    :: ScriptDataSupportedInEra era
-                    -> Hash ScriptData
-                    -> ScriptData
-                    -> TxOutDatum CtxTx era
+deriving instance Eq   (TxOutDatumHash era)
+deriving instance Show (TxOutDatumHash era)
+deriving instance Generic (TxOutDatumHash era)
 
-deriving instance Eq   (TxOutDatum ctx era)
-deriving instance Show (TxOutDatum ctx era)
-
-pattern TxOutDatum :: ScriptDataSupportedInEra era
-                   -> ScriptData
-                   -> TxOutDatum CtxTx era
-pattern TxOutDatum s d  <- TxOutDatum' s _ d
-  where
-    TxOutDatum s d = TxOutDatum' s (hashScriptData d) d
-
-{-# COMPLETE TxOutDatumNone, TxOutDatumHash, TxOutDatum' #-}
-{-# COMPLETE TxOutDatumNone, TxOutDatumHash, TxOutDatum  #-}
-
-
-parseHashScriptData :: Parsec.Parser (Hash ScriptData)
-parseHashScriptData = do
-  str <- Parsec.many1 Parsec.hexDigit Parsec.<?> "script data hash"
-  case deserialiseFromRawBytesHex (AsHash AsScriptData) (BSC.pack str) of
-    Just sdh -> return sdh
-    Nothing  -> fail $ "Invalid datum hash: " ++ show str
 
 -- ----------------------------------------------------------------------------
 -- Transaction fees
@@ -1248,6 +1089,22 @@ deriving instance Eq   (TxExtraKeyWitnesses era)
 deriving instance Show (TxExtraKeyWitnesses era)
 
 -- ----------------------------------------------------------------------------
+-- Auxiliary script data (era-dependent)
+--
+
+data TxExtraScriptData era where
+
+     TxExtraScriptDataNone :: TxExtraScriptData era
+
+     TxExtraScriptData     :: ScriptDataSupportedInEra era
+                           -> [ScriptData]
+                           -> TxExtraScriptData era
+
+deriving instance Eq   (TxExtraScriptData era)
+deriving instance Show (TxExtraScriptData era)
+
+
+-- ----------------------------------------------------------------------------
 -- Withdrawals within transactions (era-dependent)
 --
 
@@ -1324,12 +1181,13 @@ data TxBodyContent build era =
      TxBodyContent {
        txIns            :: TxIns build era,
        txInsCollateral  :: TxInsCollateral era,
-       txOuts           :: [TxOut CtxTx era],
+       txOuts           :: [TxOut era],
        txFee            :: TxFee era,
        txValidityRange  :: (TxValidityLowerBound era,
                             TxValidityUpperBound era),
        txMetadata       :: TxMetadataInEra era,
        txAuxScripts     :: TxAuxScripts era,
+       txExtraScriptData:: BuildTxWith build (TxExtraScriptData era),
        txExtraKeyWits   :: TxExtraKeyWitnesses era,
        txProtocolParams :: BuildTxWith build (Maybe ProtocolParameters),
        txWithdrawals    :: TxWithdrawals  build era,
@@ -1612,16 +1470,6 @@ deserialiseSophieBasedTxBody era bs =
 
       case len of
         -- Backwards compat for pre-Aurum era tx body files
-        2 -> do
-          txbody     <- fromCBOR
-          txmetadata <- CBOR.decodeNullMaybe fromCBOR
-          return $ CBOR.Annotator $ \fbs ->
-            SophieTxBody era
-              (flip CBOR.runAnnotator fbs txbody)
-              [] -- scripts
-              (flip CBOR.runAnnotator fbs (return TxBodyNoScriptData))
-              (fmap (flip CBOR.runAnnotator fbs) txmetadata)
-              (flip CBOR.runAnnotator fbs (return TxScriptValidityNone))
         3 -> do
           txbody     <- fromCBOR
           txscripts  <- fromCBOR
@@ -1686,7 +1534,7 @@ deserialiseSophieBasedTxBody era bs =
               (flip CBOR.runAnnotator fbs txscriptdata)
               (fmap (flip CBOR.runAnnotator fbs) txmetadata)
               (flip CBOR.runAnnotator fbs (return $ TxScriptValidity sValiditySupported scriptValidity))
-        _ -> fail $ "expected tx body tuple of size 2, 3, 4 or 6, got " <> show len
+        _ -> fail "expected tx body tuple of size 3, 4 or 6"
 
 instance IsBccEra era => HasTextEnvelope (TxBody era) where
     textEnvelopeType _ =
@@ -1709,7 +1557,7 @@ data TxBodyError =
      | TxBodyOutputNegative Quantity TxOutInAnyEra
      | TxBodyOutputOverflow Quantity TxOutInAnyEra
      | TxBodyMetadataError [(Word64, TxMetadataRangeError)]
-     | TxBodyMintDafiError
+     | TxBodyMintBccError
      | TxBodyMissingProtocolParams
      deriving Show
 
@@ -1731,8 +1579,8 @@ instance Error TxBodyError where
       intercalate "; "
         [ show k ++ ": " ++ displayError err
         | (k, err) <- errs ]
-    displayError TxBodyMintDafiError =
-      "Transaction cannot mint dafi, only non-dafi assets"
+    displayError TxBodyMintBccError =
+      "Transaction cannot mint bcc, only non-bcc assets"
     displayError TxBodyMissingProtocolParams =
       "Transaction uses Zerepoch scripts but does not provide the protocol " ++
       "parameters to hash"
@@ -1754,21 +1602,21 @@ pattern TxBody txbodycontent <- (getTxBodyContent -> txbodycontent)
 
 getTxBodyContent :: TxBody era -> TxBodyContent ViewTx era
 getTxBodyContent (ColeTxBody body) = getColeTxBodyContent body
-getTxBodyContent (SophieTxBody era body _scripts scriptdata mAux scriptValidity) =
-    fromLedgerTxBody era scriptValidity body scriptdata mAux
+getTxBodyContent (SophieTxBody era body _scripts _redeemers mAux scriptValidity) =
+    fromLedgerTxBody era scriptValidity body mAux
+
 
 fromLedgerTxBody
   :: SophieBasedEra era
   -> TxScriptValidity era
   -> Ledger.TxBody (SophieLedgerEra era)
-  -> TxBodyScriptData era
   -> Maybe (Ledger.AuxiliaryData (SophieLedgerEra era))
   -> TxBodyContent ViewTx era
-fromLedgerTxBody era scriptValidity body scriptdata mAux =
+fromLedgerTxBody era scriptValidity body mAux =
     TxBodyContent
       { txIns            = fromLedgerTxIns            era body
       , txInsCollateral  = fromLedgerTxInsCollateral  era body
-      , txOuts           = fromLedgerTxOuts           era body scriptdata
+      , txOuts           = fromLedgerTxOuts           era body
       , txFee            = fromLedgerTxFee            era body
       , txValidityRange  = fromLedgerTxValidityRange  era body
       , txWithdrawals    = fromLedgerTxWithdrawals    era body
@@ -1779,6 +1627,7 @@ fromLedgerTxBody era scriptValidity body scriptdata mAux =
       , txProtocolParams = ViewTx
       , txMetadata
       , txAuxScripts
+      , txExtraScriptData = ViewTx
       , txScriptValidity = scriptValidity
       }
   where
@@ -1796,7 +1645,7 @@ fromLedgerTxIns era body =
   where
     inputs :: SophieBasedEra era
            -> Ledger.TxBody (SophieLedgerEra era)
-           -> Set (Ledger.TxIn StandardCrypto)
+           -> Set (Sophie.TxIn StandardCrypto)
     inputs SophieBasedEraSophie = Sophie._inputs
     inputs SophieBasedEraEvie = Evie.inputs'
     inputs SophieBasedEraJen    = Jen.inputs'
@@ -1817,7 +1666,7 @@ fromLedgerTxInsCollateral era body =
   where
     collateral :: SophieBasedEra era
                -> Ledger.TxBody (SophieLedgerEra era)
-               -> Set (Ledger.TxIn StandardCrypto)
+               -> Set (Sophie.TxIn StandardCrypto)
     collateral SophieBasedEraSophie = const Set.empty
     collateral SophieBasedEraEvie = const Set.empty
     collateral SophieBasedEraJen    = const Set.empty
@@ -1825,60 +1674,14 @@ fromLedgerTxInsCollateral era body =
 
 
 fromLedgerTxOuts
-  :: forall era.
-     SophieBasedEra era
-  -> Ledger.TxBody (SophieLedgerEra era)
-  -> TxBodyScriptData era
-  -> [TxOut CtxTx era]
-fromLedgerTxOuts era body scriptdata =
+  :: SophieBasedEra era -> Ledger.TxBody (SophieLedgerEra era) -> [TxOut era]
+fromLedgerTxOuts era body =
+  fromSophieTxOut era <$>
   case era of
-    SophieBasedEraSophie ->
-      [ fromSophieTxOut era txout | txout <- toList (Sophie._outputs body) ]
-
-    SophieBasedEraEvie ->
-      [ fromSophieTxOut era txout | txout <- toList (Evie.outputs' body) ]
-
-    SophieBasedEraJen ->
-      [ fromSophieTxOut era txout | txout <- toList (Jen.outputs' body) ]
-
-    SophieBasedEraAurum ->
-      [ fromAurumTxOut
-          MultiAssetInAurumEra
-          ScriptDataInAurumEra
-          txdatums
-          txout
-      | let txdatums = selectTxDatums scriptdata
-      , txout <- toList (Aurum.outputs' body) ]
-  where
-    selectTxDatums  TxBodyNoScriptData                            = Map.empty
-    selectTxDatums (TxBodyScriptData _ (Aurum.TxDats' datums) _) = datums
-
-fromAurumTxOut :: forall era ledgerera.
-                   IsSophieBasedEra era
-                => Ledger.Era ledgerera
-                => Ledger.Crypto ledgerera ~ StandardCrypto
-                => Ledger.Value ledgerera ~ Jen.Value StandardCrypto
-                => MultiAssetSupportedInEra era
-                -> ScriptDataSupportedInEra era
-                -> Map (Aurum.DataHash StandardCrypto)
-                       (Aurum.Data ledgerera)
-                -> Aurum.TxOut ledgerera
-                -> TxOut CtxTx era
-fromAurumTxOut multiAssetInEra scriptDataInEra txdatums
-                (Aurum.TxOut addr value datahash) =
-   TxOut (fromSophieAddr addr)
-         (TxOutValue multiAssetInEra (fromJenValue value))
-         (fromAurumTxOutDatum scriptDataInEra datahash)
-  where
-    fromAurumTxOutDatum :: ScriptDataSupportedInEra era
-                         -> StrictMaybe (Aurum.DataHash StandardCrypto)
-                         -> TxOutDatum CtxTx era
-    fromAurumTxOutDatum _          SNothing = TxOutDatumNone
-    fromAurumTxOutDatum supported (SJust dh)
-      | Just d <- Map.lookup dh txdatums
-                  = TxOutDatum'    supported (ScriptDataHash dh)
-                                             (fromAurumData d)
-      | otherwise = TxOutDatumHash supported (ScriptDataHash dh)
+    SophieBasedEraSophie -> toList $ Sophie._outputs body
+    SophieBasedEraEvie -> toList $ Evie.outputs' body
+    SophieBasedEraJen    -> toList $ Jen.outputs'    body
+    SophieBasedEraAurum  -> toList $ Aurum.outputs'  body
 
 fromLedgerTxFee
   :: SophieBasedEra era -> Ledger.TxBody (SophieLedgerEra era) -> TxFee era
@@ -2178,10 +1981,10 @@ makeColeTransactionBody TxBodyContent { txIns, txOuts } = do
             (Cole.UnsafeTx ins'' outs'' (Cole.mkAttributes ()))
             ()
   where
-    classifyRangeError :: TxOut CtxTx ColeEra -> TxBodyError
+    classifyRangeError :: TxOut ColeEra -> TxBodyError
     classifyRangeError
       txout@(TxOut (AddressInEra ColeAddressInAnyEra ColeAddress{})
-                   (TxOutDafiOnly DafiOnlyInColeEra value) _)
+                   (TxOutBccOnly BccOnlyInColeEra value) _)
       | value < 0        = TxBodyOutputNegative (entropicToQuantity value)
                                                 (txOutInAnyEra txout)
       | otherwise        = TxBodyOutputOverflow (entropicToQuantity value)
@@ -2209,6 +2012,7 @@ getColeTxBodyContent (Annotated Cole.UnsafeTx{txInputs, txOutputs} _) =
                             ValidityNoUpperBoundInColeEra),
       txMetadata       = TxMetadataNone,
       txAuxScripts     = TxAuxScriptsNone,
+      txExtraScriptData= ViewTx,
       txExtraKeyWits   = TxExtraKeyWitnessesNone,
       txProtocolParams = ViewTx,
       txWithdrawals    = TxWithdrawalsNone,
@@ -2241,7 +2045,7 @@ makeSophieTransactionBody era@SophieBasedEraSophie
            guard (v <= maxTxOut) ?! TxBodyOutputOverflow (entropicToQuantity v)
                                                          (txOutInAnyEra txout)
       | let maxTxOut = fromIntegral (maxBound :: Word64) :: Entropic
-      , txout@(TxOut _ (TxOutDafiOnly DafiOnlyInSophieEra v) _) <- txOuts ]
+      , txout@(TxOut _ (TxOutBccOnly BccOnlyInSophieEra v) _) <- txOuts ]
     case txMetadata of
       TxMetadataNone      -> return ()
       TxMetadataInEra _ m -> first TxBodyMetadataError (validateTxMetadata m)
@@ -2250,7 +2054,7 @@ makeSophieTransactionBody era@SophieBasedEraSophie
       SophieTxBody era
         (Sophie.TxBody
           (Set.fromList (map (toSophieTxIn . fst) txIns))
-          (Seq.fromList (map (toSophieTxOutAny era) txOuts))
+          (Seq.fromList (map (toSophieTxOut era) txOuts))
           (case txCertificates of
              TxCertificatesNone    -> Seq.empty
              TxCertificates _ cs _ -> Seq.fromList (map toSophieCertificate cs))
@@ -2309,7 +2113,7 @@ makeSophieTransactionBody era@SophieBasedEraEvie
            guard (v <= maxTxOut) ?! TxBodyOutputOverflow (entropicToQuantity v)
                                                          (txOutInAnyEra txout)
       | let maxTxOut = fromIntegral (maxBound :: Word64) :: Entropic
-      , txout@(TxOut _ (TxOutDafiOnly DafiOnlyInEvieEra v) _) <- txOuts
+      , txout@(TxOut _ (TxOutBccOnly BccOnlyInEvieEra v) _) <- txOuts
       ]
     case txMetadata of
       TxMetadataNone      -> return ()
@@ -2319,7 +2123,7 @@ makeSophieTransactionBody era@SophieBasedEraEvie
       SophieTxBody era
         (Evie.TxBody
           (Set.fromList (map (toSophieTxIn . fst) txIns))
-          (Seq.fromList (map (toSophieTxOutAny era) txOuts))
+          (Seq.fromList (map (toSophieTxOut era) txOuts))
           (case txCertificates of
              TxCertificatesNone    -> Seq.empty
              TxCertificates _ cs _ -> Seq.fromList (map toSophieCertificate cs))
@@ -2402,13 +2206,13 @@ makeSophieTransactionBody era@SophieBasedEraJen
       TxMetadataInEra _ m -> validateTxMetadata m ?!. TxBodyMetadataError
     case txMintValue of
       TxMintNone        -> return ()
-      TxMintValue _ v _ -> guard (selectEntropic v == 0) ?! TxBodyMintDafiError
+      TxMintValue _ v _ -> guard (selectEntropic v == 0) ?! TxBodyMintBccError
 
     return $
       SophieTxBody era
         (Evie.TxBody
           (Set.fromList (map (toSophieTxIn . fst) txIns))
-          (Seq.fromList (map (toSophieTxOutAny era) txOuts))
+          (Seq.fromList (map (toSophieTxOut era) txOuts))
           (case txCertificates of
              TxCertificatesNone    -> Seq.empty
              TxCertificates _ cs _ -> Seq.fromList (map toSophieCertificate cs))
@@ -2468,6 +2272,7 @@ makeSophieTransactionBody era@SophieBasedEraAurum
                              txValidityRange = (lowerBound, upperBound),
                              txMetadata,
                              txAuxScripts,
+                             txExtraScriptData,
                              txExtraKeyWits,
                              txProtocolParams,
                              txWithdrawals,
@@ -2497,7 +2302,7 @@ makeSophieTransactionBody era@SophieBasedEraAurum
       TxMetadataInEra _ m -> validateTxMetadata m ?!. TxBodyMetadataError
     case txMintValue of
       TxMintNone        -> return ()
-      TxMintValue _ v _ -> guard (selectEntropic v == 0) ?! TxBodyMintDafiError
+      TxMintValue _ v _ -> guard (selectEntropic v == 0) ?! TxBodyMintBccError
     case txInsCollateral of
       TxInsCollateralNone | not (Set.null languages)
         -> Left TxBodyEmptyTxInsCollateral
@@ -2515,7 +2320,7 @@ makeSophieTransactionBody era@SophieBasedEraAurum
           (case txInsCollateral of
              TxInsCollateralNone     -> Set.empty
              TxInsCollateral _ txins -> Set.fromList (map toSophieTxIn txins))
-          (Seq.fromList (map (toSophieTxOutAny era) txOuts))
+          (Seq.fromList (map (toSophieTxOut era) txOuts))
           (case txCertificates of
              TxCertificatesNone    -> Seq.empty
              TxCertificates _ cs _ -> Seq.fromList (map toSophieCertificate cs))
@@ -2580,7 +2385,7 @@ makeSophieTransactionBody era@SophieBasedEraAurum
 
     scriptdata :: [ScriptData]
     scriptdata =
-        [ d | TxOut _ _ (TxOutDatum _ d) <- txOuts ]
+        [ d | BuildTxWith (TxExtraScriptData _ ds) <- [txExtraScriptData], d <- ds ]
      ++ [ d | (_, AnyScriptWitness
                     (ZerepochScriptWitness
                        _ _ _ (ScriptDatumForTxIn d) _ _)) <- witnesses
@@ -2614,37 +2419,6 @@ makeSophieTransactionBody era@SophieBasedEraAurum
         ss = case txAuxScripts of
                TxAuxScriptsNone   -> []
                TxAuxScripts _ ss' -> ss'
-
--- | A variant of 'toSophieTxOutAny that is used only internally to this module
--- that works with a 'TxOut' in any context (including CtxTx) by ignoring
--- embedded datums (taking only their hash).
---
-toSophieTxOutAny :: forall ctx era ledgerera.
-                   SophieLedgerEra era ~ ledgerera
-                => SophieBasedEra era
-                -> TxOut ctx era
-                -> Ledger.TxOut ledgerera
-toSophieTxOutAny era (TxOut _ (TxOutDafiOnly DafiOnlyInColeEra _) _) =
-    case era of {}
-
-toSophieTxOutAny _ (TxOut addr (TxOutDafiOnly DafiOnlyInSophieEra value) _) =
-    Sophie.TxOut (toSophieAddr addr) (toSophieEntropic value)
-
-toSophieTxOutAny _ (TxOut addr (TxOutDafiOnly DafiOnlyInEvieEra value) _) =
-    Sophie.TxOut (toSophieAddr addr) (toSophieEntropic value)
-
-toSophieTxOutAny _ (TxOut addr (TxOutValue MultiAssetInJenEra value) _) =
-    Sophie.TxOut (toSophieAddr addr) (toJenValue value)
-
-toSophieTxOutAny _ (TxOut addr (TxOutValue MultiAssetInAurumEra value) txoutdata) =
-    Aurum.TxOut (toSophieAddr addr) (toJenValue value)
-                 (toAurumTxOutDataHash' txoutdata)
-
-toAurumTxOutDataHash' :: TxOutDatum ctx era
-                      -> StrictMaybe (Aurum.DataHash StandardCrypto)
-toAurumTxOutDataHash'  TxOutDatumNone                          = SNothing
-toAurumTxOutDataHash' (TxOutDatumHash _ (ScriptDataHash dh))   = SJust dh
-toAurumTxOutDataHash' (TxOutDatum'    _ (ScriptDataHash dh) _) = SJust dh
 
 
 -- ----------------------------------------------------------------------------
@@ -2858,7 +2632,7 @@ collectTxBodyScriptWitnesses TxBodyContent {
         ]
 
 -- This relies on the TxId Ord instance being consistent with the
--- Ledger.TxId Ord instance via the toSophieTxId conversion
+-- Sophie.TxId Ord instance via the toSophieTxId conversion
 -- This is checked by prop_ord_distributive_TxId
 orderTxIns :: [(TxIn, v)] -> [(TxIn, v)]
 orderTxIns = sortBy (compare `on` fst)

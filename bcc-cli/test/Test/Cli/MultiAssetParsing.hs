@@ -11,7 +11,8 @@ import qualified Text.Parsec as Parsec (parse)
 import           Hedgehog (Property, checkSequential, discover, forAll, property, tripping)
 import           Hedgehog.Gen (filter)
 
-import           Bcc.Api (parseValue, renderValue, renderValuePretty, valueToList)
+import           Bcc.Api (valueToList, renderValue, renderValuePretty)
+import           Bcc.CLI.Jen.ValueParser (parseValue)
 
 import           Gen.Bcc.Api.Typed (genValueDefault)
 
