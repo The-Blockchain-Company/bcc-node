@@ -125,7 +125,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/hedgehog-extras
-  tag: 0bce8b7a9ddd4ac0acc4200c1fb51ca746e19409
+  tag: 58ea097ad4029ddbdc5b641c4ff8f2dfa4ce7a63
 
 source-repository-package
   type: git
