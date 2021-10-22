@@ -147,7 +147,6 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-crypto
-  tag: e4a553eef8328523fa32f28d1c722850a262c25e
 
 source-repository-package
   type: git
