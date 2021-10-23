@@ -516,10 +516,11 @@ data AddressKeyType
   deriving Show
 
 data ColeKeyType
-  = ColePaymentKey  ColeKeyFormat
-  | ColeGenesisKey  ColeKeyFormat
-  | ColeVestedKey    ColeKeyFormat
-  | ColeDelegateKey ColeKeyFormat
+  = ColePaymentKey        ColeKeyFormat
+  | ColeGenesisKey        ColeKeyFormat
+  | ColeGenesisVestedKey  ColeKeyFormat
+  | ColeVestedKey         ColeKeyFormat
+  | ColeDelegateKey       ColeKeyFormat
   | ColeVestedDelegateKey ColeKeyFormat
   deriving Show
 
@@ -582,6 +583,7 @@ data WitnessSigningData
 data ColdVerificationKeyOrFile
   = ColdStakePoolVerificationKey !(VerificationKey StakePoolKey)
   | ColdGenesisDelegateVerificationKey !(VerificationKey GenesisDelegateKey)
+  | ColdGenesisVestedDelegateVerificationKey !(VerificationKey GenesisVestedDelegateKey)
   | ColdVestedDelegateVerificationKey !(VerificationKey VestedDelegateKey)
   | ColdVerificationKeyFile !VerificationKeyFile
   deriving Show

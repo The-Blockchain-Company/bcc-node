@@ -443,6 +443,14 @@ pKeyCmd =
             (  Opt.long "legacy-cole-genesis-key-type"
             <> Opt.help "Use a Cole-era genesis key, in legacy SL format."
             )
+      <|> Opt.flag' (ColeGenesisVestedKey NonLegacyColeKeyFormat)
+            (  Opt.long "cole-genesis-key-type"
+            <> Opt.help "Use a Cole-era genesis key."
+            )
+      <|> Opt.flag' (ColeGenesisVestedKey LegacyColeKeyFormat)
+            (  Opt.long "legacy-cole-genesis-key-type"
+            <> Opt.help "Use a Cole-era genesis key, in legacy SL format."
+            )
       <|> Opt.flag' (ColeVestedKey NonLegacyColeKeyFormat)
             (  Opt.long "cole-vested-key-type"
             <> Opt.help "Use a Cole-era vested key."
