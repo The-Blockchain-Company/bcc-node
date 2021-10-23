@@ -125,7 +125,7 @@ data SomeSigningKey
   | AGenesisExtendedSigningKey                (SigningKey GenesisExtendedKey)
   | AGenesisDelegateSigningKey                (SigningKey GenesisDelegateKey)
   | AGenesisDelegateExtendedSigningKey        (SigningKey GenesisDelegateExtendedKey)
-  | AGenesisVestedSigngingKey                 (SigningKey GenesisVestedKey)
+  | AGenesisVestedSigningKey                  (SigningKey GenesisVestedKey)
   | AGenesisVestedExtendedSigningKey          (SigningKey GenesisVestedExtendedKey)
   | AGenesisVestedDelegateSigningKey          (SigningKey GenesisVestedDelegateKey)
   | AGenesisVestedDelegateExtendedSigningKey  (SigningKey GenesisVestedDelegateExtendedKey)
