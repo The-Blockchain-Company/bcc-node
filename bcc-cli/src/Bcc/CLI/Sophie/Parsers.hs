@@ -1168,13 +1168,14 @@ pGenesisCmd =
 
     pGenesisCreate :: Parser GenesisCmd
     pGenesisCreate =
-      GenesisCreate <$> pGenesisDir
-                    <*> pGenesisNumGenesisKeys
-                    <*> pGenesisNumVestedKeys
-                    <*> pGenesisNumUTxOKeys
-                    <*> pMaybeSystemStart
-                    <*> pInitialSupplyNonDelegated
-                    <*> pNetworkId
+      GenesisCreate 
+        <$> pGenesisDir
+        <*> pGenesisNumGenesisKeys
+        <*> pGenesisNumVestedKeys
+        <*> pGenesisNumUTxOKeys
+        <*> pMaybeSystemStart
+        <*> pInitialSupplyNonDelegated
+        <*> pNetworkId
 
     pGenesisCreateStaked :: Parser GenesisCmd
     pGenesisCreateStaked =
@@ -1224,6 +1225,7 @@ pGenesisCmd =
           <> Opt.help "The number of genesis keys to make [default is 0]."
           <> Opt.value 0
           )
+          
     pGenesisNumVestedKeys :: Parser Word
     pGenesisNumVestedKeys =
         Opt.option Opt.auto
