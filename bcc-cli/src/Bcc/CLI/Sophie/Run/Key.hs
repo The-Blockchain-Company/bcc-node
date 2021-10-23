@@ -347,12 +347,6 @@ runConvertColeKey mPwd (ColeDelegateKey format) (ASigningKeyFile skeyPathOld) =
     convert :: Cole.SigningKey -> SigningKey GenesisDelegateExtendedKey
     convert (Cole.SigningKey xsk) = GenesisDelegateExtendedSigningKey xsk
 
-runConvertColeKey mPwd (ColeGenesisVestedDelegateKey format) (ASigningKeyFile skeyPathOld) =
-    convertColeSigningKey mPwd format convert skeyPathOld
-  where
-    convert :: Cole.SigningKey -> SigningKey GenesisVestedDelegateExtendedKey
-    convert (Cole.SigningKey xsk) = GenesisVestedDelegateExtendedSigningKey xsk
-
 runConvertColeKey mPwd (ColeVestedDelegateKey format) (ASigningKeyFile skeyPathOld) =
     convertColeSigningKey mPwd format convert skeyPathOld
   where
@@ -396,15 +390,6 @@ runConvertColeKey _ (ColeDelegateKey NonLegacyColeKeyFormat)
     convert (Cole.VerificationKey xvk) =
       GenesisDelegateExtendedVerificationKey xvk
 
-runConvertColeKey _ (ColeGenesisVestedDelegateKey NonLegacyColeKeyFormat)
-                     (AVerificationKeyFile vkeyPathOld) =
-    convertColeVerificationKey convert vkeyPathOld
-  where
-    convert :: Cole.VerificationKey
-            -> VerificationKey GenesisVestedDelegateExtendedKey
-    convert (Cole.VerificationKey xvk) =
-      GenesisVestedDelegateExtendedVerificationKey xvk
-
 runConvertColeKey _ (ColeVestedDelegateKey NonLegacyColeKeyFormat)
                      (AVerificationKeyFile vkeyPathOld) =
     convertColeVerificationKey convert vkeyPathOld
@@ -431,10 +416,6 @@ runConvertColeKey _ (ColeVestedKey  LegacyColeKeyFormat)
     const legacyVerificationKeysNotSupported
 
 runConvertColeKey _ (ColeDelegateKey LegacyColeKeyFormat)
-                      AVerificationKeyFile{} =
-    const legacyVerificationKeysNotSupported
-
-runConvertColeKey _ (ColeGenesisVestedDelegateKey LegacyColeKeyFormat)
                       AVerificationKeyFile{} =
     const legacyVerificationKeysNotSupported
 
