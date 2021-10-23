@@ -378,8 +378,8 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
 data SomeGenesisKey f
      = AGenesisKey         (f GenesisKey)
      | AGenesisDelegateKey (f GenesisDelegateKey)
-     | AGenesisVestedKey    (f GenesisVestedKey)
-     | AGenesisVestedDelegateKey (f GenesisVestedDelegateKey)
+     | AGenesisVestedKey    (f VestedKey)
+     | AGenesisVestedDelegateKey (f VestedDelegateKey)
      | AGenesisUTxOKey     (f GenesisUTxOKey)
 
 
