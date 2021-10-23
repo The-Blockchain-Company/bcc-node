@@ -365,19 +365,19 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
 
     let vkey :: SomeGenesisKey VerificationKey
         vkey = case skey of
-          AGenesisKey         sk -> AGenesisKey         (getVerificationKey sk)
-          AGenesisDelegateKey sk -> AGenesisDelegateKey (getVerificationKey sk)
-          AGenesisVestedKey    sk -> AGenesisVestedKey    (getVerificationKey sk)
+          AGenesisKey               sk -> AGenesisKey               (getVerificationKey sk)
+          AGenesisDelegateKey       sk -> AGenesisDelegateKey       (getVerificationKey sk)
+          AGenesisVestedKey         sk -> AGenesisVestedKey         (getVerificationKey sk)
           AGenesisVestedDelegateKey sk -> AGenesisVestedDelegateKey (getVerificationKey sk)
-          AGenesisUTxOKey     sk -> AGenesisUTxOKey     (getVerificationKey sk)
+          AGenesisUTxOKey           sk -> AGenesisUTxOKey           (getVerificationKey sk)
 
     firstExceptT SophieGenesisCmdGenesisFileError . newExceptT . liftIO $
       case vkey of
-        AGenesisKey         vk -> writeFileTextEnvelope vkeyPath Nothing vk
-        AGenesisDelegateKey vk -> writeFileTextEnvelope vkeyPath Nothing vk
+        AGenesisKey               vk -> writeFileTextEnvelope vkeyPath Nothing vk
+        AGenesisDelegateKey       vk -> writeFileTextEnvelope vkeyPath Nothing vk
         AGenesisVestedKey         vk -> writeFileTextEnvelope vkeyPath Nothing vk
         AGenesisVestedDelegateKey vk -> writeFileTextEnvelope vkeyPath Nothing vk
-        AGenesisUTxOKey     vk -> writeFileTextEnvelope vkeyPath Nothing vk
+        AGenesisUTxOKey           vk -> writeFileTextEnvelope vkeyPath Nothing vk
 
 data SomeGenesisKey f
      = AGenesisKey         (f GenesisKey)
