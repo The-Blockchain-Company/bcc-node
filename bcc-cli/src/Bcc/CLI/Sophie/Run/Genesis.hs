@@ -155,7 +155,7 @@ runGenesisCmd (GenesisCmdKeyHash vk) = runGenesisKeyHash vk
 runGenesisCmd (GenesisVerKey vk sk) = runGenesisVerKey vk sk
 runGenesisCmd (GenesisTxIn vk nw mOutFile) = runGenesisTxIn vk nw mOutFile
 runGenesisCmd (GenesisAddr vk nw mOutFile) = runGenesisAddr vk nw mOutFile
-runGenesisCmd (GenesisCreate gd gn un ms am nw) = runGenesisCreate gd gn un ms am nw
+runGenesisCmd (GenesisCreate gd gn vn un ms am nw) = runGenesisCreate gd gn vn un ms am nw
 runGenesisCmd (GenesisCreateStaked gd gn gp gl un ms am ds nw bf bp su) = runGenesisCreateStaked gd gn gp gl un ms am ds nw bf bp su
 runGenesisCmd (GenesisHashFile gf) = runGenesisHashFile gf
 
@@ -234,7 +234,7 @@ runGenesisKeyGenVested :: VerificationKeyFile -> SigningKeyFile
                         -> ExceptT SophieGenesisCmdError IO ()
 runGenesisKeyGenVested (VerificationKeyFile vkeyPath)
                         (SigningKeyFile skeyPath) = do
-    skey <- liftIO $ generateSigningKey AsVestedKey
+    skey <- liftIO $ generateSigningKey AsGenesisVestedKey
     let vkey = getVerificationKey skey
     firstExceptT SophieGenesisCmdGenesisFileError
       . newExceptT
@@ -255,7 +255,7 @@ runGenesisKeyGenVestedDelegate :: VerificationKeyFile
 runGenesisKeyGenVestedDelegate (VerificationKeyFile vkeyPath)
                          (SigningKeyFile skeyPath)
                          (OpCertCounterFile ocertCtrPath) = do
-    skey <- liftIO $ generateSigningKey AsVestedDelegateKey
+    skey <- liftIO $ generateSigningKey AsGenesisVestedDelegateKey
     let vkey = getVerificationKey skey
     firstExceptT SophieGenesisCmdGenesisFileError
       . newExceptT
@@ -323,6 +323,10 @@ runGenesisKeyHash (VerificationKeyFile vkeyPath) = do
                              AGenesisKey
               , FromSomeType (AsVerificationKey AsGenesisDelegateKey)
                              AGenesisDelegateKey
+              , FromSomeType (AsVerificationKey AsGenesisVestedKey)
+                             AGenesisVestedKey
+              , FromSomeType (AsVerificationKey AsGenesisVestedDelegateKey)
+                             AGenesisVestedDelegateKey
               , FromSomeType (AsVerificationKey AsGenesisUTxOKey)
                              AGenesisUTxOKey
               ]
@@ -378,8 +382,8 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
 data SomeGenesisKey f
      = AGenesisKey         (f GenesisKey)
      | AGenesisDelegateKey (f GenesisDelegateKey)
-     | AGenesisVestedKey    (f VestedKey)
-     | AGenesisVestedDelegateKey (f VestedDelegateKey)
+     | AGenesisVestedKey    (f GenesisVestedKey)
+     | AGenesisVestedDelegateKey (f GenesisVestedDelegateKey)
      | AGenesisUTxOKey     (f GenesisUTxOKey)
 
 
