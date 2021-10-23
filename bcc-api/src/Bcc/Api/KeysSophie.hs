@@ -1459,7 +1459,7 @@ instance HasTypeProxy GenesisVestedDelegateKey where
 instance Key GenesisVestedDelegateKey where
 
     newtype VerificationKey GenesisVestedDelegateKey =
-        GenesisVestedDelegateVerificationKey (Sophie.VKey Sophie.GenesisVestedDelegate StandardCrypto)
+        GenesisVestedDelegateVerificationKey (Sophie.VKey Sophie.VestedDelegate StandardCrypto)
       deriving stock (Eq)
       deriving (Show, IsString) via UsingRawBytesHex (VerificationKey GenesisVestedDelegateKey)
       deriving newtype (ToCBOR, FromCBOR)
@@ -1508,7 +1508,7 @@ instance SerialiseAsRawBytes (SigningKey GenesisVestedDelegateKey) where
 
 
 newtype instance Hash GenesisVestedDelegateKey =
-    GenesisVestedDelegateKeyHash (Sophie.KeyHash Sophie.GenesisVestedDelegate StandardCrypto)
+    GenesisVestedDelegateKeyHash (Sophie.KeyHash Sophie.VestedDelegate StandardCrypto)
   deriving stock (Eq, Ord)
   deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedDelegateKey)
   deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedDelegateKey)
