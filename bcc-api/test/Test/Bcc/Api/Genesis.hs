@@ -28,7 +28,7 @@ import           Bcc.Ledger.Keys (GenDelegPair (..), VestedDelegPair (..), Hash,
                    VerKeyVRF)
 import           Sophie.Spec.Ledger.PParams (PParams' (..), emptyPParams)
 
-import           Test.Sophie.Spec.Ledger.VestedSealUtils (unsafeBoundRational)
+import           Test.Sophie.Spec.Ledger.SentryUtils (unsafeBoundRational)
 
 exampleSophieGenesis :: SophieGenesis StandardSophie
 exampleSophieGenesis =
