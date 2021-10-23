@@ -252,11 +252,13 @@ readColdVerificationKeyOrFile coldVerKeyOrFile =
   case coldVerKeyOrFile of
     ColdStakePoolVerificationKey vk -> pure (Right vk)
     ColdGenesisDelegateVerificationKey vk -> pure $ Right (castVerificationKey vk)
+    ColdGenesisVestedDelegateVerificationKey vk -> pure $ Right (castVerificationKey vk)
     ColdVestedDelegateVerificationKey vk -> pure $ Right (castVerificationKey vk)
     ColdVerificationKeyFile (VerificationKeyFile fp) ->
       readFileTextEnvelopeAnyOf
         [ FromSomeType (AsVerificationKey AsStakePoolKey) id
         , FromSomeType (AsVerificationKey AsGenesisDelegateKey) castVerificationKey
+        , FromSomeType (AsVerificationKey AsGenesisVestedDelegateKey) castVerificationKey
         , FromSomeType (AsVerificationKey AsVestedDelegateKey) castVerificationKey
         ]
         fp
