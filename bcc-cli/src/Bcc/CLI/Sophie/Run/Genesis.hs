@@ -413,6 +413,7 @@ writeOutput Nothing                   = Text.putStrLn
 
 runGenesisCreate :: GenesisDir
                  -> Word  -- ^ num genesis & delegate keys to make
+                 -> Word  -- ^ num vested & vested delegate keys to make
                  -> Word  -- ^ num utxo keys to make
                  -> Maybe SystemStart
                  -> Maybe Entropic
@@ -1100,7 +1101,7 @@ readVestedDelegsMap vesteddir vesteddeldir = do
 
     let vestedDelegsMap :: Map (Hash VestedKey)
                          (Hash VestedDelegateKey, Hash VrfKey)
-        vesteddelegsMap =
+        vestedDelegsMap =
           Map.fromList [ (ah, (dh, vh))
                        | (a,(d,v)) <- Map.elems combinedMap
                        , let ah = verificationKeyHash a
