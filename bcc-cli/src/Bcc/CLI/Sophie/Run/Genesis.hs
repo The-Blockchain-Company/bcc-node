@@ -380,11 +380,11 @@ runGenesisVerKey (VerificationKeyFile vkeyPath) (SigningKeyFile skeyPath) = do
         AGenesisUTxOKey           vk -> writeFileTextEnvelope vkeyPath Nothing vk
 
 data SomeGenesisKey f
-     = AGenesisKey         (f GenesisKey)
-     | AGenesisDelegateKey (f GenesisDelegateKey)
-     | AGenesisVestedKey    (f VestedKey)
-     | AGenesisVestedDelegateKey (f VestedDelegateKey)
-     | AGenesisUTxOKey     (f GenesisUTxOKey)
+     = AGenesisKey               (f GenesisKey)
+     | AGenesisDelegateKey       (f GenesisDelegateKey)
+     | AGenesisVestedKey         (f GenesisVestedKey)
+     | AGenesisVestedDelegateKey (f GenesisVestedDelegateKey)
+     | AGenesisUTxOKey           (f GenesisUTxOKey)
 
 
 runGenesisTxIn :: VerificationKeyFile -> NetworkId -> Maybe OutputFile
