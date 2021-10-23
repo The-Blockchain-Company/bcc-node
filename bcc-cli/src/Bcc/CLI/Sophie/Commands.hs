@@ -520,6 +520,7 @@ data ColeKeyType
   | ColeGenesisKey  ColeKeyFormat
   | ColeVestedKey    ColeKeyFormat
   | ColeDelegateKey ColeKeyFormat
+  | ColeVestedDelegateKey ColeKeyFormat
   deriving Show
 
 data ColeKeyFormat = NonLegacyColeKeyFormat

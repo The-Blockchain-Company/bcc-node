@@ -459,11 +459,11 @@ pKeyCmd =
             (  Opt.long "legacy-cole-genesis-delegate-key-type"
             <> Opt.help "Use a Cole-era genesis delegate key, in legacy SL format."
             )
-      <|> Opt.flag' (AsVestedDelegateKey NonLegacyColeKeyFormat)
+      <|> Opt.flag' (ColeVestedDelegateKey NonLegacyColeKeyFormat)
             (  Opt.long "cole-vested-delegate-key-type"
             <> Opt.help "Use a Cole-era vested delegate key."
             )
-      <|> Opt.flag' (AsVestedDelegateKey LegacyColeKeyFormat)
+      <|> Opt.flag' (ColeVestedDelegateKey LegacyColeKeyFormat)
             (  Opt.long "legacy-cole-vested-delegate-key-type"
             <> Opt.help "Use a Cole-era vested delegate key, in legacy SL format."
             )
