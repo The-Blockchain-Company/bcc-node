@@ -1282,7 +1282,7 @@ instance SerialiseAsRawBytes (SigningKey GenesisVestedKey) where
 
 
 newtype instance Hash GenesisVestedKey =
-    GenesisKeyHash (Sophie.KeyHash Sophie.Genesis StandardCrypto)
+    GenesisVestedKeyHash (Sophie.KeyHash Sophie.Genesis StandardCrypto)
   deriving stock (Eq, Ord)
   deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedKey)
   deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedKey)
