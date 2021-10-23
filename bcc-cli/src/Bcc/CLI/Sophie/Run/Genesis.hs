@@ -510,7 +510,7 @@ runGenesisCreateStaked (GenesisDir rootdir)
   
   forM_ [ 1 .. genNumVestedKeys ] $ \index -> do
     createVestedKeys  vesteddir  index
-    createVestedDelegateKeys vesteddeldir index
+    createDelegateKeys vesteddeldir index
 
   forM_ [ 1 .. genNumUTxOKeys ] $ \index ->
     createUtxoKeys utxodir index
