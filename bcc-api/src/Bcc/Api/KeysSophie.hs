@@ -26,6 +26,10 @@ module Bcc.Api.KeysSophie (
     GenesisExtendedKey,
     GenesisDelegateKey,
     GenesisDelegateExtendedKey,
+    GenesisVestedKey,
+    GenesisVestedExtendedKey,
+    GenesisVestedDelegateKey,
+    GenesisVestedDelegateExtendedKey,
     GenesisUTxOKey,
     VestedKey,
     VestedExtendedKey,
@@ -1217,6 +1221,462 @@ instance CastSigningKeyRole VestedUTxOKey PaymentKey where
       PaymentSigningKey skey
 
 
+--
+-- GenesisVestedKeys
+-- 
+data GenesisVestedKey
+
+instance HasTypeProxy GenesisVestedKey where
+    data AsType GenesisVestedKey = AsGenesisVestedKey
+    proxyToAsType _ = AsGenesisVestedKey
+
+instance Key GenesisVestedKey where
+
+    newtype VerificationKey GenesisVestedKey =
+        GenesisVestedVerificationKey (Sophie.VKey Sophie.Genesis StandardCrypto)
+      deriving stock (Eq)
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey GenesisVestedKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    newtype SigningKey GenesisVestedKey =
+        GenesisVestedSigningKey (Sophie.SignKeyDSIGN StandardCrypto)
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey GenesisVestedKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    deterministicSigningKey :: AsType GenesisVestedKey -> Crypto.Seed -> SigningKey GenesisVestedKey
+    deterministicSigningKey AsGenesisVestedKey seed =
+        GenesisVestedSigningKey (Crypto.genKeyDSIGN seed)
+
+    deterministicSigningKeySeedSize :: AsType GenesisVestedKey -> Word
+    deterministicSigningKeySeedSize AsGenesisVestedKey =
+        Crypto.seedSizeDSIGN proxy
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+    getVerificationKey :: SigningKey GenesisVestedKey -> VerificationKey GenesisVestedKey
+    getVerificationKey (GenesisSigningKey sk) =
+        GenesisVestedVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
+
+    verificationKeyHash :: VerificationKey GenesisVestedKey -> Hash GenesisVestedKey
+    verificationKeyHash (GenesisVestedVerificationKey vkey) =
+        GenesisKeyHash (Sophie.hashKey vkey)
+
+
+instance SerialiseAsRawBytes (VerificationKey GenesisVestedKey) where
+    serialiseToRawBytes (GenesisVestedVerificationKey (Sophie.VKey vk)) =
+      Crypto.rawSerialiseVerKeyDSIGN vk
+
+    deserialiseFromRawBytes (AsVerificationKey AsGenesisVestedKey) bs =
+      GenesisVestedVerificationKey . Sophie.VKey <$>
+        Crypto.rawDeserialiseVerKeyDSIGN bs
+
+instance SerialiseAsRawBytes (SigningKey GenesisVestedKey) where
+    serialiseToRawBytes (GenesisVestedSigningKey sk) =
+      Crypto.rawSerialiseSignKeyDSIGN sk
+
+    deserialiseFromRawBytes (AsSigningKey AsGenesisVestedKey) bs =
+      GenesisSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+
+
+newtype instance Hash GenesisVestedKey =
+    GenesisKeyHash (Sophie.KeyHash Sophie.Genesis StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash GenesisVestedKey) where
+    serialiseToRawBytes (GenesisKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsGenesisVestedKey) bs =
+      GenesisVestedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey GenesisVestedKey) where
+    textEnvelopeType _ = "GenesisVestedVerificationKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance HasTextEnvelope (SigningKey GenesisVestedKey) where
+    textEnvelopeType _ = "GenesisVestedSigningKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+
+--
+-- Sophie vested extended ed25519 keys
+--
+
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
+--
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
+--
+-- The extended verification keys can be converted (via 'castVerificationKey')
+-- to ordinary keys (i.e. 'VerificationKey' 'GenesisKey') but this is /not/ the
+-- case for the signing keys. The signing keys can be used to witness
+-- transactions directly, with verification via their non-extended verification
+-- key ('VerificationKey' 'GenesisKey').
+--
+-- This is a type level tag, used with other interfaces like 'Key'.
+--
+data GenesisVestedExtendedKey
+
+instance HasTypeProxy GenesisVestedExtendedKey where
+    data AsType GenesisVestedExtendedKey = AsGenesisVestedExtendedKey
+    proxyToAsType _ = AsGenesisVestedExtendedKey
+
+instance Key GenesisVestedExtendedKey where
+
+    newtype VerificationKey GenesisVestedExtendedKey =
+        GenesisVestedExtendedVerificationKey Crypto.HD.XPub
+      deriving stock (Eq)
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey GenesisVestedExtendedKey)
+
+    newtype SigningKey GenesisVestedExtendedKey =
+        GenesisVestedExtendedSigningKey Crypto.HD.XPrv
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey GenesisVestedExtendedKey)
+
+    deterministicSigningKey :: AsType GenesisVestedExtendedKey
+                            -> Crypto.Seed
+                            -> SigningKey GenesisVestedExtendedKey
+    deterministicSigningKey AsGenesisVestedExtendedKey seed =
+        GenesisVestedExtendedSigningKey
+          (Crypto.HD.generate seedbs BS.empty)
+      where
+       (seedbs, _) = Crypto.getBytesFromSeedT 32 seed
+
+    deterministicSigningKeySeedSize :: AsType GenesisVestedExtendedKey -> Word
+    deterministicSigningKeySeedSize AsGenesisVestedExtendedKey = 32
+
+    getVerificationKey :: SigningKey GenesisVestedExtendedKey
+                       -> VerificationKey GenesisVestedExtendedKey
+    getVerificationKey (GenesisVestedExtendedSigningKey sk) =
+        GenesisVestedExtendedVerificationKey (Crypto.HD.toXPub sk)
+
+    -- | We use the hash of the normal non-extended pub key so that it is
+    -- consistent with the one used in addresses and signatures.
+    --
+    verificationKeyHash :: VerificationKey GenesisVestedExtendedKey
+                        -> Hash GenesisVestedExtendedKey
+    verificationKeyHash (GenesisVestedExtendedVerificationKey vk) =
+        GenesisVestedExtendedKeyHash
+      . Sophie.KeyHash
+      . Crypto.castHash
+      $ Crypto.hashWith Crypto.HD.xpubPublicKey vk
+
+
+instance ToCBOR (VerificationKey GenesisVestedExtendedKey) where
+    toCBOR (GenesisVestedExtendedVerificationKey xpub) =
+      toCBOR (Crypto.HD.unXPub xpub)
+
+instance FromCBOR (VerificationKey GenesisVestedExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . GenesisVestedExtendedVerificationKey)
+             (Crypto.HD.xpub (bs :: ByteString))
+
+instance ToCBOR (SigningKey GenesisVestedExtendedKey) where
+    toCBOR (GenesisVestedExtendedSigningKey xprv) =
+      toCBOR (Crypto.HD.unXPrv xprv)
+
+instance FromCBOR (SigningKey GenesisVestedExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . GenesisVestedExtendedSigningKey)
+             (Crypto.HD.xprv (bs :: ByteString))
+
+instance SerialiseAsRawBytes (VerificationKey GenesisVestedExtendedKey) where
+    serialiseToRawBytes (GenesisVestedExtendedVerificationKey xpub) =
+      Crypto.HD.unXPub xpub
+
+    deserialiseFromRawBytes (AsVerificationKey AsGenesisVestedExtendedKey) bs =
+      either (const Nothing) (Just . GenesisVestedExtendedVerificationKey)
+             (Crypto.HD.xpub bs)
+
+instance SerialiseAsRawBytes (SigningKey GenesisVestedExtendedKey) where
+    serialiseToRawBytes (GenesisVestedExtendedSigningKey xprv) =
+      Crypto.HD.unXPrv xprv
+
+    deserialiseFromRawBytes (AsSigningKey AsGenesisVestedExtendedKey) bs =
+      either (const Nothing) (Just . GenesisVestedExtendedSigningKey)
+             (Crypto.HD.xprv bs)
+
+
+newtype instance Hash GenesisVestedExtendedKey =
+    GenesisVestedExtendedKeyHash (Sophie.KeyHash Sophie.Staking StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedExtendedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedExtendedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash GenesisVestedExtendedKey) where
+    serialiseToRawBytes (GenesisVestedExtendedKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsGenesisVestedExtendedKey) bs =
+      GenesisVestedExtendedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey GenesisVestedExtendedKey) where
+    textEnvelopeType _ = "GenesisVestedExtendedVerificationKey_ed25519_bip32"
+
+instance HasTextEnvelope (SigningKey GenesisVestedExtendedKey) where
+    textEnvelopeType _ = "GenesisVestedExtendedSigningKey_ed25519_bip32"
+
+instance CastVerificationKeyRole GenesisVestedExtendedKey GenesisVestedKey where
+    castVerificationKey (GenesisVestedExtendedVerificationKey vk) =
+        GenesisVestedVerificationKey
+      . Sophie.VKey
+      . fromMaybe impossible
+      . Crypto.rawDeserialiseVerKeyDSIGN
+      . Crypto.HD.xpubPublicKey
+      $ vk
+      where
+        impossible =
+          error "castVerificationKey: cole and sophie key sizes do not match!"
+
+
+--
+-- Genesis vested delegate keys
+--
+
+data GenesisVestedDelegateKey
+
+instance HasTypeProxy GenesisVestedDelegateKey where
+    data AsType GenesisVestedDelegateKey = AsGenesisVestedDelegateKey
+    proxyToAsType _ = AsGenesisVestedDelegateKey
+
+
+instance Key GenesisVestedDelegateKey where
+
+    newtype VerificationKey GenesisVestedDelegateKey =
+        GenesisVestedDelegateVerificationKey (Sophie.VKey Sophie.GenesisVestedDelegate StandardCrypto)
+      deriving stock (Eq)
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey GenesisVestedDelegateKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    newtype SigningKey GenesisVestedDelegateKey =
+        GenesisVestedDelegateSigningKey (Sophie.SignKeyDSIGN StandardCrypto)
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey GenesisVestedDelegateKey)
+      deriving newtype (ToCBOR, FromCBOR)
+      deriving anyclass SerialiseAsCBOR
+
+    deterministicSigningKey :: AsType GenesisVestedDelegateKey -> Crypto.Seed -> SigningKey GenesisVestedDelegateKey
+    deterministicSigningKey AsGenesisVestedDelegateKey seed =
+        GenesisVestedDelegateSigningKey (Crypto.genKeyDSIGN seed)
+
+    deterministicSigningKeySeedSize :: AsType GenesisVestedDelegateKey -> Word
+    deterministicSigningKeySeedSize AsGenesisVestedDelegateKey =
+        Crypto.seedSizeDSIGN proxy
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+    getVerificationKey :: SigningKey GenesisVestedDelegateKey -> VerificationKey GenesisVestedDelegateKey
+    getVerificationKey (GenesisVestedDelegateSigningKey sk) =
+        GenesisVestedDelegateVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
+
+    verificationKeyHash :: VerificationKey GenesisVestedDelegateKey -> Hash GenesisVestedDelegateKey
+    verificationKeyHash (GenesisVestedDelegateVerificationKey vkey) =
+        GenesisVestedDelegateKeyHash (Sophie.hashKey vkey)
+
+
+instance SerialiseAsRawBytes (VerificationKey GenesisVestedDelegateKey) where
+    serialiseToRawBytes (GenesisVestedDelegateVerificationKey (Sophie.VKey vk)) =
+      Crypto.rawSerialiseVerKeyDSIGN vk
+
+    deserialiseFromRawBytes (AsVerificationKey AsGenesisVestedDelegateKey) bs =
+      GenesisVestedDelegateVerificationKey . Sophie.VKey <$>
+        Crypto.rawDeserialiseVerKeyDSIGN bs
+
+instance SerialiseAsRawBytes (SigningKey GenesisVestedDelegateKey) where
+    serialiseToRawBytes (GenesisVestedDelegateSigningKey sk) =
+      Crypto.rawSerialiseSignKeyDSIGN sk
+
+    deserialiseFromRawBytes (AsSigningKey AsGenesisVestedDelegateKey) bs =
+      GenesisVestedDelegateSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+
+
+newtype instance Hash GenesisVestedDelegateKey =
+    GenesisVestedDelegateKeyHash (Sophie.KeyHash Sophie.GenesisVestedDelegate StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedDelegateKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedDelegateKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash GenesisVestedDelegateKey) where
+    serialiseToRawBytes (GenesisVestedDelegateKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsGenesisVestedDelegateKey) bs =
+      GenesisVestedDelegateKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey GenesisVestedDelegateKey) where
+    textEnvelopeType _ = "GenesisVestedDelegateVerificationKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance HasTextEnvelope (SigningKey GenesisVestedDelegateKey) where
+    textEnvelopeType _ = "GenesisVestedDelegateSigningKey_"
+                      <> fromString (Crypto.algorithmNameDSIGN proxy)
+      where
+        proxy :: Proxy (Sophie.DSIGN StandardCrypto)
+        proxy = Proxy
+
+instance CastVerificationKeyRole GenesisVestedDelegateKey StakePoolKey where
+    castVerificationKey (GenesisVestedDelegateVerificationKey (Sophie.VKey vkey)) =
+      StakePoolVerificationKey (Sophie.VKey vkey)
+
+instance CastSigningKeyRole GenesisVestedDelegateKey StakePoolKey where
+    castSigningKey (GenesisVestedDelegateSigningKey skey) =
+      StakePoolSigningKey skey
+
+
+--
+-- Sophie vested delegate extended ed25519 keys
+--
+
+-- | Sophie-era vested keys using extended ed25519 cryptographic keys.
+--
+-- These serve the same role as normal vested keys, but are here to support
+-- legacy Cole vested keys which used extended keys.
+--
+-- The extended verification keys can be converted (via 'castVerificationKey')
+-- to ordinary keys (i.e. 'VerificationKey' 'GenesisKey') but this is /not/ the
+-- case for the signing keys. The signing keys can be used to witness
+-- transactions directly, with verification via their non-extended verification
+-- key ('VerificationKey' 'GenesisKey').
+--
+-- This is a type level tag, used with other interfaces like 'Key'.
+--
+data GenesisVestedDelegateExtendedKey
+
+instance HasTypeProxy GenesisVestedDelegateExtendedKey where
+    data AsType GenesisVestedDelegateExtendedKey = AsGenesisVestedDelegateExtendedKey
+    proxyToAsType _ = AsGenesisVestedDelegateExtendedKey
+
+instance Key GenesisVestedDelegateExtendedKey where
+
+    newtype VerificationKey GenesisVestedDelegateExtendedKey =
+        GenesisVestedDelegateExtendedVerificationKey Crypto.HD.XPub
+      deriving stock (Eq)
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (VerificationKey GenesisVestedDelegateExtendedKey)
+
+    newtype SigningKey GenesisVestedDelegateExtendedKey =
+        GenesisVestedDelegateExtendedSigningKey Crypto.HD.XPrv
+      deriving anyclass SerialiseAsCBOR
+      deriving (Show, IsString) via UsingRawBytesHex (SigningKey GenesisVestedDelegateExtendedKey)
+
+    deterministicSigningKey :: AsType GenesisVestedDelegateExtendedKey
+                            -> Crypto.Seed
+                            -> SigningKey GenesisVestedDelegateExtendedKey
+    deterministicSigningKey AsGenesisVestedDelegateExtendedKey seed =
+        GenesisVestedDelegateExtendedSigningKey
+          (Crypto.HD.generate seedbs BS.empty)
+      where
+       (seedbs, _) = Crypto.getBytesFromSeedT 32 seed
+
+    deterministicSigningKeySeedSize :: AsType GenesisVestedDelegateExtendedKey -> Word
+    deterministicSigningKeySeedSize AsGenesisVestedDelegateExtendedKey = 32
+
+    getVerificationKey :: SigningKey GenesisVestedDelegateExtendedKey
+                       -> VerificationKey GenesisVestedDelegateExtendedKey
+    getVerificationKey (GenesisVestedDelegateExtendedSigningKey sk) =
+        GenesisVestedDelegateExtendedVerificationKey (Crypto.HD.toXPub sk)
+
+    -- | We use the hash of the normal non-extended pub key so that it is
+    -- consistent with the one used in addresses and signatures.
+    --
+    verificationKeyHash :: VerificationKey GenesisVestedDelegateExtendedKey
+                        -> Hash GenesisVestedDelegateExtendedKey
+    verificationKeyHash (GenesisVestedDelegateExtendedVerificationKey vk) =
+        GenesisVestedDelegateExtendedKeyHash
+      . Sophie.KeyHash
+      . Crypto.castHash
+      $ Crypto.hashWith Crypto.HD.xpubPublicKey vk
+
+
+instance ToCBOR (VerificationKey GenesisVestedDelegateExtendedKey) where
+    toCBOR (GenesisVestedDelegateExtendedVerificationKey xpub) =
+      toCBOR (Crypto.HD.unXPub xpub)
+
+instance FromCBOR (VerificationKey GenesisVestedDelegateExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . GenesisVestedDelegateExtendedVerificationKey)
+             (Crypto.HD.xpub (bs :: ByteString))
+
+instance ToCBOR (SigningKey GenesisVestedDelegateExtendedKey) where
+    toCBOR (GenesisVestedDelegateExtendedSigningKey xprv) =
+      toCBOR (Crypto.HD.unXPrv xprv)
+
+instance FromCBOR (SigningKey GenesisVestedDelegateExtendedKey) where
+    fromCBOR = do
+      bs <- fromCBOR
+      either fail (return . GenesisVestedDelegateExtendedSigningKey)
+             (Crypto.HD.xprv (bs :: ByteString))
+
+instance SerialiseAsRawBytes (VerificationKey GenesisVestedDelegateExtendedKey) where
+    serialiseToRawBytes (GenesisVestedDelegateExtendedVerificationKey xpub) =
+      Crypto.HD.unXPub xpub
+
+    deserialiseFromRawBytes (AsVerificationKey AsGenesisVestedDelegateExtendedKey) bs =
+      either (const Nothing) (Just . GenesisVestedDelegateExtendedVerificationKey)
+             (Crypto.HD.xpub bs)
+
+instance SerialiseAsRawBytes (SigningKey GenesisVestedDelegateExtendedKey) where
+    serialiseToRawBytes (GenesisVestedDelegateExtendedSigningKey xprv) =
+      Crypto.HD.unXPrv xprv
+
+    deserialiseFromRawBytes (AsSigningKey AsGenesisVestedDelegateExtendedKey) bs =
+      either (const Nothing) (Just . GenesisVestedDelegateExtendedSigningKey)
+             (Crypto.HD.xprv bs)
+
+
+newtype instance Hash GenesisVestedDelegateExtendedKey =
+    GenesisVestedDelegateExtendedKeyHash (Sophie.KeyHash Sophie.Staking StandardCrypto)
+  deriving stock (Eq, Ord)
+  deriving (Show, IsString) via UsingRawBytesHex (Hash GenesisVestedDelegateExtendedKey)
+  deriving (ToCBOR, FromCBOR) via UsingRawBytes (Hash GenesisVestedDelegateExtendedKey)
+  deriving anyclass SerialiseAsCBOR
+
+instance SerialiseAsRawBytes (Hash GenesisVestedDelegateExtendedKey) where
+    serialiseToRawBytes (GenesisVestedDelegateExtendedKeyHash (Sophie.KeyHash vkh)) =
+      Crypto.hashToBytes vkh
+
+    deserialiseFromRawBytes (AsHash AsGenesisVestedDelegateExtendedKey) bs =
+      GenesisVestedDelegateExtendedKeyHash . Sophie.KeyHash <$> Crypto.hashFromBytes bs
+
+instance HasTextEnvelope (VerificationKey GenesisVestedDelegateExtendedKey) where
+    textEnvelopeType _ = "GenesisVestedDelegateExtendedVerificationKey_ed25519_bip32"
+
+instance HasTextEnvelope (SigningKey GenesisVestedDelegateExtendedKey) where
+    textEnvelopeType _ = "GenesisVestedDelegateExtendedSigningKey_ed25519_bip32"
+
+instance CastVerificationKeyRole GenesisVestedDelegateExtendedKey GenesisVestedDelegateKey where
+    castVerificationKey (GenesisVestedDelegateExtendedVerificationKey vk) =
+        GenesisVestedDelegateVerificationKey
+      . Sophie.VKey
+      . fromMaybe impossible
+      . Crypto.rawDeserialiseVerKeyDSIGN
+      . Crypto.HD.xpubPublicKey
+      $ vk
+      where
+        impossible =
+          error "castVerificationKey: cole and sophie key sizes do not match!"
 
 -- Vested keys
 --
