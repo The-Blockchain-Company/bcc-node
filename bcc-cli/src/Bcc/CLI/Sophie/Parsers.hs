@@ -1223,7 +1223,7 @@ pGenesisCmd =
           <> Opt.help "The number of genesis keys to make [default is 0]."
           <> Opt.value 0
           )
-     pGenesisNumVestedKeys :: Parser Word
+    pGenesisNumVestedKeys :: Parser Word
     pGenesisNumVestedKeys =
         Opt.option Opt.auto
           (  Opt.long "gen-vested-keys"
