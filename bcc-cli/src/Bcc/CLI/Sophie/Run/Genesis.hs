@@ -644,13 +644,6 @@ createDelegateKeys dir index = do
   runGenesisKeyGenDelegateVRF
         (VerificationKeyFile $ dir </> "delegate" ++ strIndex ++ ".vrf.vkey")
         (SigningKeyFile $ dir </> "delegate" ++ strIndex ++ ".vrf.skey")
-  runGenesisKeyGenVestedDelegate
-        (VerificationKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vkey")
-        coldSK
-        opCertCtr
-  runGenesisKeyGenVestedDelegateVRF
-        (VerificationKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vrf.vkey")
-        (SigningKeyFile $ dir </> "vesteddelegate" ++ strIndex ++ ".vrf.skey")
   firstExceptT SophieGenesisCmdNodeCmdError $ do
     runNodeKeyGenKES
         kesVK
@@ -666,6 +659,32 @@ createDelegateKeys dir index = do
    kesVK = VerificationKeyFile $ dir </> "delegate" ++ strIndex ++ ".kes.vkey"
    coldSK = SigningKeyFile $ dir </> "delegate" ++ strIndex ++ ".skey"
    opCertCtr = OpCertCounterFile $ dir </> "delegate" ++ strIndex ++ ".counter"
+
+createVestedDelegateKeys :: FilePath -> Word -> ExceptT SophieGenesisCmdError IO ()
+createVestedDelegateKeys dir index = do
+  liftIO $ createDirectoryIfMissing False dir
+  runGenesisKeyGenVestedDelegate
+        (VerificationKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".vkey")
+        coldSK
+        opCertCtr
+  runGenesisKeyGenVestedDelegateVRF
+        (VerificationKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".vrf.vkey")
+        (SigningKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".vrf.skey")
+  firstExceptT SophieGenesisCmdNodeCmdError $ do
+    runNodeKeyGenKES
+        kesVK
+        (SigningKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".kes.skey")
+    runNodeIssueOpCert
+        (VerificationKeyFilePath kesVK)
+        coldSK
+        opCertCtr
+        (KESPeriod 0)
+        (OutputFile $ dir </> "opcert" ++ strIndex ++ ".cert")
+ where
+   strIndex = show index
+   kesVK = VerificationKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".kes.vkey"
+   coldSK = SigningKeyFile $ dir </> "vested delegate" ++ strIndex ++ ".skey"
+   opCertCtr = OpCertCounterFile $ dir </> "vested delegate" ++ strIndex ++ ".counter"
 
 createGenesisKeys :: FilePath -> Word -> ExceptT SophieGenesisCmdError IO ()
 createGenesisKeys dir index = do
