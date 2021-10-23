@@ -153,7 +153,7 @@ withSomeSigningKey ssk f =
       AGenesisExtendedSigningKey                sk -> f sk
       AGenesisDelegateSigningKey                sk -> f sk
       AGenesisDelegateExtendedSigningKey        sk -> f sk
-      AGenesisVestedSigngingKey                 sk -> f sk
+      AGenesisVestedSigningKey                  sk -> f sk
       AGenesisVestedExtendedSigningKey          sk -> f sk
       AGenesisVestedDelegateSigningKey          sk -> f sk
       AGenesisVestedDelegateExtendedSigningKey  sk -> f sk
