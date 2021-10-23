@@ -410,8 +410,8 @@ renderTextViewCmd :: TextViewCmd -> Text
 renderTextViewCmd (TextViewInfo _ _) = "text-view decode-cbor"
 
 data GenesisCmd
-  = GenesisCreate GenesisDir Word Word (Maybe SystemStart) (Maybe Entropic) NetworkId
-  | GenesisCreateStaked GenesisDir Word Word Word Word (Maybe SystemStart) (Maybe Entropic) Entropic NetworkId Word Word Word
+  = GenesisCreate GenesisDir Word Word Word (Maybe SystemStart) (Maybe Entropic) NetworkId
+  | GenesisCreateStaked GenesisDir Word Word Word Word Word (Maybe SystemStart) (Maybe Entropic) Entropic NetworkId Word Word Word
   | GenesisKeyGenGenesis VerificationKeyFile SigningKeyFile
   | GenesisKeyGenDelegate VerificationKeyFile SigningKeyFile OpCertCounterFile
   | GenesisKeyGenVested VerificationKeyFile SigningKeyFile
