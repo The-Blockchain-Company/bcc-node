@@ -1135,6 +1135,7 @@ pGenesisCmd =
       GenesisKeyGenDelegate <$> pVerificationKeyFile Output
                             <*> pSigningKeyFile Output
                             <*> pOperatorCertIssueCounterFile
+                            
     pGenesisVestedKeyGen :: Parser GenesisCmd
     pGenesisVestedKeyGen =
       GenesisKeyGenVested <$> pVerificationKeyFile Output <*> pSigningKeyFile Output
