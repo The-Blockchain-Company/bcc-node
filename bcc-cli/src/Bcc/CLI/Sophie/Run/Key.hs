@@ -115,52 +115,48 @@ runGetVerificationKey skf (VerificationKeyFile vkf) = do
 
 
 data SomeSigningKey
-  = AColeSigningKey         (SigningKey ColeKey)
-  | APaymentSigningKey         (SigningKey PaymentKey)
-  | APaymentExtendedSigningKey (SigningKey PaymentExtendedKey)
-  | AStakeSigningKey           (SigningKey StakeKey)
-  | AStakeExtendedSigningKey   (SigningKey StakeExtendedKey)
-  | AStakePoolSigningKey       (SigningKey StakePoolKey)
-  | AGenesisSigningKey         (SigningKey GenesisKey)
-  | AGenesisExtendedSigningKey (SigningKey GenesisExtendedKey)
-  | AGenesisDelegateSigningKey (SigningKey GenesisDelegateKey)
-  | AGenesisDelegateExtendedSigningKey
-                               (SigningKey GenesisDelegateExtendedKey)
-  | AGenesisUTxOSigningKey     (SigningKey GenesisUTxOKey)
-  | AVestedSigningKey           (SigningKey VestedKey)
-  | AVestedExtendedSigningKey   (SigningKey VestedExtendedKey)
-  | AVestedDelegateSigningKey   (SigningKey VestedDelegateKey)
-  | AVestedDelegateExtendedSigningKey
-                               (SigningKey VestedDelegateExtendedKey)
-  | AVestedUTxOSigningKey       (SigningKey VestedUTxOKey)
-  | AVrfSigningKey             (SigningKey VrfKey)
-  | AKesSigningKey             (SigningKey KesKey)
+  = AColeSigningKey                     (SigningKey ColeKey)
+  | APaymentSigningKey                  (SigningKey PaymentKey)
+  | APaymentExtendedSigningKey          (SigningKey PaymentExtendedKey)
+  | AStakeSigningKey                    (SigningKey StakeKey)
+  | AStakeExtendedSigningKey            (SigningKey StakeExtendedKey)
+  | AStakePoolSigningKey                (SigningKey StakePoolKey)
+  | AGenesisSigningKey                  (SigningKey GenesisKey)
+  | AGenesisExtendedSigningKey          (SigningKey GenesisExtendedKey)
+  | AGenesisDelegateSigningKey          (SigningKey GenesisDelegateKey)
+  | AGenesisDelegateExtendedSigningKey  (SigningKey GenesisDelegateExtendedKey)
+  | AGenesisUTxOSigningKey              (SigningKey GenesisUTxOKey)
+  | AVestedSigningKey                   (SigningKey VestedKey)
+  | AVestedExtendedSigningKey           (SigningKey VestedExtendedKey)
+  | AVestedDelegateSigningKey           (SigningKey VestedDelegateKey)
+  | AVestedDelegateExtendedSigningKey   (SigningKey VestedDelegateExtendedKey)
+  | AVestedUTxOSigningKey               (SigningKey VestedUTxOKey)
+  | AVrfSigningKey                      (SigningKey VrfKey)
+  | AKesSigningKey                      (SigningKey KesKey)
 
 withSomeSigningKey :: SomeSigningKey
                    -> (forall keyrole. Key keyrole => SigningKey keyrole -> a)
                    -> a
 withSomeSigningKey ssk f =
     case ssk of
-      AColeSigningKey         sk -> f sk
-      APaymentSigningKey         sk -> f sk
-      APaymentExtendedSigningKey sk -> f sk
-      AStakeSigningKey           sk -> f sk
-      AStakeExtendedSigningKey   sk -> f sk
-      AStakePoolSigningKey       sk -> f sk
-      AGenesisSigningKey         sk -> f sk
-      AGenesisExtendedSigningKey sk -> f sk
-      AGenesisDelegateSigningKey sk -> f sk
-      AGenesisDelegateExtendedSigningKey
-                                 sk -> f sk
-      AGenesisUTxOSigningKey     sk -> f sk
-      AVestedSigningKey           sk -> f sk
-      AVestedExtendedSigningKey   sk -> f sk
-      AVestedDelegateSigningKey   sk -> f sk
-      AVestedDelegateExtendedSigningKey
-                                 sk -> f sk
-      AVestedUTxOSigningKey       sk -> f sk
-      AVrfSigningKey             sk -> f sk
-      AKesSigningKey             sk -> f sk
+      AColeSigningKey                     sk -> f sk 
+      APaymentSigningKey                  sk -> f sk
+      APaymentExtendedSigningKey          sk -> f sk
+      AStakeSigningKey                    sk -> f sk
+      AStakeExtendedSigningKey            sk -> f sk
+      AStakePoolSigningKey                sk -> f sk
+      AGenesisSigningKey                  sk -> f sk
+      AGenesisExtendedSigningKey          sk -> f sk
+      AGenesisDelegateSigningKey          sk -> f sk
+      AGenesisDelegateExtendedSigningKey  sk -> f sk
+      AGenesisUTxOSigningKey              sk -> f sk
+      AVestedSigningKey                   sk -> f sk
+      AVestedExtendedSigningKey           sk -> f sk
+      AVestedDelegateSigningKey           sk -> f sk
+      AVestedDelegateExtendedSigningKey   sk -> f sk
+      AVestedUTxOSigningKey               sk -> f sk
+      AVrfSigningKey                      sk -> f sk
+      AKesSigningKey                      sk -> f sk
 
 readSigningKeyFile
   :: SigningKeyFile
