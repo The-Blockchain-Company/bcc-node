@@ -569,6 +569,12 @@ module Bcc.Api (
     GenesisUTxOKey,
     genesisUTxOPseudoTxIn,
 
+    -- GenesisVestedKeys
+    GenesisVestedKey,
+    GenesisVestedExtendedKey,
+    GenesisVestedDelegateKey,
+    GenesisVestedDelegateExtendedKey,
+
     -- ** Genesis paramaters
     GenesisParameters(..),
 
