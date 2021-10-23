@@ -1257,12 +1257,12 @@ instance Key GenesisVestedKey where
         proxy = Proxy
 
     getVerificationKey :: SigningKey GenesisVestedKey -> VerificationKey GenesisVestedKey
-    getVerificationKey (GenesisSigningKey sk) =
+    getVerificationKey (GenesisVestedSigningKey sk) =
         GenesisVestedVerificationKey (Sophie.VKey (Crypto.deriveVerKeyDSIGN sk))
 
     verificationKeyHash :: VerificationKey GenesisVestedKey -> Hash GenesisVestedKey
     verificationKeyHash (GenesisVestedVerificationKey vkey) =
-        GenesisKeyHash (Sophie.hashKey vkey)
+        GenesisVestedKeyHash (Sophie.hashKey vkey)
 
 
 instance SerialiseAsRawBytes (VerificationKey GenesisVestedKey) where
@@ -1278,7 +1278,7 @@ instance SerialiseAsRawBytes (SigningKey GenesisVestedKey) where
       Crypto.rawSerialiseSignKeyDSIGN sk
 
     deserialiseFromRawBytes (AsSigningKey AsGenesisVestedKey) bs =
-      GenesisSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
+      GenesisVestedSigningKey <$> Crypto.rawDeserialiseSignKeyDSIGN bs
 
 
 newtype instance Hash GenesisVestedKey =
@@ -1289,7 +1289,7 @@ newtype instance Hash GenesisVestedKey =
   deriving anyclass SerialiseAsCBOR
 
 instance SerialiseAsRawBytes (Hash GenesisVestedKey) where
-    serialiseToRawBytes (GenesisKeyHash (Sophie.KeyHash vkh)) =
+    serialiseToRawBytes (GenesisVestedKeyHash (Sophie.KeyHash vkh)) =
       Crypto.hashToBytes vkh
 
     deserialiseFromRawBytes (AsHash AsGenesisVestedKey) bs =
