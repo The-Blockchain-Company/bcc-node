@@ -280,8 +280,8 @@ data SomeExtendedVerificationKey
   | AStakeExtendedVerificationKey                 (VerificationKey StakeExtendedKey)
   | AGenesisExtendedVerificationKey               (VerificationKey GenesisExtendedKey)
   | AGenesisDelegateExtendedVerificationKey       (VerificationKey GenesisDelegateExtendedKey)
-  | AGenesisExtendedVerificationKey               (VerificationKey GenesisVestedExtendedKey)
-  | AGenesisDelegateExtendedVerificationKey       (VerificationKey GenesisVestedDelegateExtendedKey)
+  | AGenesisVestedExtendedVerificationKey         (VerificationKey GenesisVestedExtendedKey)
+  | AGenesisVestedDelegateExtendedVerificationKey (VerificationKey GenesisVestedDelegateExtendedKey)
   | AVestedExtendedVerificationKey                (VerificationKey VestedExtendedKey)
   | AVestedDelegateExtendedVerificationKey        (VerificationKey VestedDelegateExtendedKey)
 
