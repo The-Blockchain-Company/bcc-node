@@ -668,7 +668,7 @@ instance FromJSON NodeConfig where
       parseColeProtocolVersion o =
         Bcc.Chain.Update.ProtocolVersion
           <$> o .: "LastKnownBlockVersion-Major"
-          <*> o .: "LastKnownBlockVersion-Seal"
+          <*> o .: "LastKnownBlockVersion-Sentry"
 
       parseColeSoftwareVersion :: Object -> Data.Aeson.Types.Internal.Parser Bcc.Chain.Update.SoftwareVersion
       parseColeSoftwareVersion o =
@@ -872,7 +872,7 @@ sophieProtVer dnc =
   let bver = ncColeProtocolVersion dnc in
   Sophie.Spec.ProtVer
     (fromIntegral $ Bcc.Chain.Update.pvMajor bver)
-    (fromIntegral $ Bcc.Chain.Update.pvSeal bver)
+    (fromIntegral $ Bcc.Chain.Update.pvSentry bver)
 
 readBccGenesisConfig
         :: NodeConfig

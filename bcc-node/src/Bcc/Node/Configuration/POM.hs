@@ -210,7 +210,7 @@ instance FromJSON PartialNodeConfiguration where
                                          .!= Cole.ApplicationName "bcc-sl"
         npcColeApplicationVersion  <- v .:? "ApplicationVersion" .!= 1
         protVerMajor                <- v .: "LastKnownBlockVersion-Major"
-        protVerSeal                <- v .: "LastKnownBlockVersion-Seal"
+        protVerSentry                <- v .: "LastKnownBlockVersion-Sentry"
                         
 
         pure NodeColeProtocolConfiguration {
@@ -221,7 +221,7 @@ instance FromJSON PartialNodeConfiguration where
              , npcColeApplicationName
              , npcColeApplicationVersion
              , npcColeSupportedProtocolVersionMajor = protVerMajor
-             , npcColeSupportedProtocolVersionSeal = protVerSeal
+             , npcColeSupportedProtocolVersionSentry = protVerSentry
              }
 
       parseSophieProtocol v = do

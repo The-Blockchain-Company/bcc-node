@@ -303,7 +303,7 @@ data NodeColeProtocolConfiguration =
        -- move to the next version.
        --
      , npcColeSupportedProtocolVersionMajor :: !Word16
-     , npcColeSupportedProtocolVersionSeal  :: !Word16
+     , npcColeSupportedProtocolVersionSentry  :: !Word16
      }
   deriving (Eq, Show)
 

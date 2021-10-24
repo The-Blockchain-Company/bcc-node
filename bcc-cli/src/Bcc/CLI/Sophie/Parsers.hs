@@ -2972,7 +2972,7 @@ pEpochSlots =
 
 pProtocolVersion :: Parser (Natural, Natural)
 pProtocolVersion =
-    (,) <$> pProtocolMajorVersion <*> pProtocolSealVersion
+    (,) <$> pProtocolMajorVersion <*> pProtocolSentryVersion
   where
     pProtocolMajorVersion =
       Opt.option Opt.auto
@@ -2980,11 +2980,11 @@ pProtocolVersion =
         <> Opt.metavar "NATURAL"
         <> Opt.help "Major protocol version. An increase indicates a hard fork."
         )
-    pProtocolSealVersion =
+    pProtocolSentryVersion =
       Opt.option Opt.auto
-        (  Opt.long "protocol-seal-version"
+        (  Opt.long "protocol-sentry-version"
         <> Opt.metavar "NATURAL"
-        <> Opt.help "Seal protocol version. An increase indicates a soft fork\
+        <> Opt.help "Sentry protocol version. An increase indicates a soft fork\
                     \ (old software canvalidate but not produce new blocks)."
         )
 

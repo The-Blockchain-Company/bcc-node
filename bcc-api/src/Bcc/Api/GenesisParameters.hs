@@ -62,7 +62,7 @@ data GenesisParameters =
        --
        protocolParamSecurity :: Int,
 
-       -- | The Vested Seal Protocol vestMultiple 
+       -- | The Vested Sentry Protocol vestMultiple 
        -- 
        protocolVestMultiple :: Word64,
 

@@ -283,7 +283,7 @@ instance FromJSON ProtocolParameters where
     withObject "ProtocolParameters" $ \o -> do
       v <- o .: "protocolVersion"
       ProtocolParameters
-        <$> ((,) <$> v .: "major" <*> v .: "seal")
+        <$> ((,) <$> v .: "major" <*> v .: "sentry")
         <*> o .: "decentralization"
         <*> o .: "extraOptimumEntropy"
         <*> o .: "maxBlockHeaderSize"
@@ -326,8 +326,8 @@ instance ToJSON ProtocolParameters where
       , "monetaryExpansion"   .= toRationalJSON protocolParamMonetaryExpansion
       , "stakeAddressDeposit" .= protocolParamStakeAddressDeposit
       , "poolPledgeInfluence" .= toRationalJSON protocolParamPoolPledgeInfluence
-      , "protocolVersion"     .= let (major, seal) = protocolParamProtocolVersion
-                                  in object ["major" .= major, "seal" .= seal]
+      , "protocolVersion"     .= let (major, sentry) = protocolParamProtocolVersion
+                                  in object ["major" .= major, "sentry" .= sentry]
       , "txFeeFixed"          .= protocolParamTxFeeFixed
       , "txFeePerByte"        .= protocolParamTxFeePerByte
       -- Aurum era:
@@ -351,7 +351,7 @@ instance ToJSON ProtocolParameters where
 data ProtocolParametersUpdate =
      ProtocolParametersUpdate {
 
-       -- | Protocol version, major and current open Seal. Updating the major version is
+       -- | Protocol version, major and current open Sentry. Updating the major version is
        -- used to trigger hard forks.
        --
        protocolUpdateProtocolVersion :: Maybe (Natural, Natural),
@@ -1196,8 +1196,8 @@ toSophiePParams ProtocolParameters {
                  } =
    Sophie.PParams
      { Sophie._protocolVersion
-                             = let (maj, seal) = protocolParamProtocolVersion
-                                in Ledger.ProtVer maj seal
+                             = let (maj, sentry) = protocolParamProtocolVersion
+                                in Ledger.ProtVer maj sentry
      , Sophie._d            = fromMaybe
                                  (error "toAurumPParams: invalid Decentralization value")
                                  (Ledger.boundRational protocolParamDecentralization)
@@ -1255,8 +1255,8 @@ toAurumPParams ProtocolParameters {
                  } =
     Aurum.PParams {
       Aurum._protocolVersion
-                           = let (maj, seal) = protocolParamProtocolVersion
-                              in Aurum.ProtVer maj seal 
+                           = let (maj, sentry) = protocolParamProtocolVersion
+                              in Aurum.ProtVer maj sentry 
     , Aurum._d            = fromMaybe
                                (error "toAurumPParams: invalid Decentralization value")
                                (Ledger.boundRational protocolParamDecentralization)
