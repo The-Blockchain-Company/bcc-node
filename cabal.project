@@ -151,7 +151,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-ledger-specs
-  tag: df86be00f15f3f75fca7c855ea37da882d23c465
+  tag: 75858a07d25b6b39aee45157c1987e159bd995b4
   subdir:
     aurum/impl
     cole/chain/executable-spec
@@ -208,7 +208,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/shardagnostic-network
-  tag: 1d531d448d2460e046b9024f773e21c15c8543f8
+  tag: f2886b1f66fd31dc7c467ac80695795ad03325f6
   subdir:
     io-sim
     io-classes
@@ -227,7 +227,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/zerepoch
-  tag: 7f29fe0c2a871b95aa28fce72e13880114758758
+  tag: 8b17285524d7a464a5492911cbce1ccabf431033
   subdir:
     zerepoch-core
     zerepoch-ledger
