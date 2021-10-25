@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name:                   bcc-testnet
-version:                1.29.0
+version:                1.99.0
 description:            The bcc full node
 author:                 TBCO
 maintainer:             operations@tbco.io
