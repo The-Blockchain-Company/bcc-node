@@ -18,7 +18,7 @@
 *************************
 ``bcc-node`` Overview
 *************************
-
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on Linux or WSL2 Remaining build options will work but will require tinkering as they have not yet been tested. ***
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
 `node shell <https://github.com/The-Blockchain-Company/bcc-shell>`_ repositories.
