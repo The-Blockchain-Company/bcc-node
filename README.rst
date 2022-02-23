@@ -18,7 +18,7 @@
 *************************
 ``bcc-node`` Overview
 *************************
-**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Remaining build options will work but will require tinkering as they have not yet been tested. ***
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Learn more at https://github.com/Quantum-One-DAO ***
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
 `node shell <https://github.com/The-Blockchain-Company/bcc-shell>`_ repositories.
@@ -34,17 +34,17 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
-Network Configuration, Genesis and Topology Files
+Network Configuration, Genesis and Topology Files - Hydra is in process of being enabled at hydra.quantumone.network and is not enabled at the below URL.  
 =================================================
 
 The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
-How to build
+How to build - We are in the process of enabling documentation @ docs.quantumone.network
 ============
 
 Documentation for building the node can be found `here <https://docs.bcc.org/getting-started/installing-the-bcc-node>`_.
 
-Linux Executable
+Linux Executable - We are moving Hydra to hydra.quantumone.network for public testing. Hydra below is not enabled. 
 ==================
 
 You can download the latest version of ``bcc-node`` and ``bcc-cli``:
@@ -53,7 +53,7 @@ You can download the latest version of ``bcc-node`` and ``bcc-cli``:
 * `win64 <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_
 * `macos <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-macos/latest-finished>`_
 
-Windows Executable
+Windows Executable 
 ==================
 
 Download
@@ -70,7 +70,7 @@ The download includes bcc-node.exe and a .dll. To run the node with bcc-node run
 
     bcc-node.exe run --topology ./mainnet-topology.json --database-path ./state --port 3001 --config ./configuration-mainnet.yaml --socket-path \\.\pipe\bcc-node
 
-Docker image
+Docker image - Images will be available soon under quantumone.network 
 ============
 
 You can pull the docker image with the latest version of bcc-node from `here <https://hub.docker.com/r/tbco/bcc-node>`_.
