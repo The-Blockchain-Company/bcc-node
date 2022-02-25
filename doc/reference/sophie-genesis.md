@@ -554,7 +554,7 @@ But for demos it is fine
 
 ```bash
 $ bcc-cli genesis
-Usage: bcc-cli genesis (key-gen-genesis | key-gen-delegate | key-gen-utxo |
+Usage: bcc-cli genesis (key-gen-genesis | key-gen-delegate | key-gen-vested | key-gen-vesteddelegate |key-gen-utxo |
                              key-hash | get-ver-key | initial-addr |
                              initial-txin | create | create-staked | hash)
   Genesis block commands
@@ -565,6 +565,8 @@ Available options:
 Available commands:
   key-gen-genesis          Create a Sophie genesis key pair
   key-gen-delegate         Create a Sophie genesis delegate key pair
+  key-gen-vested           Create a Sophie genesis vested key pair
+  key-gen-vesteddelegate   Create a Sophie genesis vesteddelegate key pair
   key-gen-utxo             Create a Sophie genesis UTxO key pair
   key-hash                 Print the identifier (hash) of a public key
   get-ver-key              Derive the verification key from a signing key
@@ -584,7 +586,7 @@ are for the manual method.
 
 ```bash
 $ bcc-cli genesis create
-Usage: bcc-cli genesis create --genesis-dir DIR [--gen-genesis-keys INT]
+Usage: bcc-cli genesis create --genesis-dir DIR [--gen-genesis-keys INT] [--gen-vested-keys INT]
                                   [--gen-utxo-keys INT] [--start-time UTC-TIME]
                                   [--supply ENTROPIC]
                                   (--mainnet | --testnet-magic NATURAL)
@@ -595,6 +597,7 @@ Available options:
   --genesis-dir DIR        The genesis directory containing the genesis template
                            and required genesis/delegation/spending keys.
   --gen-genesis-keys INT   The number of genesis keys to make [default is 0].
+  --gen-vested-keys INT    The number of vested keys to make [default is 0]
   --gen-utxo-keys INT      The number of UTxO keys to make [default is 0].
   --start-time UTC-TIME    The genesis start time in YYYY-MM-DDThh:mm:ssZ
                            format. If unspecified, will be the current time +30
@@ -615,8 +618,11 @@ It follows this file layout convention:
  * `${genesisdir}/genesis.json`
  * `${genesisdir}/genesis.spec.json`
  * `${genesisdir}/genesis-keys/genesis${N}.{vkey,skey}`
+ * `${genesisdir}/genesis-keys/vested${N}.{vkey,skey}`
  * `${genesisdir}/delegate-keys/delegate${N}.{vkey,skey}`
  * `${genesisdir}/delegate-keys/delegate-opcert${N}.counter`
+ * `${genesisdir}/vesteddelegate-keys/vesteddelegate${N}.{vkey,skey}`
+ * `${genesisdir}/vesteddelegate-keys/vesteddelegate-opcert${N}.counter`
  * `${genesisdir}/utxo-keys/utxo${N}.{vkey,skey}`
 
 By default it will not create any keys for you, and will pick up any that you
@@ -629,7 +635,7 @@ $ bcc-cli genesis create --testnet-magic 42 --genesis-dir example/
 ```
 
 The `create` command can also create all the necessary keys for you.
-The optional `--gen-genesis-keys` and `--gen-utxo-keys` flags can be used to
+The optional `--gen-genesis-keys`, `--gen-vested-keys`, and `--gen-utxo-keys` flags can be used to
 specify the number of keys of each kind to generate.
 
 We still need a genesis spec to start from. Here's the default genesis spec
@@ -637,11 +643,16 @@ file `example/genesis.spec.json`
 
 ```json
 {
+  "vestMultiple": 1,
+    "vestedDelegs": {},
+    "securityParam": 2160,
+    "slotsPerKESPeriod": 129600,
+    "updateQuorum": 5,
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
         "poolDeposit": 0,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
@@ -663,21 +674,18 @@ file `example/genesis.spec.json`
         "a0": 0
     },
     "genDelegs": {},
-    "updateQuorum": 5,
     "networkId": "Testnet",
+    "maxKESEvolutions": 60,
     "initialFunds": {},
     "maxEntropicSupply": 0,
     "networkMagic": 42,
+    "slotLength": 1,
+    "systemStart": "1970-01-01T00:00:00Z",
     "epochLength": 432000,
     "staking": {
         "pools": {},
         "stake": {}
     },
-    "systemStart": "1970-01-01T00:00:00Z",
-    "slotsPerKESPeriod": 129600,
-    "slotLength": 1,
-    "maxKESEvolutions": 60,
-    "securityParam": 2160
 }
 ```
 
@@ -711,59 +719,61 @@ Let's have a look at the result
 ```json
 $ cat example/genesis.json
 {
+    "vestMultiple": 1,
+    "vestedDelegs": {},
+    "securityParam": 2160,
+    "slotsPerKESPeriod": 129600,
+    "updateQuorum": 5,
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
-        "poolDeposit": 0,
-        "protocolVersion": {
-            "minor": 0,
-            "major": 0
-        },
         "minUTxOValue": 0,
-        "decentralisationParam": 1,
-        "maxTxSize": 16384,
-        "minPoolCost": 0,
-        "minFeeA": 0,
-        "maxBlockBodySize": 65536,
-        "minFeeB": 0,
         "eMax": 18,
         "extraEntropy": {
             "tag": "NeutralNonce"
         },
+        "minFeeB": 0,
+        "tau": 0.0,
+        "maxBlockBodySize": 65536,
+        "maxTxSize": 16384,
+        "minPoolCost": 0,
+        "minFeeA": 1,
+        "nOpt": 100,
         "maxBlockHeaderSize": 1100,
         "keyDeposit": 0,
-        "nOpt": 100,
-        "rho": 0,
-        "tau": 0,
-        "a0": 0
-    },
-    "genDelegs": {
-        "035e6617b16a5d1e8e79af6866e1fe8ce64948bbcda90dcab4dbaf94": {
-            "delegate": "4e28928a3007ec07f1067b89034935461974ee7d68cbc3e87b93dff4",
-            "vrf": "f97549acac913c8d9b654bd96253c41559e5fc6ab2b408579417239b7943b69c"
+        "poolDeposit": 0,
+        "protocolVersion": {
+            "sentry": 0,
+            "major": 0
         },
-        "df648b1e8c82d1bf49a66cd5840162c6c7f752a5f7b6b16f9b347ceb": {
-            "delegate": "d1aecbb4f0cf732685f32ae52557c5650bdca5510963ba7f52d664bf",
-            "vrf": "3e4dffe799fc7d4a0817b95da1c67374f6797d11100feaf8437305112b9e4659"
+        "a0": 0.0,
+        "rho": 0.0,
+        "decentralisationParam": 1.0
+    },
+    "maxEntropicSupply": 0,
+    "networkMagic": 42,
+    "initialFunds": {
+        "6089d93346c322ba1487051c793dc1d90071efd2ccb063fdb05ec5cf09": 0,
+        "6060a1cca04000f8b427992878794dda0adfd36bfe0708bd6e17b7326e": 0
+    },
+    "networkId": "Testnet",
+    "maxKESEvolutions": 60,
+    "genDelegs": {
+        "40b6b2c3920e04948baa3a0d73307d106bb38752a11e3a4a71a84889": {
+            "delegate": "a615747a919f1d1c40de03bcc97b4d7a7ca9c5feab3e2b6f5187ca90",
+            "vrf": "3fe07080e0c0e81152a3057cd597ee92693d5abf8c2b893072420e437e8bd6f9"
+        },
+        "9855f0c73dbe25d13fc343651a999ed427168d91af341ee300325e94": {
+            "delegate": "43d573b721045c984d5377ef1d4ed3804f27a6d6b607be521f7f7426",
+            "vrf": "711f0e2e9ec3edf2f76aeed19c9096718eea7e98764e8454574c9c3a136f2729"
         }
     },
-    "updateQuorum": 5,
-    "networkId": "Testnet",
-    "initialFunds": {
-        "60373d2725a14e935af0da8e1237fe88511047807a2ed5b7afcbb0ecd2": 500000000,
-        "6099a57798e192f9eef043db1f4d6b5eee6e77af89f875125b0ae63b04": 500000000
-    },
-    "maxEntropicSupply": 1000000000,
-    "networkMagic": 42,
+    "slotLength": 1,
+    "systemStart": "2022-02-24T16:04:13.997535103Z",
     "epochLength": 432000,
     "staking": {
         "pools": {},
         "stake": {}
-    },
-    "systemStart": "2020-10-12T14:19:23.119688613Z",
-    "slotsPerKESPeriod": 129600,
-    "slotLength": 1,
-    "maxKESEvolutions": 60,
-    "securityParam": 2160
+    }
 }
 ```
 
@@ -779,14 +789,18 @@ genesis1.skey  genesis1.vkey  genesis2.skey  genesis2.vkey
 
 example-default/utxo-keys/:
 utxo1.skey  utxo1.vkey  utxo2.skey  utxo2.vkey
+
+example/vesteddelegate-keys:
+vesteddelegate1.skey  vesteddelegate1.vrf.skey  vesteddelegate2.skey  vesteddelegate2.vrf.skey  vesteddelegate-opcert1.counter
+vesteddelegate1.vkey  vesteddelegate1.vrf.vkey  vesteddelegate2.vkey  vesteddelegate2.vrf.vkey  vesteddelegate-opcert2.counter
 ```
 
 You'll notice that the automagic method has divided the total supply amongst
 the initial UTxO keys, but you can still edit this file manually to adjust that
 if you want.
 
-[ONE MILLION ENTROPIC]: https://www.youtube.com/watch?v=l91ISfcuzDw
-[why make trillions when we could make billions?]: https://www.youtube.com/watch?v=xyyqoHCkw9I
+[ONE MILLION ENTROPIC]: "https://www.youtube.com/watch?v=l91ISfcuzDw" - #TODO
+[why make trillions when we could make billions?]: https://www.youtube.com/watch?v=xyyqoHCkw9I -#TODO
 
 ## Node operational keys and certificates
 
@@ -1160,16 +1174,16 @@ Usage: bcc-cli query protocol-parameters [--sophie-mode | --cole-mode
 Available options:
   --sophie-mode           For talking to a node running in Sophie-only mode.
   --cole-mode             For talking to a node running in Cole-only mode.
-  --epoch-slots NATURAL    The number of slots per epoch for the Cole era.
-                           (default: 21600)
-  --bcc-mode           For talking to a node running in full Bcc mode
-                           (default).
-  --epoch-slots NATURAL    The number of slots per epoch for the Cole era.
-                           (default: 21600)
-  --mainnet                Use the mainnet magic id.
-  --testnet-magic NATURAL  Specify a testnet magic id.
-  --out-file FILE          Optional output file. Default is to write to stdout.
-  -h,--help                Show this help text
+  --epoch-slots NATURAL   The number of slots per epoch for the Cole era.
+                          (default: 21600)
+  --bcc-mode              For talking to a node running in full Bcc mode
+                          (default).
+  --epoch-slots NATURAL   The number of slots per epoch for the Cole era.
+                          (default: 21600)
+  --mainnet               Use the mainnet magic id.
+  --testnet-magic NATURAL Specify a testnet magic id.
+  --out-file FILE         Optional output file. Default is to write to stdout.
+  -h,--help               Show this help text
 ```
 
 The only surprising extra flag is the "network magic". This is the
@@ -1198,10 +1212,11 @@ $ BCC_NODE_SOCKET_PATH=example/node1/node.sock \
     bcc-cli query protocol-parameters \
     --testnet-magic 42 \
     --sophie-mode
-{
+{    
+    "vestedMultiple": 1,
     "poolDeposit": 0,
     "protocolVersion": {
-        "minor": 0,
+        "sentry": 0,
         "major": 0
     },
     "minUTxOValue": 0,
@@ -1355,7 +1370,7 @@ Usage: bcc-cli address key-gen [--normal-key | --extended-key | --cole-key]
 Available options:
   --normal-key             Use a normal Sophie-era key (default).
   --extended-key           Use an extended ed25519 Sophie-era key.
-  --cole-key              Use a Cole-era key.
+  --cole-key               Use a Cole-era key.
   --verification-key-file FILE
                            Output filepath of the verification key.
   --signing-key-file FILE  Output filepath of the signing key.
@@ -1442,51 +1457,40 @@ Usage: bcc-cli transaction build-raw [--cole-era | --sophie-era |
   Build a transaction (low-level, inconvenient)
 
 Available options:
-  --cole-era              Specify the Cole era
-  --sophie-era            Specify the Sophie era
-  --evie-era            Specify the Evie era
-  --jen-era               Specify the Jen era (default)
-  --tx-in TX-IN            TxId#TxIx
-  --txin-script-file FILE  Filepath of the spending script witness
-  --tx-out TX-OUT          The transaction output as Address+Entropic where
-                           Address is the Bech32-encoded address followed by the
-                           amount in Entropic.
-  --mint VALUE             Mint multi-asset value(s) with the multi-asset cli
-                           syntax. You must specifiy a script witness.
-  --minting-script-file FILE
-                           Filepath of the multi-asset witness script.
-  --invalid-before SLOT    Time that transaction is valid from (in slots).
-  --invalid-hereafter SLOT Time that transaction is valid until (in slots).
-  --fee ENTROPIC           The fee amount in Entropic.
-  --certificate-file CERTIFICATEFILE
-                           Filepath of the certificate. This encompasses all
-                           types of certificates (stake pool certificates, stake
-                           key certificates etc). Optionally specify a script
-                           witness.
-  --certificate-script-file FILE
-                           Filepath of the certificate script witness
-  --withdrawal WITHDRAWAL  The reward withdrawal as StakeAddress+Entropic where
-                           StakeAddress is the Bech32-encoded stake address
-                           followed by the amount in Entropic. Optionally
-                           specify a script witness.
-  --withdrawal-script-file FILE
-                           Filepath of the withdrawal script witness.
-  --json-metadata-no-schema
-                           Use the "no schema" conversion from JSON to tx
-                           metadata.
-  --json-metadata-detailed-schema
-                           Use the "detailed schema" conversion from JSON to tx
-                           metadata.
-  --auxiliary-script-file FILE
-                           Filepath of auxiliary script(s)
-  --metadata-json-file FILE
-                           Filepath of the metadata file, in JSON format.
-  --metadata-cbor-file FILE
-                           Filepath of the metadata, in raw CBOR format.
-  --update-proposal-file FILE
-                           Filepath of the update proposal.
-  --out-file FILE          Output filepath of the JSON TxBody.
-  -h,--help                Show this help text
+  --cole-era                          Specify the Cole era
+  --sophie-era                        Specify the Sophie era
+  --evie-era                          Specify the Evie era
+  --jen-era                           Specify the Jen era (default)
+  --tx-in TX-IN                       TxId#TxIx
+  --txin-script-file FILE             Filepath of the spending script witness
+  --tx-out TX-OUT                     The transaction output as Address+Entropic where
+                                      Address is the Bech32-encoded address followed by the
+                                      amount in Entropic.
+  --mint VALUE                        Mint multi-asset value(s) with the multi-asset cli
+                                      syntax. You must specifiy a script witness.
+  --minting-script-file FILE          Filepath of the multi-asset witness script.
+  --invalid-before SLOT               Time that transaction is valid from (in slots).
+  --invalid-hereafter SLOT            Time that transaction is valid until (in slots).
+  --fee ENTROPIC                      The fee amount in Entropic.
+  --certificate-file CERTIFICATEFILE  Filepath of the certificate. This encompasses all
+                                      types of certificates (stake pool certificates, stake
+                                      key certificates etc). Optionally specify a script
+                                      witness.
+  --certificate-script-file FILE      Filepath of the certificate script witness
+  --withdrawal WITHDRAWAL             The reward withdrawal as StakeAddress+Entropic where
+                                      StakeAddress is the Bech32-encoded stake address
+                                      followed by the amount in Entropic. Optionally
+                                      specify a script witness.
+  --withdrawal-script-file  FILE      Filepath of the withdrawal script witness.
+  --json-metadata-no-schema           Use the "no schema" conversion from JSON to tx metadata.
+  --json-metadata-detailed-schema     Use the "detailed schema" conversion from JSON to tx
+                                      metadata.
+  --auxiliary-script-file FILE        Filepath of auxiliary script(s)
+  --metadata-json-file FILE           Filepath of the metadata file, in JSON format.
+  --metadata-cbor-file FILE           Filepath of the metadata, in raw CBOR format.
+  --update-proposal-file FILE         Filepath of the update proposal.
+  --out-file FILE                     Output filepath of the JSON TxBody.
+  -h,--help                           Show this help text
 ```
 
 Yes, this is a very inconvenient way to build transactions, but at least you'll
