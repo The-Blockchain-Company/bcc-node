@@ -43,6 +43,8 @@ The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bc
 Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
 ==================================================================
 
+.. code-block:: console
+
 sudo apt-get update -y
 
 sudo apt-get upgrade -y
