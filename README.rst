@@ -62,26 +62,36 @@ Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
     sudo make install
 
 Debian OS: extra lib linking may be required
+
 .. code-block:: console
+
     sudo ln -s /usr/local/lib/libsodium.so.23.3.0 /usr/lib/libsodium.so.23
 
 AWS Linux CentOS: clearing the lib cache may be required.
+
 .. code-block:: console
+
     sudo ldconfig
 
 Raspberry Pi 4 with Ubuntu: extra lib linking may be required
+
 .. code-block:: console
+
     sudo apt-get install libnuma-dev
 
 Install Cabal & dependencies
+
 .. code-block:: console
+
     sudo apt-get -y install pkg-config libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev build-essential curl libgmp-dev libffi-dev libncurses-dev libtinfo5
 
     curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
 
 Respond 'NO' to install Haskell-Language-Server (HLS) 
 Respond 'Yes' to automatically add required PATH variable to .bashrc
+
 .. code-block:: console
+
     cd $HOME
     source .bashrc
     ghcup upgrade
@@ -89,7 +99,9 @@ Respond 'Yes' to automatically add required PATH variable to .bashrc
     ghcup set cabal 3.4.0.0
 
 Install GHC
+
 .. code-block:: console
+
     ghcup install ghc 8.10.4
     ghcup set ghc 8.10.4
 
@@ -100,7 +112,9 @@ Install GHC
     source $HOME/.bashrc
 
 TestNet guidance - to set to testnet rather then mainnet...
+
 .. code-block:: console
+
     echo export NODE_CONFIG=testnet>> $HOME/.bashrc
     source $HOME/.bashrc
 
@@ -113,13 +127,17 @@ in the CLI command instructions, replace it with
 '--testnet-magic 1097911063' 
 
 Update Cabal and Verify Install 
+
 .. code-block:: console
+
     cabal update
     cabal --version
     ghc --version
 
 Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 will work as well)
+
 .. code-block:: console
+
     cd $HOME/git
     git clone https://github.com/The-Blockchain-Company/bcc-node.git
     cd Bcc-node
@@ -133,13 +151,17 @@ Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 
     cabal build all
 
 Copy Node and CLI files to bin
+
 .. code-block:: console
+
     sudo cp $(find $HOME/git/bcc-node/dist-newstyle/build -type f -name "bcc-cli") /usr/local/bin/bcc-cli
 
     sudo cp $(find $HOME/git/bcc-node/dist-newstyle/build -type f -name "bcc-node") /usr/local/bin/bcc-node
 
 Test Versioning with
+
 .. code-block:: console
+
     bcc-cli --version 
     bcc-node --version
 
