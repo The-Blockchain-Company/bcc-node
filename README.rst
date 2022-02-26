@@ -18,7 +18,8 @@
 *************************
 ``bcc-node`` Overview
 *************************
-**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Learn more at https://github.com/Quantum-One-DAO ***
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is in process of being enabled at hydra.quantumone.network. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Learn more at https://github.com/Quantum-One-DAO  ****
+
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
 `node shell <https://github.com/The-Blockchain-Company/bcc-shell>`_ repositories.
@@ -39,8 +40,95 @@ Network Configuration, Genesis and Topology Files - Hydra is in process of being
 
 The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
-How to build - We are in the process of enabling documentation @ docs.quantumone.network
-============
+Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
+==================================================================
+
+sudo apt-get update -y
+
+sudo apt-get upgrade -y
+
+sudo apt-get install git jq bc make automake rsync htop curl build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev make g++ wget libncursesw5 libtool autoconf -y
+
+mkdir $HOME/git
+cd $HOME/git
+git clone https://github.com/The-Blockchain-Company/libsodium
+cd libsodium
+git checkout 66f017f1
+./autogen.sh
+./configure
+make
+sudo make install
+
+Debian OS: extra lib linking may be required
+-- sudo ln -s /usr/local/lib/libsodium.so.23.3.0 /usr/lib/libsodium.so.23
+
+AWS Linux CentOS: clearing the lib cache may be required.
+-- sudo ldconfig
+
+Raspberry Pi 4 with Ubuntu: extra lib linking may be required
+-- sudo apt-get install libnuma-dev
+
+Install Cabal & dependencies
+
+sudo apt-get -y install pkg-config libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev build-essential curl libgmp-dev libffi-dev libncurses-dev libtinfo5
+
+curl --proto '=https' --tlsv1.2 -sSf https://get-ghcup.haskell.org | sh
+
+Respond 'NO' to install Haskell-Language-Server (HLS) 
+Respond 'Yes' to automatically add required PATH variable to .bashrc
+
+cd $HOME
+source .bashrc
+ghcup upgrade
+ghcup install cabal 3.4.0.0
+ghcup set cabal 3.4.0.0
+
+Install GHC
+
+ghcup install ghc 8.10.4
+ghcup set ghc 8.10.4
+
+echo PATH="$HOME/.local/bin:$PATH" >> $HOME/.bashrc
+echo export LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH" >> $HOME/.bashrc
+echo export NODE_HOME=$HOME/bcc-my-node >> $HOME/.bashrc
+echo export NODE_CONFIG=mainnet>> $HOME/.bashrc
+source $HOME/.bashrc
+
+TestNet guidance - to set to testnet rather then mainnet...
+
+echo export NODE_CONFIG=testnet>> $HOME/.bashrc
+source $HOME/.bashrc
+
+and wherever you see 
+
+'--mainnet' 
+
+in the CLI command instructions, replace it with 
+
+'--testnet-magic 1097911063' 
+
+Update Cabal and Verify Install 
+
+cabal update
+cabal --version
+ghc --version
+
+Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 will work as well)
+
+cd $HOME/git
+git clone https://github.com/The-Blockchain-Company/bcc-node.git
+cd Bcc-node
+git fetch --all --recurse-submodules --tags
+git checkout $(curl -s https://api.github.com/repos/The-Blockchain-Company/bcc-node/releases/latest | jq -r .tag_name)
+
+cabal configure -O0 -w ghc-8.10.4
+
+echo -e "package bcc-crypto-toptimum\n flags: -external-libsodium-vrf" > cabal.project.local
+sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
+cabal build all
+
+Additional build methods - We are in the process of enabling documentation @ docs.quantumone.network
+========================
 
 Documentation for building the node can be found `here <https://docs.bcc.org/getting-started/installing-the-bcc-node>`_.
 
