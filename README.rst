@@ -127,6 +127,15 @@ echo -e "package bcc-crypto-toptimum\n flags: -external-libsodium-vrf" > cabal.p
 sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
 cabal build all
 
+Copy Node and CLI files to bin
+
+sudo cp $(find $HOME/git/bcc-node/dist-newstyle/build -type f -name "bcc-cli") /usr/local/bin/bcc-cli
+
+sudo cp $(find $HOME/git/bcc-node/dist-newstyle/build -type f -name "bcc-node") /usr/local/bin/bcc-node
+
+Test Versioning with bcc-cli --version and or bcc-node --version to verify build
+
+
 Additional build methods - We are in the process of enabling documentation @ docs.quantumone.network
 ========================
 
