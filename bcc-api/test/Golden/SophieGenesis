@@ -3,7 +3,7 @@
     "protocolParams": {
         "poolDeposit": 0,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
