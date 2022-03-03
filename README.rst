@@ -601,7 +601,7 @@ You can also read more about `native tokens and how they compare to bcc and ERC2
 
 API Documentation
 =================
-The API documentation is published `here <https://The-Blockchain-Company.github.io/bcc-node/>`_.
+The API documentation is published `here <https://The-Blockchain-Company.github.io/>`_.
 
 The documentation is built with each push, but is only published from `master` branch.  In order to
 test if the documentation is working, build the documentation locally with `./scripts/haddocs.sh` and
