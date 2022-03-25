@@ -1,7 +1,7 @@
 # Technical writers
-doc                                                           @rmourey26 Robert Mourey Jr
-README.*                                                      @rmourey26 Robert Mourey Jr
-bcc-cli/README.md                                             @rmourey26 Robert Mourey Jr
+doc                                                           @rmourey26 
+README.*                                                      @rmourey26 
+bcc-cli/README.md                                             @rmourey26 
 # Release manager added for notification on dependency updates
 cabal.project                                                 @rmourey26
 
@@ -22,7 +22,7 @@ bench                                                         @rmourey26
 nix/workbench                                                 @rmourey26
 nix/supervisord-cluster                                       @rmourey26
 trace-forward                                                 @rmourey26
-Makefile                                                      @rmoruey26
+Makefile                                                      @rmourey26
 
 .buildkite                                                    @rmourey26
 .github                                                       @rmourey26
