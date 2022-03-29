@@ -4,7 +4,7 @@ name:                  locli
 version:               1.29
 description:           Bcc log analysis CLI.
 author:                TBCO (Blockchain Engineer Robert Mourey Jr for The-Blockchain-Company)
-maintainer:            operations@tbco.io
+maintainer:            operations@blockchain-company.io
 license:               Apache-2.0
 license-files:
   NOTICE

@@ -26,7 +26,7 @@ copyright = '2021, TBCO'
 author = 'TBCO'
 
 # The full version, including alpha/beta/rc tags
-release = '1.0.0'
+release = '1.9.9'
 
 
 # -- General configuration ---------------------------------------------------
@@ -81,7 +81,7 @@ html_theme_options = {
     'display_version': False,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': False,
-    'style_nav_header_background': '#f8f8f5',
+    'style_nav_header_background': '#1e2022',
     # Toc options
     'collapse_navigation': True,
     'sticky_navigation': True,

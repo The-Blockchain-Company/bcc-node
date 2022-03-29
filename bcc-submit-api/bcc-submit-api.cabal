@@ -9,7 +9,7 @@ bug-reports:            https://github.com/The-Blockchain-Company/bcc-node/issue
 license:                Apache-2.0
 license-file:           LICENSE
 author:                 TBCO Engineering Team
-maintainer:             operations@tbco.io
+maintainer:             operations@blockchain-company.io
 copyright:              (c)2021 TBCO
 category:               Language
 build-type:             Simple
