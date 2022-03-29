@@ -1,10 +1,9 @@
 # Technical writers
-doc                                                           @tbco devs Robert Mourey Jr
-README.*                                                      @tbco devs Robert Mourey Jr
-bcc-cli/README.md                                            @tbco devs Robert Mourey Jr
-
+doc                                                           @rmourey26 
+README.*                                                      @rmourey26 
+bcc-cli/README.md                                             @rmourey26 
 # Release manager added for notification on dependency updates
-cabal.project                                                 @LaurenceIO
+cabal.project                                                 @rmourey26
 
 # General reviewers per PR
 #                       TBD
@@ -18,22 +17,22 @@ cabal.project                                                 @LaurenceIO
 doc                                                           @docs-access
 README.*                                                      @docs-access
 
-bench/tx-generator                                            @tbco devs Robert Mourey Jr
-bench                                                         @tbco devs Robert Mourey Jr
-nix/workbench                                                 @tbco devs Robert Mourey Jr
-nix/supervisord-cluster                                       @tbco devs Robert Mourey Jr
-trace-forward                                                 @tbco devs Robert Mourey Jr
-Makefile                                                      @tbco devs Robert Mourey Jr
+bench/tx-generator                                            @rmourey26
+bench                                                         @rmourey26
+nix/workbench                                                 @rmourey26
+nix/supervisord-cluster                                       @rmourey26
+trace-forward                                                 @rmourey26
+Makefile                                                      @rmourey26
 
-.buildkite                                                    @devops
-.github                                                       @devops
-ci                                                            @devops
-configuration                                                 @devops
-nix                                                           @devops
-*.nix                                                         @devops
-flake.lock                                                    @devops
-bors.toml                                                     @devops
-bcc-node/src/Bcc/Tracing/OrphanInstances/Network.hs   @devops @coot @karknu
-bcc-node/src/Bcc/Node/Configuration/Logging.hs        @devops
-bcc-node/src/Bcc/Node/Configuration/Socket.hs         @devops
-bcc-node/src/Bcc/Node/Run.hs                          @devops
+.buildkite                                                    @rmourey26
+.github                                                       @rmourey26
+ci                                                            @rmourey26
+configuration                                                 @rmourey26
+nix                                                           @rmourey26
+*.nix                                                         
+flake.lock                                                    @rmourey26
+bors.toml                                                     @rmourey26
+bcc-node/src/Bcc/Tracing/OrphanInstances/Network.hs   @rmourey26
+bcc-node/src/Bcc/Node/Configuration/Logging.hs        @rmourey26
+bcc-node/src/Bcc/Node/Configuration/Socket.hs         @rmourey26
+bcc-node/src/Bcc/Node/Run.hs                          @rmourey26
