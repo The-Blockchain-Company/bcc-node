@@ -121,12 +121,12 @@ dev: &dev
 
   tls: &dev_tls
     ca:
-      organization: "Input Output HK"
+      organization: "The Blockchain Company"
       commonName: "Bcc SL Self-Signed Root CA"
       expiryDays: 3650
 
     server:
-      organization: "Input Output HK"
+      organization: "The Blockchain Company"
       commonName: "Bcc SL Server Node"
       expiryDays: 365
       altDNS:
@@ -136,7 +136,7 @@ dev: &dev
         - "::1"
 
     clients:
-      - organization: "Input Output HK"
+      - organization: "The Blockchain Company"
         commonName: "Klarity Wallet"
         expiryDays: 365
 
@@ -378,12 +378,12 @@ mainnet_base: &mainnet_base
 
   tls: &mainnet_base_tls
     ca:
-      organization: "Input Output HK"
+      organization: "The Blockchain Company"
       commonName: "Bcc SL Self-Signed Root CA"
       expiryDays: 3650
 
     server:
-      organization: "Input Output HK"
+      organization: "The Blockchain Company"
       commonName: "Bcc SL Server Node"
       expiryDays: 365
       altDNS:
@@ -393,7 +393,7 @@ mainnet_base: &mainnet_base
         - "::1"
 
     clients:
-      - organization: "Input Output HK"
+      - organization: "The Blockchain Company"
         commonName: "Klarity Wallet"
         expiryDays: 365
 
