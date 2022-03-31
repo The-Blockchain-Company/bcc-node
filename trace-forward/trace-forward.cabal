@@ -7,7 +7,7 @@ license:             Apache-2.0
 license-file:        LICENSE
 copyright:           2021 The-Blockchain-Company
 author:              TBCO
-maintainer:          operations@tbco.io
+maintainer:          operations@blockchain-company.io
 build-type:          Simple
 extra-doc-files:     README.md
                      CHANGELOG.md

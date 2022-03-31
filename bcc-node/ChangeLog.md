@@ -166,13 +166,13 @@
 - Add details about registering relays on-chain to SPO documentation. (#2591)
 - Improved installation documentation. (#2624)
 - Preparatory support for Aurum. (#2547)
-- Preparatory support for David. (#2498)
+- Preparatory support for Sjobs. (#2498)
 - Add a docker image option for downloading bcc-node. (#2632)
 - Miscellaneous internal improvements. (#2644, #2645, #2646)
 
 ### consensus changes
 
-- Some preparation for upcoming work on David. (#2978)
+- Some preparation for upcoming work on Sjobs. (#2978)
 - Drop support for GHC 8.6.5. Note that support had already been dropped in the
   node. (#3004)
 - Introduce an option to configure the snapshot interval. This will primarily be
@@ -205,7 +205,7 @@
   (#2236, #2252)
 - Expose BccPots for use in downstream projects. (#2208)
 - Some Cole-era serialisation testing. (#2217)
-- Some preparation for upcoming work on David. (#2135)
+- Some preparation for upcoming work on Sjobs. (#2135)
 
 ### network changes
 

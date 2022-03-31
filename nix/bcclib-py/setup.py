@@ -6,8 +6,8 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="bcclib-py",
     version="1.0.0",
-    author="Samuel Leathers",
-    author_email="samuel.leathers@tbco.io",
+    author="Robert Mourey Jr",
+    author_email="rmourey_jr@blockchain-company.io",
     description="Library for interacting with bcc-cli in python",
     long_description=long_description,
     long_description_content_type="text/markdown",

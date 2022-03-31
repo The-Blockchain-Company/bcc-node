@@ -49,7 +49,7 @@ Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
 
     sudo apt-get upgrade -y
 
-    sudo apt-get install git jq bc make automake rsync htop curl build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g- dev make g++ wget libncursesw5 libtool autoconf -y
+    sudo apt-get install git jq bc make automake rsync htop curl build-essential pkg-config libffi-dev libgmp-dev libssl-dev libtinfo-dev libsystemd-dev zlib1g-dev make g++ wget libncursesw5 libtool autoconf -y
 
     mkdir $HOME/git
     cd $HOME/git
@@ -594,7 +594,7 @@ You can validate Cole era blocks, delegation certificates, txs and update propos
 ``cabal exec bcc-cli -- validate-cbor --cole-block 21600 --filepath CBOREncodedColeBlockFile``
 
 
-Native Tokens 
+Native Tokens #TODO
 =======================================
 
 Native tokens is a new feature that enables the transacting of multi-assets on Bcc. Native tokens are now supported on mainnet and users can transact with bcc, and an unlimited number of user-defined (custom) tokens natively.

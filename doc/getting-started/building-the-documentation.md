@@ -4,6 +4,10 @@
 
 ```bash
 brew install sphinx-doc
+
+Ubuntu 20.04
+apt-get install python3-pip python3-dev python3-setuptools apache2 -y
+pip3 install --upgrade pip
 ```
 
 Ensure any post install steps are executed.

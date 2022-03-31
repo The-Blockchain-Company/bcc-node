@@ -4,7 +4,7 @@ name:                   bcc-testnet
 version:                1.99.0
 description:            The bcc full node
 author:                 TBCO
-maintainer:             operations@tbco.io
+maintainer:             operations@blockchain-company.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE
