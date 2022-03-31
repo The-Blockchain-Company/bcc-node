@@ -3,3 +3,5 @@
 /example
 cabal.project.local
 haddocks
+/doc
+/logs
