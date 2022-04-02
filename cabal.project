@@ -125,12 +125,12 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/hedgehog-extras
-  tag: 58ea097ad4029ddbdc5b641c4ff8f2dfa4ce7a63
+  tag: 1485421ec9ee98db2c575c14e46e30017850edd1
 
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-base
-  tag: 6c39121b136b0f752484092c8843a73d979b2a37
+  tag: 73f49024008e2d9564974ea4d039e2c0726a6ce8
  
   subdir:
     base-deriving-via
@@ -147,11 +147,11 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-crypto
-  tag: 53f1590b7aef15054b7123bd4b77921aabdb0cda
+  tag: ce2f7994556490b169914f8d818fb9ef6149211f
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-ledger-specs
-  tag: 75858a07d25b6b39aee45157c1987e159bd995b4
+  tag: e1109f35aee321bbf899a5e2cc4de3eec583f9b7
   subdir:
     aurum/impl
     cole/chain/executable-spec
@@ -175,7 +175,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-prelude
-  tag: ad2544a45a08f950017198b7b16b768002696406
+  tag: 9aa92040d1510162610b1082ae8b69d43be7a84f
   subdir:
     bcc-prelude
     bcc-prelude-test
@@ -188,7 +188,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/tbco-monitoring-framework
-  tag: 5c43c579bf93009f76093d303247bdcef8d61d9a
+  tag: 04b3cbe2069a84161bc47fb8e0489bb350e92a8a
   
   subdir:
     contra-tracer
@@ -208,7 +208,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/shardagnostic-network
-  tag: f2886b1f66fd31dc7c467ac80695795ad03325f6
+  tag: 556083a6d5e0fb94c912b561a5f1f7afd1113dc0
   subdir:
     io-sim
     io-classes
@@ -227,7 +227,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/zerepoch
-  tag: 8b17285524d7a464a5492911cbce1ccabf431033
+  tag: c8cf4619e6e496930c9092cf6d64493eff300177
   subdir:
     zerepoch-core
     zerepoch-ledger
