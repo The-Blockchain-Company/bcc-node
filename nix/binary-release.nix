@@ -1,5 +1,5 @@
 ############################################################################
-# Windows release CARDAN~1.ZIP
+# Windows release BCC~1.ZIP
 #
 # This bundles up the windows build and its dependencies,
 # and sets up the Hydra build artifact.
