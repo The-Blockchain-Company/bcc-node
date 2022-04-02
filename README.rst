@@ -15,6 +15,15 @@
     </tr>
   </table>
 
+=================
+API Documentation
+=================
+The API documentation is published `here <https://The-Blockchain-Company.github.io/>`_.
+
+The documentation is built with each push, but is only published from `master` branch.  In order to
+test if the documentation is working, build the documentation locally with `./scripts/haddocs.sh` and
+open `haddocks/index.html` in the browser.
+
 *************************
 ``bcc-node`` Overview
 *************************
@@ -599,10 +608,4 @@ To help you get started we have compiled a handy list of resources:
 
 You can also read more about `native tokens and how they compare to bcc and ERC20 <https://github.com/The-Blockchain-Company/bcc-ledger-specs/blob/master/doc/explanations/features.rst>`_. Browse native tokens created on the Bcc blockchain and see their transactions in an interactive dashboard that allows filtering and searching: nativetokens.da.iogservices.io.
 
-API Documentation
-=================
-The API documentation is published `here <https://The-Blockchain-Company.github.io/>`_.
 
-The documentation is built with each push, but is only published from `master` branch.  In order to
-test if the documentation is working, build the documentation locally with `./scripts/haddocs.sh` and
-open `haddocks/index.html` in the browser.
