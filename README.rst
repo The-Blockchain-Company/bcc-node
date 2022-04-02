@@ -155,7 +155,7 @@ Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 
 
     cabal configure -O0 -w ghc-8.10.4
 
-    echo -e "package bcc-crypto-toptimum\n flags: -external-libsodium-vrf" > cabal.project.local
+    echo -e "package bcc-crypto-optimum\n flags: -external-libsodium-vrf" > cabal.project.local
     sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
     cabal build all
 
@@ -175,10 +175,20 @@ Test Versioning with
     bcc-node --version
 
 
-Additional build methods - We are in the process of enabling documentation @ docs.quantumone.network
+Additional build methods -
 ========================
 
-Documentation for building the node can be found `here <https://docs.bcc.org/getting-started/installing-the-bcc-node>`_.
+Docker image - 
+============
+
+You can pull the docker image with the latest version of bcc-node from `here <https://hub.docker.com/r/tbco/bcc-node>`_.
+
+.. code-block:: console
+
+    docker pull tbco/bcc-node
+
+
+Additional documentation for building the node will be available soon. 
 
 Linux Executable - We are moving Hydra to hydra.quantumone.network for public testing. Hydra below is not enabled. 
 ==================
@@ -206,14 +216,6 @@ The download includes bcc-node.exe and a .dll. To run the node with bcc-node run
 
     bcc-node.exe run --topology ./mainnet-topology.json --database-path ./state --port 3001 --config ./configuration-mainnet.yaml --socket-path \\.\pipe\bcc-node
 
-Docker image - Images will be available soon under quantumone.network 
-============
-
-You can pull the docker image with the latest version of bcc-node from `here <https://hub.docker.com/r/tbco/bcc-node>`_.
-
-.. code-block:: console
-
-    docker pull tbco/bcc-node
 
 ``bcc-node``
 ================
