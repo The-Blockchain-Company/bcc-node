@@ -21,13 +21,13 @@ You will also need to have `yj` installed.  This can be done via `brew`, `apt-ge
 
 ### Install and run the bcc-submit-api
 
-Install the `cardani-submit-api`:
+Install the `bcc-submit-api`:
 
 ```bash
 bcc-node $ cabal install bcc-submit-api --overwrite-policy=always
 ```
 
-Install the `cardani-cli`:
+Install the `bcc-cli`:
 
 ```bash
 bcc-node $ cabal install bcc-cli --overwrite-policy=always
@@ -43,7 +43,7 @@ EnableLogging: True
 EOF
 ```
 
-Then run the `cardani-submit-api` against your network:
+Then run the `bcc-submit-api` against your network:
 
 ```bash
 playground $ bcc-submit-api --config submit-api-config.yaml --socket-path node.socket --port 8090 $(cat magic.flag)
