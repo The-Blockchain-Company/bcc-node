@@ -1,3 +1,4 @@
+
 .. raw:: html
 
   <p align="center">
@@ -609,5 +610,3 @@ To help you get started we have compiled a handy list of resources:
 `Documentation for native tokens <https://docs.bcc.org/native-tokens/learn>`_
 
 You can also read more about `native tokens and how they compare to bcc and ERC20 <https://github.com/The-Blockchain-Company/bcc-ledger-specs/blob/master/doc/explanations/features.rst>`_. Browse native tokens created on the Bcc blockchain and see their transactions in an interactive dashboard that allows filtering and searching: nativetokens.da.iogservices.io.
-
-
