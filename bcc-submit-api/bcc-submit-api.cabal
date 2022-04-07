@@ -15,7 +15,7 @@ category:               Language
 build-type:             Simple
 extra-source-files:     CHANGELOG.md
 
-common base                         { build-depends: base                             >= 4.14       && < 4.15     }
+common base                         { build-depends: base                             >= 4.9       && < 5    }
 
 common bcc-api                     { build-depends: bcc-api                         >= 0.1.0.0                  }
 common bcc-submit-api              { build-depends: bcc-submit-api                  >= 0.1.0.0                  }
