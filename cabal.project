@@ -151,7 +151,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-ledger-specs
-  tag: 70423e2e9fcbef62bca659c4e72080a9af9625a5
+  tag: efebea4372d3d1e16674fdebd48e597cc99be866
   subdir:
     aurum/impl
     cole/chain/executable-spec
@@ -227,7 +227,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/zerepoch
-  tag: a58472fbf105a8fd347088712e8eaecc0f905809
+  tag: d3efc65d4a2065f988373a4f4ef81a8bcabf5786
   subdir:
     zerepoch-core
     zerepoch-ledger
