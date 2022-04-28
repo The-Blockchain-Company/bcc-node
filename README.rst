@@ -146,7 +146,7 @@ Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 
 
     cabal configure -O0 -w ghc-8.10.4
 
-    echo -e "package bcc-crypto-toptimum\n flags: -external-libsodium-vrf" > cabal.project.local
+    echo -e "package bcc-crypto-optimum\n flags: -external-libsodium-vrf" > cabal.project.local
     sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
     cabal build all
 
