@@ -29,7 +29,7 @@ open `haddocks/index.html` in the browser.
 *************************
 ``bcc-node`` Overview
 *************************
-**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Learn more at https://github.com/Quantum-One-DLT  ****
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Hydra is running for demonstration purposes and is not a production version. When we are ready to launch public test net, hydra will be converted to a production instance. Learn more at https://github.com/Quantum-One-DLT  ****
 
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
@@ -46,7 +46,7 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
-Network Configuration, Genesis and Topology Files - Hydra is in process of being enabled at hydra.quantumone.network and is not enabled at the below URL.  
+Network Configuration, Genesis and Topology Files -
 =================================================
 
 The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
@@ -492,8 +492,7 @@ A Cole update proposal can be created as follows:
                     (--mainnet | --testnet-magic NATURAL)
                     --signing-key FILEPATH
                     --protocol-version-major WORD16
-                    --protocol-version-minor WORD16
-                    --protocol-version-alt WORD8
+                    --protocol-version-sentry WORD16
                     --application-name STRING
                     --software-version-num WORD32
                     --system-tag STRING
@@ -501,7 +500,7 @@ A Cole update proposal can be created as follows:
                     --filepath FILEPATH
                   ..
 
-The mandatory arguments are ``--mainnet | --testnet-magic``, ``signing-key``, ``protocol-version-major``, ``protocol-version-minor``, ``protocol-version-alt``, ``application-name``, ``software-version-num``, ``system-tag``, ``installer-hash`` and ``filepath``.
+The mandatory arguments are ``--mainnet | --testnet-magic``, ``signing-key``, ``protocol-version-major``, ``protocol-version-sentry``, ``application-name``, ``software-version-num``, ``system-tag``, ``installer-hash`` and ``filepath``.
 
 The remaining arguments are optional parameters you want to update in your update proposal.
 
@@ -599,12 +598,12 @@ You can validate Cole era blocks, delegation certificates, txs and update propos
 ``cabal exec bcc-cli -- validate-cbor --cole-block 21600 --filepath CBOREncodedColeBlockFile``
 
 
-Native Tokens #TODO
+Native Tokens
 =======================================
 
 Native tokens is a new feature that enables the transacting of multi-assets on Bcc. Native tokens are now supported on mainnet and users can transact with bcc, and an unlimited number of user-defined (custom) tokens natively.
 
-To help you get started we have compiled a handy list of resources:
+To help you get started we have compiled a handy list of resources:  #TODO
 
 `Bcc Forum discussion <https://forum.bcc.org/c/developers/bcc-tokens/150>`_
 
