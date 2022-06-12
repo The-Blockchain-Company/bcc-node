@@ -156,7 +156,7 @@ Update Cabal and Verify Install
     cabal --version
     ghc --version
 
-Cabal version should be 3.4.0.0 and ghc should be 8.10.4 (although 8.10.5 and 9 will work as well)
+Cabal version should be 3.4.0.0 and ghc should be 8.10.4 
 
 .. code-block:: console
 
