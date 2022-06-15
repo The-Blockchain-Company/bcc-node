@@ -170,6 +170,7 @@ Cabal version should be 3.4.0.0 and ghc should be 8.10.4
 
     echo -e "package bcc-crypto-optimum\n flags: -external-libsodium-vrf" > cabal.project.local
     sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
+    rm -rf $HOME/git/bcc-node/dist-newstyle/build/x86_64-linux/ghc-8.10.4 to reset previous build folder
     cabal build all
 
 Copy Node and CLI files to bin
