@@ -4,7 +4,6 @@ GenesisFile: genesis.json
 RequiresNetworkMagic: RequiresNoMagic
 LastKnownBlockVersion-Major: 0
 LastKnownBlockVersion-Sentry: 2
-LastKnownBlockVersion-Alt: 0
 ApplicationName: bcc-sl
 ApplicationVersion: 1
 

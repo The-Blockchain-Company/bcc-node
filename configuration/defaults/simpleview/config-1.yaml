@@ -73,7 +73,6 @@ ApplicationName: bcc-sl
 ApplicationVersion: 1
 LastKnownBlockVersion-Major: 0
 LastKnownBlockVersion-Sentry: 2
-LastKnownBlockVersion-Alt: 0
 
 #####         Tracing         #####
 
