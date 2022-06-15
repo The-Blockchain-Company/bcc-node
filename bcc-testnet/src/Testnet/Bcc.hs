@@ -326,8 +326,7 @@ testnet testnetOptions H.Conf {..} = do
     , "--testnet-magic", show @Int testnetMagic
     , "--signing-key", tempAbsPath </> "cole/delegate-keys.000.key"
     , "--protocol-version-major", "1"
-    , "--protocol-version-minor", "0"
-    , "--protocol-version-alt", "0"
+    , "--protocol-version-sentry", "0"
     , "--application-name", "bcc-sl"
     , "--software-version-num", "1"
     , "--system-tag", "linux"
@@ -350,8 +349,7 @@ testnet testnetOptions H.Conf {..} = do
     , "--testnet-magic", show @Int testnetMagic
     , "--signing-key", tempAbsPath </> "cole/delegate-keys.000.key"
     , "--protocol-version-major", "2"
-    , "--protocol-version-minor", "0"
-    , "--protocol-version-alt", "0"
+    , "--protocol-version-sentry", "0"
     , "--application-name", "bcc-sl"
     , "--software-version-num", "1"
     , "--system-tag", "linux"

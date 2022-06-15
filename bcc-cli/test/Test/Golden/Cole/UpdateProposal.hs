@@ -28,8 +28,7 @@ golden_cole_update_proposal = propertyOnce $ H.moduleWorkspace "tmp" $ \tempDir 
     , "--mainnet"
     , "--signing-key", signingKey
     , "--protocol-version-major", "1"
-    , "--protocol-version-minor", "0"
-    , "--protocol-version-alt", "0"
+    , "--protocol-version-sentry", "0"
     , "--application-name", "bcc-sl"
     , "--software-version-num", "1"
     , "--system-tag", "linux"

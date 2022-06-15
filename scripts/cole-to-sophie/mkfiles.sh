@@ -247,7 +247,7 @@ bcc-cli cole governance create-update-proposal \
             --testnet-magic 42 \
             --signing-key cole/delegate-keys.000.key \
             --protocol-version-major 1 \
-            --protocol-version-minor 0 \
+            --protocol-version-sentry 0 \
             --application-name "bcc-sl" \
             --software-version-num 1 \
             --system-tag "linux" \
@@ -267,7 +267,7 @@ bcc-cli cole governance create-update-proposal \
             --testnet-magic 42 \
             --signing-key cole/delegate-keys.000.key \
             --protocol-version-major 2 \
-            --protocol-version-minor 0 \
+            --protocol-version-sentry 0 \
             --application-name "bcc-sl" \
             --software-version-num 1 \
             --system-tag "linux" \
