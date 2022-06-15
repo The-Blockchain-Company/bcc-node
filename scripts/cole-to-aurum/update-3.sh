@@ -37,7 +37,7 @@ bcc-cli governance create-update-proposal \
             --genesis-verification-key-file sophie/genesis-keys/genesis1.vkey \
             --genesis-verification-key-file sophie/genesis-keys/genesis2.vkey \
             --protocol-major-version ${VERSION} \
-            --protocol-minor-version 0
+            --protocol-sentry-version 0
 
 bcc-cli key convert-cole-key \
             --cole-signing-key-file cole/payment-keys.000.key \

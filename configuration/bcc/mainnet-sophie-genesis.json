@@ -2,7 +2,7 @@
   "activeSlotsCoeff": 0.05,
   "protocolParams": {
     "protocolVersion": {
-      "minor": 0,
+      "sentry": 0,
       "major": 2
     },
     "decentralisationParam": 1,

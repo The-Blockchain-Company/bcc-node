@@ -73,7 +73,7 @@ let
                };
 
                LastKnownBlockVersion-Major = 0;
-               LastKnownBlockVersion-Minor = 0;
+               LastKnownBlockVersion-Sentry = 0;
                LastKnownBlockVersion-Alt   = 0;
              })
            [ "AurumGenesisHash"

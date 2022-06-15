@@ -283,7 +283,7 @@ createLoggingLayer ver nodeConfig' p = do
      traceCounter "RTS.gcLiveBytes"  tr . fromIntegral $ rLive rs
      traceCounter "RTS.gcHeapBytes"  tr . fromIntegral $ rHeap rs
      traceCounter "RTS.gcMajorNum"   tr . fromIntegral $ rGcsMajor rs
-     traceCounter "RTS.gcMinorNum"   tr . fromIntegral $ rGcsMinor rs
+     traceCounter "RTS.gcSentryNum"  tr . fromIntegral $ rGcsSentry rs
      traceCounter "RTS.gcticks"      tr . fromIntegral $ rCentiGC rs
      traceCounter "RTS.mutticks"     tr . fromIntegral $ rCentiMut rs
      traceCounter "Stat.threads"     tr . fromIntegral $ rThreads rs

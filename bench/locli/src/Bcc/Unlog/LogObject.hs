@@ -335,7 +335,7 @@ parsePartialResourceStates =
       <*> o .: "CentiGC"
       <*> o .: "CentiMut"
       <*> o .: "GcsMajor"
-      <*> o .: "GcsMinor"
+      <*> o .: "GcsSentry"
       <*> o .: "Alloc"
       <*> o .: "Live"
       <*> (o AE..:? "Heap" & fmap (fromMaybe 0))

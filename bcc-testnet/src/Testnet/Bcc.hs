@@ -204,7 +204,7 @@ testnet testnetOptions H.Conf {..} = do
     . HM.insert "AurumGenesisFile" (J.toJSON @String "sophie/genesis.aurum.json")
     . HM.insert "RequiresNetworkMagic" (J.toJSON @String "RequiresMagic")
     . HM.insert "LastKnownBlockVersion-Major" (J.toJSON @Int 1)
-    . HM.insert "LastKnownBlockVersion-Minor" (J.toJSON @Int 0)
+    . HM.insert "LastKnownBlockVersion-Sentry" (J.toJSON @Int 0)
     . HM.insert "TraceBlockchainTime" (J.toJSON True)
     . HM.delete "GenesisFile"
     . HM.insert "TestEnableDevelopmentHardForkEras" (J.toJSON @Bool True)

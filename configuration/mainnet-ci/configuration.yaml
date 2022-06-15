@@ -79,7 +79,7 @@ dev: &dev
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
   ssc: &dev_ssc
@@ -336,7 +336,7 @@ mainnet_base: &mainnet_base
     applicationVersion: 1
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 2
+      bvSentry: 2
       bvAlt: 0
 
   ssc:
@@ -14855,7 +14855,7 @@ mainnet_wallet_win64: &mainnet_wallet_win64
     applicationVersion: 16
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 1
+      bvSentry: 1
       bvAlt: 0
 
 mainnet_wallet_macos64: &mainnet_wallet_macos64
@@ -14865,7 +14865,7 @@ mainnet_wallet_macos64: &mainnet_wallet_macos64
     applicationVersion: 16
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 1
+      bvSentry: 1
       bvAlt: 0
 
 mainnet_wallet_linux64: &mainnet_wallet_linux64
@@ -14875,7 +14875,7 @@ mainnet_wallet_linux64: &mainnet_wallet_linux64
     applicationVersion: 16
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 1
+      bvSentry: 1
       bvAlt: 0
 
 
@@ -14920,7 +14920,7 @@ mainnet_ci_full: &mainnet_ci_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 ##############################################################################
@@ -14983,7 +14983,7 @@ testnet_full: &testnet_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 testnet_wallet: &testnet_wallet
@@ -14993,7 +14993,7 @@ testnet_wallet: &testnet_wallet
     applicationVersion: 4
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 testnet_wallet_win64: &testnet_wallet_win64
@@ -15059,7 +15059,7 @@ sophie_staging_full: &sophie_staging_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 sophie_staging_wallet: &sophie_staging_wallet
@@ -15069,7 +15069,7 @@ sophie_staging_wallet: &sophie_staging_wallet
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 sophie_staging_wallet_win64: &sophie_staging_wallet_win64
@@ -15134,7 +15134,7 @@ sophie_staging_short_full: &sophie_staging_short_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 1
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 sophie_staging_short_wallet: &sophie_staging_short_wallet
@@ -15144,7 +15144,7 @@ sophie_staging_short_wallet: &sophie_staging_short_wallet
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 sophie_staging_short_wallet_win64: &sophie_staging_short_wallet_win64
@@ -15179,7 +15179,7 @@ mainnet_dryrun_full: &mainnet_dryrun_full
     <<: *mainnet_base_update
     lastKnownBlockVersion:
       bvMajor: 1
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_dryrun_wallet_win64: &mainnet_dryrun_wallet_win64
@@ -15189,7 +15189,7 @@ mainnet_dryrun_wallet_win64: &mainnet_dryrun_wallet_win64
     applicationVersion: 26
     lastKnownBlockVersion:
       bvMajor: 1
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_dryrun_wallet_macos64: &mainnet_dryrun_wallet_macos64
@@ -15199,7 +15199,7 @@ mainnet_dryrun_wallet_macos64: &mainnet_dryrun_wallet_macos64
     applicationVersion: 26
     lastKnownBlockVersion:
       bvMajor: 1
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_dryrun_wallet_linux64: &mainnet_dryrun_wallet_linux64
@@ -15209,7 +15209,7 @@ mainnet_dryrun_wallet_linux64: &mainnet_dryrun_wallet_linux64
     applicationVersion: 26
     lastKnownBlockVersion:
       bvMajor: 1
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 ##############################################################################
@@ -15233,7 +15233,7 @@ mainnet_staging_short_epoch_full: &mainnet_staging_short_epoch_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_staging_short_epoch_wallet_win64:
@@ -15243,7 +15243,7 @@ mainnet_staging_short_epoch_wallet_win64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_staging_short_epoch_wallet_macos64:
@@ -15253,7 +15253,7 @@ mainnet_staging_short_epoch_wallet_macos64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 mainnet_staging_short_epoch_wallet_linux64:
@@ -15263,7 +15263,7 @@ mainnet_staging_short_epoch_wallet_linux64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 ##############################################################################
@@ -15314,7 +15314,7 @@ devnet: &devnet
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
     systemTag: none
 
@@ -15331,7 +15331,7 @@ devnet_win64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
     systemTag: win64
 
@@ -15343,7 +15343,7 @@ devnet_macos64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
     systemTag: macos64
 
@@ -15355,7 +15355,7 @@ devnet_linux64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
     systemTag: linux
 
@@ -15406,7 +15406,7 @@ internal_staging_full: &internal_staging_full
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
     systemTag: none
 
@@ -15418,7 +15418,7 @@ internal_staging_wallet_win64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 internal_staging_wallet_macos64:
@@ -15428,7 +15428,7 @@ internal_staging_wallet_macos64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0
 
 internal_staging_wallet_linux64:
@@ -15438,5 +15438,5 @@ internal_staging_wallet_linux64:
     applicationVersion: 0
     lastKnownBlockVersion:
       bvMajor: 0
-      bvMinor: 0
+      bvSentry: 0
       bvAlt: 0

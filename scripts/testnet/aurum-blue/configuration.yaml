@@ -7,7 +7,7 @@
   "ColeGenesisHash": "954fd1fc35329395ae5ec031d5bd4621d6293d82b922a88132ec1d20c0d648f9",
   "LastKnownBlockVersion-Alt": 0,
   "LastKnownBlockVersion-Major": 5,
-  "LastKnownBlockVersion-Minor": 1,
+  "LastKnownBlockVersion-Sentry": 1,
   "MaxKnownMajorProtocolVersion": 2,
   "PBftSignatureThreshold": 1.1,
   "Protocol": "Bcc",

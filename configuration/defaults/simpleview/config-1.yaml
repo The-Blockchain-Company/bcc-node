@@ -72,7 +72,7 @@ SocketPath:
 ApplicationName: bcc-sl
 ApplicationVersion: 1
 LastKnownBlockVersion-Major: 0
-LastKnownBlockVersion-Minor: 2
+LastKnownBlockVersion-Sentry: 2
 LastKnownBlockVersion-Alt: 0
 
 #####         Tracing         #####
