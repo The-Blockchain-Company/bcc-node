@@ -22,15 +22,10 @@
 
 THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERE ARE TIMES WHERE YOU WILL FIND THAT ITS DOWN. IT EXISTS FOR DEMONSTRATION PURPOSES. YOU WILL FIND URL LINKS WITHIN THE README FILE THAT DO NOT WORK. ULTIMATELY, I PLAN TO ENABLE ANOTHER DEMO HYDRA at hydra.tbco.io & UPGRADE HYDRA.QUANTUMONE.NETWORK TO A PRODUCTION LEVEL INSTANCE. THE FORK AT QUANTUM-ONE-DLT GITHUB ORG WILL BE THE PRODUCTION/MAIN REPOS FOR QUANTUM ONE DAO. NEITHER OF THE TWO SETS OF REPOS HAVE BEEN SIGNIFICANTLY MODIFIED SINCE OCTOBER 2021 NOR DO THEY ADDRESS THE ISSUES CARDANO PLANS TO ADDRESS WITH THE VASIL FORK.
 
-==================
-
-**IMPORTANT** IF YOU ATTEMPT TO RUN, FOR EXAMPLE, A COLE-TO-SOPHIE EXAMPLE BY UTILIZING SCRIPTS/COLE-TO-SOPHIE/MKFILES.SH, YOU MUST MODIFY THE CONFIGURATION FILE GENERATED AT example/configuration.yaml. YOU MUST REMOVE THE ALT PROTOCOL. THAT IS ONE OF THE MANY MINOR YET IMPORTANT THINGS THAT MUST BE ADDRESSED BEFORE THIS DEMO COULD BE COVERTED TO A PUBLIC TEST-NET
-
-HAVE A QUESTION? EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO
-
 =================
 API Documentation
 =================
+
 The API documentation is published `here <https://The-Blockchain-Company.github.io/>`_.
 
 The documentation is built with each push, but is only published from `master` branch.  In order to
@@ -40,7 +35,8 @@ open `haddocks/index.html` in the browser.
 *************************
 ``bcc-node`` Overview
 *************************
-**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Hydra is running for demonstration purposes and is not a production version. When we are ready to launch public test net, hydra will be converted to a production instance. Learn more at https://github.com/Quantum-One-DLT  ****
+
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Hydra is running for demonstration purposes and is not a production version. When we are ready to launch public test net, hydra will be converted to a production instance. Learn more at https://github.com/Quantum-One-DLT  ****
 
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
