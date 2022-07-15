@@ -20,7 +20,7 @@
 **IMPORTANT**
 =================
 
-THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERE ARE TIMES WHERE YOU WILL FIND THAT ITS DOWN. IT EXISTS FOR DEMONSTRATION PURPOSES. YOU WILL FIND URL LINKS WITHIN THE README FILE THAT DO NOT WORK. ULTIMATELY, I PLAN TO ENABLE ANOTHER DEMO HYDRA at hydra.tbco.io & UPGRADE HYDRA.QUANTUMONE.NETWORK TO A PRODUCTION LEVEL INSTANCE. THE FORK AT QUANTUM-ONE-DLT GITHUB ORG WILL BE THE PRODUCTION/MAIN REPOS FOR QUANTUM ONE DAO. NEITHER OF THE TWO SETS OF REPOS HAVE BEEN SIGNIFICANTLY MODIFIED SINCE OCTOBER 2021 NOR DO THEY ADDRESS THE ISSUES CARDANO PLANS TO ADDRESS WITH THE VASIL FORK.
+THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERE ARE TIMES WHERE YOU WILL FIND THAT ITS DOWN. IT EXISTS FOR DEMONSTRATION PURPOSES. YOU WILL FIND URL LINKS WITHIN THE README FILE THAT DO NOT WORK. ULTIMATELY, I PLAN TO ENABLE ANOTHER DEMO HYDRA at hydra.tbco.io & UPGRADE HYDRA.QUANTUMONE.NETWORK TO A PRODUCTION LEVEL INSTANCE. THE FORK AT QUANTUM-ONE-DLT GITHUB ORG WILL BE THE PRODUCTION/MAIN REPOS FOR QUANTUM ONE DAO. NEITHER OF THE TWO SETS OF REPOS HAVE BEEN SIGNIFICANTLY MODIFIED SINCE OCTOBER 2021 NOR DO THEY ADDRESS THE ISSUES CARDANO PLANS TO ADDRESS WITH THE VASIL FORK. 
 
 ==================
 
@@ -55,10 +55,10 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
-Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. 
-=================================================
+Network Configuration, Genesis and Topology Files - THIS LINK IS NOT YET VALID.
+================================================
 
-The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
+The latest supported networks can be found at `<https://hydra.quantumone.network/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
 Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
 ==================================================================
