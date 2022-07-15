@@ -157,7 +157,7 @@ Update Cabal and Verify Install
 Cabal version should be 3.4.0.0 and ghc should be 8.10.4 
 
 ** re: code block below --> FYI git fetch not necessary, git checkout releases not necessary nor will it work as there are no github releases as of yet, 
-   will update readme when release pushed** 
+   will update readme when release pushed ** 
 
 .. code-block:: console
 
