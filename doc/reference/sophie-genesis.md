@@ -279,9 +279,10 @@ example genesis template for us in `example/genesis.spec.json`:
 {
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
+        "vestedMultiple": 1,
         "poolDeposit": 0,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
@@ -302,6 +303,7 @@ example genesis template for us in `example/genesis.spec.json`:
         "tau": 0,
         "a0": 0
     },
+    "vestedDelegs": {},
     "genDelegs": {},
     "updateQuorum": 5,
     "networkId": "Testnet",
@@ -361,9 +363,10 @@ $ cat example/genesis.json
 {
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
+        "vestedMultiple": 1,
         "poolDeposit": 0,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
@@ -384,6 +387,7 @@ $ cat example/genesis.json
         "tau": 0,
         "a0": 0
     },
+    "vestedDelegs": {},
     "genDelegs": {
         "f42b0eb14056134323d9756fa693dba5e421acaaf84fdaff922a4c0f": {
             "delegate": "e446c231ace1f29eb83827f29cb4a19e4c324229d59472c8d2dbb958",
@@ -644,7 +648,6 @@ file `example/genesis.spec.json`
 ```json
 {
   "vestMultiple": 1,
-    "vestedDelegs": {},
     "securityParam": 2160,
     "slotsPerKESPeriod": 129600,
     "updateQuorum": 5,
@@ -673,6 +676,7 @@ file `example/genesis.spec.json`
         "tau": 0,
         "a0": 0
     },
+    "vestedDelegs": {},
     "genDelegs": {},
     "networkId": "Testnet",
     "maxKESEvolutions": 60,
@@ -720,7 +724,6 @@ Let's have a look at the result
 $ cat example/genesis.json
 {
     "vestMultiple": 1,
-    "vestedDelegs": {},
     "securityParam": 2160,
     "slotsPerKESPeriod": 129600,
     "updateQuorum": 5,
@@ -757,6 +760,7 @@ $ cat example/genesis.json
     },
     "networkId": "Testnet",
     "maxKESEvolutions": 60,
+    "vestedDelegs": {},
     "genDelegs": {
         "40b6b2c3920e04948baa3a0d73307d106bb38752a11e3a4a71a84889": {
             "delegate": "a615747a919f1d1c40de03bcc97b4d7a7ca9c5feab3e2b6f5187ca90",
@@ -1046,7 +1050,7 @@ $ cp configuration/defaults/cole-mainnet/configuration.yaml \
 and make a couple tweaks
 
 ```bash
-$ sed -i 's/^Protocol: RealPBFT/Protocol: TOptimum/' example/configuration.yaml
+$ sed -i 's/^Protocol: RealPBFT/Protocol: Optimum/' example/configuration.yaml
 $ sed -i 's/^minSeverity: Info/minSeverity: Debug/' example/configuration.yaml
 $ sed -i 's/^TraceBlockchainTime: False/TraceBlockchainTime: True/' example/configuration.yaml
 ```
