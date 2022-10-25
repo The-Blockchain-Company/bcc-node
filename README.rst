@@ -20,13 +20,8 @@
 **IMPORTANT**
 =================
 
-THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERE ARE TIMES WHERE YOU WILL FIND THAT ITS DOWN. IT EXISTS FOR DEMONSTRATION PURPOSES. YOU WILL FIND URL LINKS WITHIN THE README FILE THAT DO NOT WORK. ULTIMATELY, I PLAN TO ENABLE ANOTHER DEMO HYDRA at hydra.tbco.io & UPGRADE HYDRA.QUANTUMONE.NETWORK TO A PRODUCTION LEVEL INSTANCE. THE FORK AT QUANTUM-ONE-DLT GITHUB ORG WILL BE THE PRODUCTION/MAIN REPOS FOR QUANTUM ONE DAO. NEITHER OF THE TWO SETS OF REPOS HAVE BEEN SIGNIFICANTLY MODIFIED SINCE OCTOBER 2021 NOR DO THEY ADDRESS THE ISSUES CARDANO PLANS TO ADDRESS WITH THE VASIL FORK.
-
-==================
-
-**IMPORTANT** IF YOU ATTEMPT TO RUN, FOR EXAMPLE, A COLE-TO-SOPHIE EXAMPLE BY UTILIZING SCRIPTS/COLE-TO-SOPHIE/MKFILES.SH, YOU MUST MODIFY THE CONFIGURATION FILE GENERATED AT example/configuration.yaml. YOU MUST REMOVE THE ALT PROTOCOL & CHANGE THE MINOR PROTOCOL TO THE SENTRY PROTOCOL OR UPDATE THE SCRIPT ITSELF. THAT IS ONE OF THE MANY MINOR YET IMPORTANT THINGS THAT MUST BE ADDRESSED BEFORE THIS DEMO COULD BE COVERTED TO A PUBLIC TEST-NET
-
-IF ANYONE NEEDS ASSISTANCE IN REPLICATING THE VIDEO DEMOS WHERE I'VE SHOWN THIS RUNNING PLEASE EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO
+THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERES A GOOD PROBABILITY HYDRA WILL MOVE TO AN AWS EC2 INSTANCE IN THE NEXT 30 DAYS OR LESS. THE CACHIX "tbco" BINARY CACHE SHOULD ALSO BE AVAILABLE AT THAT TIME.  
+HAVE A QUESTION? EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO
 
 =================
 API Documentation
@@ -57,10 +52,15 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
+<<<<<<< HEAD
 Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR A DEMO SEE HTTPS://HYDRA.QUANTUMONE.NETWORK 
 =================================================
+=======
+Network Configuration, Genesis and Topology Files - THIS LINK IS NOT YET VALID.
+================================================
+>>>>>>> eaa39abee18c5573d89f685f2ee441d5e33ed680
 
-The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
+The latest supported networks can be found at `<https://hydra.quantumone.network/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
 Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
 ==================================================================
@@ -158,6 +158,8 @@ Update Cabal and Verify Install
 
 Cabal version should be 3.4.0.0 and ghc should be 8.10.4 
 
+** re: code block below --> FYI git fetch not necessary, git checkout releases not necessary nor will it work as there are no github releases as of yet, will update readme when release pushed ** 
+
 .. code-block:: console
 
     cd $HOME/git
@@ -170,6 +172,7 @@ Cabal version should be 3.4.0.0 and ghc should be 8.10.4
 
     echo -e "package bcc-crypto-optimum\n flags: -external-libsodium-vrf" > cabal.project.local
     sed -i $HOME/.cabal/config -e "s/overwrite-policy:/overwrite-policy: always/g"
+    rm -rf $HOME/git/bcc-node/dist-newstyle/build/x86_64-linux/ghc-8.10.4 to reset previous build folder
     cabal build all
 
 Copy Node and CLI files to bin

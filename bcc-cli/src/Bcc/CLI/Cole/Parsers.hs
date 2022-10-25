@@ -508,7 +508,7 @@ parseMpcThd =
 parseProtocolVersion :: Parser ProtocolVersion
 parseProtocolVersion =
   ProtocolVersion <$> (parseWord "protocol-version-major" "Protocol verson major." "WORD16" :: Parser Word16)
-                  <*> (parseWord "protocol-version-minor" "Protocol verson sentry." "WORD16" :: Parser Word16)
+                  <*> (parseWord "protocol-version-sentry" "Protocol verson sentry." "WORD16" :: Parser Word16)
 
 parseHeavyDelThd :: Parser Cole.EntropicPortion
 parseHeavyDelThd =

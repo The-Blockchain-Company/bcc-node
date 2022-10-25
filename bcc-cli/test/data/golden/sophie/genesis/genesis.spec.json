@@ -34,7 +34,7 @@
         "poolDeposit": 0,
         "protocolVersion": {
             "major": 0,
-            "minor": 0
+            "sentry": 0
         },
         "rho": 0,
         "tau": 0

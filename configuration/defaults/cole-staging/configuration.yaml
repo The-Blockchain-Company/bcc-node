@@ -31,7 +31,10 @@ RequiresNetworkMagic: RequiresNoMagic
 # of the system for agreeing on and synchronising protocol updates.
 LastKnownBlockVersion-Major: 1
 LastKnownBlockVersion-Sentry: 0
+<<<<<<< HEAD
 LastKnownBlockVersion-Alt: 0
+=======
+>>>>>>> eaa39abee18c5573d89f685f2ee441d5e33ed680
 
 # In the Cole era some software versions are also published on the chain.
 # We do this only for Cole compatibility now.

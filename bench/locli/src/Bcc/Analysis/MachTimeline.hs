@@ -69,7 +69,7 @@ instance RenderDistributions MachTimeline where
     , Field 3 0 "GC"       "GC"    "%"      $ DWord64 (rCentiGC . sResourceDistribs)
     , Field 3 0 "MUT"      "MUT"    "%"     $ DWord64 (fmap (min 999) . rCentiMut . sResourceDistribs)
     , Field 3 0 "GcMaj"    "GC "   "Maj"    $ DWord64 (rGcsMajor . sResourceDistribs)
-    , Field 3 0 "GcMin"    "flt "  "Min"    $ DWord64 (rGcsMinor . sResourceDistribs)
+    , Field 3 0 "GcSen"    "flt "  "Sen"    $ DWord64 (rGcsSentry . sResourceDistribs)
     , Field 5 0 "RSS"      (m!!0)  "RSS"    $ DWord64 (rRSS . sResourceDistribs)
     , Field 5 0 "Heap"     (m!!1)  "Heap"   $ DWord64 (rHeap . sResourceDistribs)
     , Field 5 0 "Live"     (m!!2)  "Live"   $ DWord64 (rLive . sResourceDistribs)
@@ -173,7 +173,7 @@ slotStatsMachTimeline CInfo{} slots =
      , rCentiGC     = rCentiGC    . slResources
      , rCentiMut    = rCentiMut   . slResources
      , rGcsMajor    = rGcsMajor   . slResources
-     , rGcsMinor    = rGcsMinor   . slResources
+     , rGcsSentry   = rGcsSentry  . slResources
      , rRSS         = rRSS        . slResources
      , rHeap        = rHeap       . slResources
      , rLive        = rLive       . slResources

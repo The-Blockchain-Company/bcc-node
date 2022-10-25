@@ -45,7 +45,7 @@ class BccCluster:
     def hard_fork_cole(self, version):
         version_params = version.split(".")
         proposal_path = self.cli.state_dir / f"{version}.proposal"
-        self.cli.cmd(["bcc-cli", "cole", "create-update-proposal", "--testnet-magic", str(self.cli.network_magic), "--signing-key", self.cole_delegate_keys[0], "--protocol-version-major", version_params[0], "--protocol-version-minor", version_params[1], "--protocol-version-alt", version_params[2], "--application-name", "bcc-sl", "--software-version-num", "1", "--system-tag", "linux", "--installer-hash", "0", "--filepath", proposal_path])
+        self.cli.cmd(["bcc-cli", "cole", "create-update-proposal", "--testnet-magic", str(self.cli.network_magic), "--signing-key", self.cole_delegate_keys[0], "--protocol-version-major", version_params[0], "--protocol-version-sentry", version_params[1], "--application-name", "bcc-sl", "--software-version-num", "1", "--system-tag", "linux", "--installer-hash", "0", "--filepath", proposal_path])
         self.cli.cmd(["bcc-cli", "cole", "submit-update-proposal", "--testnet-magic", str(self.cli.network_magic), "--filepath", proposal_path])
         for index,key in enumerate(self.cole_delegate_keys, start=1):
             proposal_vote_path = f"{proposal_path}-vote{index}"

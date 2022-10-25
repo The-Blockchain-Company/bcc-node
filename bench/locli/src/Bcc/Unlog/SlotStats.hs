@@ -77,7 +77,7 @@ instance RenderTimeline SlotStats where
     , Field 3 0 "GC%"         (c 3!!1) "GC"      $ IText (d 3.fmap (min 999).rCentiGC.slResources)
     , Field 3 0 "MUT%"        (c 3!!2) "mut"     $ IText (d 3.fmap (min 999).rCentiMut.slResources)
     , Field 3 0 "majFlt"      (g 3!!0) "maj"     $ IText (d 3.rGcsMajor.slResources)
-    , Field 3 0 "minFlt"      (g 3!!1) "min"     $ IText (d 3.rGcsMinor.slResources)
+    , Field 3 0 "senFlt"      (g 3!!1) "sen"     $ IText (d 3.rGcsSentry.slResources)
     , Field 6 0 "productiv"   "Produc" "tivity"  $ IText
       (\SlotStats{..}->
           f 4 $ calcProd <$> (min 6 . -- workaround for ghc-8.10.2

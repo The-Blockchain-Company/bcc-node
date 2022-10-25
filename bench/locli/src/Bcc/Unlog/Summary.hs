@@ -357,7 +357,7 @@ slotStatsSummary CInfo{} slots =
      , rCentiGC     = rCentiGC    . slResources
      , rCentiMut    = rCentiMut   . slResources
      , rGcsMajor    = rGcsMajor   . slResources
-     , rGcsMinor    = rGcsMinor   . slResources
+     , rGcsSentry    = rGcsSentry   . slResources
      , rRSS         = rRSS        . slResources
      , rHeap        = rHeap       . slResources
      , rLive        = rLive       . slResources
@@ -386,7 +386,7 @@ mapSummary statsF Summary{..} desc f =
     (f (rCentiGC sResourceDistribs))
     (f (rCentiMut sResourceDistribs))
     (f (rGcsMajor sResourceDistribs))
-    (f (rGcsMinor sResourceDistribs))
+    (f (rGcsSentry sResourceDistribs))
     (f (rRSS sResourceDistribs))
     (f (rHeap sResourceDistribs))
     (f (rLive sResourceDistribs))
@@ -426,7 +426,7 @@ toDistribLines statsF distPropsF s@Summary{..} =
    <*> ZipList (min 999 . -- workaround for ghc-8.10.x
                 pctSample <$> dPercentiles (rCentiMut sResourceDistribs))
    <*> ZipList (pctSample <$> dPercentiles (rGcsMajor sResourceDistribs))
-   <*> ZipList (pctSample <$> dPercentiles (rGcsMinor sResourceDistribs))
+   <*> ZipList (pctSample <$> dPercentiles (rGcsSentry sResourceDistribs))
     -- <*> ZipList (pctSample <$> dPercentiles ( sResourceDistribs))
    <*> ZipList (pctSample <$> dPercentiles (rRSS sResourceDistribs))
    <*> ZipList (pctSample <$> dPercentiles (rHeap sResourceDistribs))
