@@ -38,7 +38,7 @@ The update parameters section might look like this:
   "ApplicationVersion": 0,
   "LastKnownBlockVersion-Alt": 0,
   "LastKnownBlockVersion-Major": 2,
-  "LastKnownBlockVersion-Minor": 0,
+  "LastKnownBlockVersion-Sentry": 0,
 ```
 
 *Tracing*

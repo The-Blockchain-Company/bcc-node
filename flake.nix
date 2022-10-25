@@ -8,7 +8,7 @@
       url = "github:The-Blockchain-Company/haskell.nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    utils.url = "github:numtide/flake-utils";
+    utils.url = "github:rmourey26/flake-utils";
     tbcoNix = {
       url = "github:The-Blockchain-Company/tbco-nix";
       inputs.nixpkgs.follows = "nixpkgs";

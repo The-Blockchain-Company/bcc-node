@@ -75,7 +75,7 @@ class BccCluster:
         with open(config_file) as in_json:
             config = json.load(in_json)
         config["LastKnownBlockVersion-Major"] = int(version_params[0])
-        config["LastKnownBlockVersion-Minor"] = int(version_params[1])
+        config["LastKnownBlockVersion-Sentry"] = int(version_params[1])
         config["LastKnownBlockVersion-Alt"] = int(version_params[2])
         with open(config_file, "w") as out_json:
             json.dump(config, out_json)

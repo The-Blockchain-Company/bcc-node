@@ -28,7 +28,7 @@ RequiresNetworkMagic: RequiresNoMagic
 # This protocol version number gets used by block producing nodes as part
 # of the system for agreeing on and synchronising protocol updates.
 LastKnownBlockVersion-Major: 0
-LastKnownBlockVersion-Minor: 2
+LastKnownBlockVersion-Sentry: 2
 LastKnownBlockVersion-Alt: 0
 
 # In the Cole era some software versions are also published on the chain.

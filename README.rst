@@ -26,7 +26,7 @@ THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WIL
 
 **IMPORTANT** IF YOU ATTEMPT TO RUN, FOR EXAMPLE, A COLE-TO-SOPHIE EXAMPLE BY UTILIZING SCRIPTS/COLE-TO-SOPHIE/MKFILES.SH, YOU MUST MODIFY THE CONFIGURATION FILE GENERATED AT example/configuration.yaml. YOU MUST REMOVE THE ALT PROTOCOL & CHANGE THE MINOR PROTOCOL TO THE SENTRY PROTOCOL OR UPDATE THE SCRIPT ITSELF. THAT IS ONE OF THE MANY MINOR YET IMPORTANT THINGS THAT MUST BE ADDRESSED BEFORE THIS DEMO COULD BE COVERTED TO A PUBLIC TEST-NET
 
-IF ANYONE NEEDS ASSISTANCE IN REPLICATING THE VIDEO DEMOS WHERE I'VE SHOWN THIS RUNNING PLEASE EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO - THANK YOU!!
+IF ANYONE NEEDS ASSISTANCE IN REPLICATING THE VIDEO DEMOS WHERE I'VE SHOWN THIS RUNNING PLEASE EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO
 
 =================
 API Documentation
@@ -57,7 +57,7 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
-Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. 
+Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR A DEMO SEE HTTPS://HYDRA.QUANTUMONE.NETWORK 
 =================================================
 
 The latest supported networks can be found at `<https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
@@ -203,7 +203,7 @@ You can pull the docker image with the latest version of bcc-node from `here <ht
 
 Additional documentation for building the node will be available soon. 
 
-Linux Executable - We are moving Hydra to hydra.quantumone.network for public testing. Hydra below is not enabled. 
+Linux Executable - Soon available at hydra.quantumone.network 
 ==================
 
 You can download the latest version of ``bcc-node`` and ``bcc-cli``:
@@ -212,7 +212,7 @@ You can download the latest version of ``bcc-node`` and ``bcc-cli``:
 * `win64 <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_
 * `macos <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-macos/latest-finished>`_
 
-Windows Executable 
+Windows Executable - NOT AVAILABLE
 ==================
 
 Download

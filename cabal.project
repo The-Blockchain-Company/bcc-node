@@ -151,7 +151,7 @@ source-repository-package
 source-repository-package
   type: git
   location: https://github.com/The-Blockchain-Company/bcc-ledger-specs
-  
+  tag: 5dbb6eebadfb70317c87101e709a176e7094faab  
   subdir:
     aurum/impl
     cole/chain/executable-spec

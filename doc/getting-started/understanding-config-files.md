@@ -164,7 +164,7 @@ This protocol version number gets used by block producing nodes as part of the s
 	  "ApplicationVersion": 0,
 	  "LastKnownBlockVersion-Alt": 0,
 	  "LastKnownBlockVersion-Major": 2,
-	  "LastKnownBlockVersion-Minor": 0,
+	  "LastKnownBlockVersion-Sentry": 0,
 
 
 #### Tracing

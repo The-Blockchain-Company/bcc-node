@@ -280,8 +280,9 @@ example genesis template for us in `example/genesis.spec.json`:
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
         "poolDeposit": 0,
+        "vestMultiple": 1,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
@@ -303,6 +304,7 @@ example genesis template for us in `example/genesis.spec.json`:
         "a0": 0
     },
     "genDelegs": {},
+    "vestedDelegs": {},
     "updateQuorum": 5,
     "networkId": "Testnet",
     "initialFunds": {},
@@ -358,12 +360,13 @@ and then look at it and understand what the command has done
 
 ```json
 $ cat example/genesis.json
-{
+{   "vestMultiple": 1,
+    "vestedDelegs": {}, 
     "activeSlotsCoeff": 5.0e-2,
     "protocolParams": {
         "poolDeposit": 0,
         "protocolVersion": {
-            "minor": 0,
+            "sentry": 0,
             "major": 0
         },
         "minUTxOValue": 0,
@@ -643,7 +646,7 @@ file `example/genesis.spec.json`
 
 ```json
 {
-  "vestMultiple": 1,
+    "vestMultiple": 1,
     "vestedDelegs": {},
     "securityParam": 2160,
     "slotsPerKESPeriod": 129600,
@@ -798,9 +801,6 @@ vesteddelegate1.vkey  vesteddelegate1.vrf.vkey  vesteddelegate2.vkey  vesteddele
 You'll notice that the automagic method has divided the total supply amongst
 the initial UTxO keys, but you can still edit this file manually to adjust that
 if you want.
-
-[ONE MILLION ENTROPIC]: "https://www.youtube.com/watch?v=l91ISfcuzDw" - #TODO
-[why make trillions when we could make billions?]: https://www.youtube.com/watch?v=xyyqoHCkw9I -#TODO
 
 ## Node operational keys and certificates
 
@@ -1213,7 +1213,7 @@ $ BCC_NODE_SOCKET_PATH=example/node1/node.sock \
     --testnet-magic 42 \
     --sophie-mode
 {    
-    "vestedMultiple": 1,
+    "vestMultiple": 1,
     "poolDeposit": 0,
     "protocolVersion": {
         "sentry": 0,
