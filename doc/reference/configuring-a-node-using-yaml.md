@@ -36,7 +36,6 @@ The update parameters section might look like this:
 ```
   "ApplicationName": "bcc-sl",
   "ApplicationVersion": 0,
-  "LastKnownBlockVersion-Alt": 0,
   "LastKnownBlockVersion-Major": 2,
   "LastKnownBlockVersion-Sentry": 0,
 ```

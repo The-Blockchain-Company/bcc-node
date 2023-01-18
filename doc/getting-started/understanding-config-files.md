@@ -167,7 +167,6 @@ This protocol version number gets used by block producing nodes as part of the s
 
 	  "ApplicationName": "bcc-sl",
 	  "ApplicationVersion": 0,
-	  "LastKnownBlockVersion-Alt": 0,
 	  "LastKnownBlockVersion-Major": 2,
 	  "LastKnownBlockVersion-Sentry": 0,
 
