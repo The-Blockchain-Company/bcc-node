@@ -28,6 +28,7 @@ The genesis file is generated with the `bcc-cli` by reading a `genesis.spec.json
 But it is important because it is used to set:
 
 * `genDelegs`, a mapping from genesis keys to genesis delegates.
+* `vestedDelegs`, a mapping from vested keys to vested delegates.
 * `initialFunds`, a mapping from the initial addresses to the initial values at those address.
 * `maxEntropicSupply`, the total amount of entropics in the blockchain.
 * `systemStart`, the time of slot zero.
@@ -130,6 +131,7 @@ Here is a brief description of each parameter. You can learn more in the [spec](
 | networkMagic | To identify the testnets |
 | systemStart | Time of slot 0 |
 | genDelegs | Mapping from genesis keys to genesis delegate |
+| vestedDelegs | Mapping from vested keys to vested delegate |
 | updateQuorum | Determines the quorum needed for votes on the protocol parameter updates |
 | initialFunds | Mapping address to values |
 | maxEntropicSupply | The total number of entropic in the system, used in the reward calculation. |
@@ -137,6 +139,7 @@ Here is a brief description of each parameter. You can learn more in the [spec](
 | epochLength | Number of slots in an epoch. |
 | staking | Initial delegation |
 | slotsPerKESPeriod | Number of slots in an KES period |
+| vestMultiple | A number representing a variable(s) included within alternate reward scheme calculations
 | slotLength | in seconds |
 | maxKESEvolutions | The maximum number of time a KES key can be evolved before a pool operator must create a new operational certificate |
 | securityParam | Security parameter k |
