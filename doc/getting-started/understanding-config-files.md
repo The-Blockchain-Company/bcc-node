@@ -38,7 +38,7 @@ The `genesis.json` file looks like the one below.
   "activeSlotsCoeff": 0.05,
   "protocolParams": {
     "protocolVersion": {
-      "minor": 0,
+      "sentry": 0,
       "major": 2
     },
     "decentralisationParam": 1,
@@ -90,6 +90,7 @@ The `genesis.json` file looks like the one below.
       "vrf": "63ef48bc5355f3e7973100c371d6a095251c80ceb40559f4750aa7014a6fb6db"
     }
   },
+  "vestedDelegs": {},
   "updateQuorum": 5,
   "networkId": "Mainnet",
   "initialFunds": {},
@@ -100,7 +101,8 @@ The `genesis.json` file looks like the one below.
   "slotsPerKESPeriod": 129600,
   "slotLength": 1,
   "maxKESEvolutions": 62,
-  "securityParam": 2160
+  "securityParam": 2160,
+  "vestMultiple": 1,
 }
 ```
 Here is a brief description of each parameter. You can learn more in the [spec](https://github.com/The-Blockchain-Company/bcc-ledger-specs/tree/master/sophie/chain-and-ledger/executable-spec).
