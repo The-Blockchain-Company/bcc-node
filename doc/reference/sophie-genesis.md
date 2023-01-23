@@ -650,12 +650,8 @@ file `example/genesis.spec.json`
 
 ```json
 {
-<<<<<<< HEAD
     "vestMultiple": 1,
     "vestedDelegs": {},
-=======
-  "vestMultiple": 1,
->>>>>>> eaa39abee18c5573d89f685f2ee441d5e33ed680
     "securityParam": 2160,
     "slotsPerKESPeriod": 129600,
     "updateQuorum": 5,
@@ -684,7 +680,6 @@ file `example/genesis.spec.json`
         "tau": 0,
         "a0": 0
     },
-    "vestedDelegs": {},
     "genDelegs": {},
     "networkId": "Testnet",
     "maxKESEvolutions": 60,
