@@ -94,8 +94,8 @@ bcc-cli transaction sign \
             --signing-key-file cole/payment-keys.000-converted.key \
             --signing-key-file cole/payment-keys.001-converted.key \
             --testnet-magic 42 \
-            --tx-body-file  tx2.txbody \
-            --out-file      tx2.tx
+            --tx-body-file tx2.txbody \
+            --out-file tx2.tx
 
 
 bcc-cli transaction submit --tx-file tx2.tx --testnet-magic 42
