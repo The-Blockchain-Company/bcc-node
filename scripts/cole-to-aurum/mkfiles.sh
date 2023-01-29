@@ -309,6 +309,7 @@ bcc-cli genesis create --testnet-magic 42 --genesis-dir sophie
 # cycling KES keys
 sed -i sophie/genesis.spec.json \
     -e 's/"slotLength": 1/"slotLength": 0.2/' \
+    -e 's/"vestMutliple": 1/"vestMultiple": 1/' \
     -e 's/"activeSlotsCoeff": 5.0e-2/"activeSlotsCoeff": 0.1/' \
     -e 's/"securityParam": 2160/"securityParam": 10/' \
     -e 's/"epochLength": 432000/"epochLength": 1500/' \
