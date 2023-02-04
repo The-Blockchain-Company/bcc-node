@@ -154,7 +154,7 @@ let
     inherit dockerImages;
     ifd-pins = mkPins {
       inherit (sources) tbco-nix "haskell.nix";
-      inherit nixpkgs;
+      inherit nixpkgs;tbco
       inherit (pkgs.haskell-nix) hackageSrc stackageSrc;
     };
   } // (optionalAttrs linuxBuild (with linuxRelease; {

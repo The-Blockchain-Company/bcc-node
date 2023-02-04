@@ -4,7 +4,7 @@ name:                  bcc-topology
 version:               1.99.0
 description:           A bcc topology generator
 author:                TBCO
-maintainer:            operations@blockchain-company.io
+maintainer:            operations@tbcokchain-company.io
 license:               Apache-2.0
 license-files:         LICENSE
                        NOTICE

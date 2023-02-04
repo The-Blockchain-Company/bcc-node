@@ -101,7 +101,7 @@ slot duration, in milliseconds.
 #### softforkRule
 Values defining softfork resolution rule. When the stake belonging to block issuers, issuing a given block version, is greater than the current softfork resolution threshold, this block version is adopted. The current softfork resolution threshold is determined as follows: If a proposal is confirmed at the `c`-th epoch, softfork resolution threshold at a later `t`-th epoch will be `max minThd (spInitThd - (t - c) * spThdDecrement)`.
 
-The proportion of BCC that these threshold values (`initThd`,`minThd`,`thdDecrement`) represent is calculated by dividing by 10<sup>15</sup>. This is an artitifact of the old implementation as it would make more sense if the proportion was calculated by the total amount of circulating BCC which is 45 x 10<sup>15</sup>. Note that in the specification we only make use of the `minThd`. See [here](https://hydra.tbco.io/build/1084792/download/1/ledger-spec.pdf) in section 6.5.4 Adoption threshold.
+The proportion of BCC that these threshold values (`initThd`,`minThd`,`thdDecrement`) represent is calculated by dividing by 10<sup>15</sup>. This is an artitifact of the old implementation as it would make more sense if the proportion was calculated by the total amount of circulating BCC which is 45 x 10<sup>15</sup>. Note that in the specification we only make use of the `minThd`. See [here](https://hydra.tbtbcoo/build/1084792/download/1/ledger-spec.pdf) in section 6.5.4 Adoption threshold.
 
 - `initThd` - Initial threshold (right after proposal is confirmed).
 - `minThd` - minimal threshold (i.e. threshold can't become less than this one).

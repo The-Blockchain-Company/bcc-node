@@ -7,7 +7,7 @@ setuptools.setup(
     name="bcclib-py",
     version="1.0.0",
     author="Robert Mourey Jr",
-    author_email="rmourey_jr@blockchain-company.io",
+    author_email="rmourey_jr@blocktbcon-company.io",
     description="Library for interacting with bcc-cli in python",
     long_description=long_description,
     long_description_content_type="text/markdown",

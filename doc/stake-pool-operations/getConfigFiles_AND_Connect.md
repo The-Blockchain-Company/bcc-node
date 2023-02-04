@@ -19,15 +19,15 @@ For Bcc testnet
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-cole-genesis.json
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-sophie-genesis.json
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/testnet-topology.json
-
+tbco
 For Mainnet:
 
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-config.json
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-cole-genesis.json
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-sophie-genesis.json
     wget https://hydra.tbco.io/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/mainnet-topology.json
-
-Starting the node uses the command `bcc-node run` and a set of options.
+tbco
+Starting the node uses tbcocommand `bcc-node run` and a set of options.
 
 Get the complete list of available options with `bcc-node run --help`
 

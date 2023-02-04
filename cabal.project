@@ -221,7 +221,7 @@ source-repository-package
     shardagnostic-network
     shardagnostic-network-framework
     shardagnostic-network-testing
-    typed-protocols
+    tbcod-protocols
     typed-protocols-examples
 
 source-repository-package
