@@ -199,7 +199,7 @@ let
 
       # Unless using specific network:
       ${lib.optionalString (__hasAttr "network" customConfig) ''
-        export BCC_NODE_SOCKET_PATH="$PWD/state-node-${customConfig.network}/node.socketbco
+        export BCC_NODE_SOCKET_PATH="$PWD/state-node-${customConfig.network}/node.socket"
         ${lib.optionalString (__hasAttr "utxo" pkgs.commonLib.bccLib.environments.${customConfig.network}) ''
           # Selfnode and other test clusters have public secret keys that we pull from tbco-nix
           echo "To access funds use UTXO_SKEY and UTXO_VKEY environment variables"

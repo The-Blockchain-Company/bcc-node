@@ -1,6 +1,6 @@
 # Technical writers
 doc                                                           @rmourey26 
-README.*                                                      @rmourey2tbco
+README.*                                                      @rmourey26 
 bcc-cli/README.md                                             @rmourey26 
 # Release manager added for notification on dependency updates
 cabal.project                                                 @rmourey26

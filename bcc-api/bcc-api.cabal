@@ -4,7 +4,7 @@ name:                   bcc-api
 version:                1.99.0
 description:            The bcc api
 author:                 TBCO
-maintainer:             operations@tbcokchain-company.io
+maintainer:             operations@blockchain-company.io
 license:                Apache-2.0
 license-files:          LICENSE
                         NOTICE

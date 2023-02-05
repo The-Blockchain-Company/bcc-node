@@ -272,7 +272,7 @@
   fragile feature, only to be used for metrics) (#2988)
 - Various internal improvements and refactoring (#2872, #2899, #2900)
 
-### ledger chtbcos
+### ledger changes
 - Update the calculation of rewards to be done progressively, spreading the
   additional CPU load across a number of days. This should resolve the slowdown
   4k/f slots into the epoch which has been seen by a number of node operators.

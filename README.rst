@@ -23,7 +23,7 @@
 THIS IS NOT A PRODUCTION READY REPO. IF YOU FOLLOW THE BUILD STEPS BELOW, IT WILL COMPILE, IT WILL RUN. HOWEVER, THE CURRENT HYDRA INSTANCE AT hydra.quantumone.network is NOT a PRODUCTION INSTANCE NOR IS IT SET UP IN ITS ENTIRETY TO HANDLE LOW LEVEL CI&D. THERES A GOOD PROBABILITY HYDRA WILL MOVE TO AN AWS EC2 INSTANCE IN THE NEXT 30 DAYS OR LESS. THE CACHIX "tbco" BINARY CACHE SHOULD ALSO BE AVAILABLE AT THAT TIME.  
 HAVE A QUESTION? EMAIL DEVOPS@BLOCKCHAIN-COMPANY.IO
 
-=================tbco
+=================
 API Documentation
 =================
 The API documentation is published `here <https://The-Blockchain-Company.github.io/>`_.
@@ -37,7 +37,7 @@ open `haddocks/index.html` in the browser.
 *************************
 **** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Hydra is running for demonstration purposes and is not a production version. When we are ready to launch public test net, hydra will be converted to a production instance. Learn more at https://github.com/Quantum-One-DLT  ****
 
-Integration of the `ledger <https://github.com/The-Blockchain-tbcoany/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
+Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
 `node shell <https://github.com/The-Blockchain-Company/bcc-shell>`_ repositories.
 
@@ -49,9 +49,9 @@ Integration of the `ledger <https://github.com/The-Blockchain-tbcoany/bcc-ledger
   networking, with configuration, CLI, logging and monitoring.
 
 - The node no longer incorporates wallet or explorer functionality. The wallet
-  backend and explorer btbcond are separate components that run in separate
-  external processes thatbcommunicate with the node via local IPC.
-tbco
+  backend and explorer backend are separate components that run in separate
+  external processes that communicate with the node via local IPC.
+
 <<<<<<< HEAD
 Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR A DEMO SEE HTTPS://HYDRA.QUANTUMONE.NETWORK 
 =================================================
@@ -59,7 +59,7 @@ Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR 
 Network Configuration, Genesis and Topology Files - THIS LINK IS NOT YET VALID.
 ================================================
 >>>>>>> eaa39abee18c5573d89f685f2ee441d5e33ed680
-tbco
+
 The latest supported networks can be found at `<https://hydra.quantumone.network/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
 Quick Build Ubuntu 20.04 (Other distros will build with tinkering)
@@ -224,7 +224,7 @@ Download
 You can download `here <https://hydra.tbco.io/job/Bcc/bcc-node/bcc-node-win64/latest-finished>`_.
 
 Instructions
-------------tbco
+------------
 
 The download includes bcc-node.exe and a .dll. To run the node with bcc-node run you need to reference a few files and directories as arguments. These can be copied from the bcc-node repo into the executables directory. The command to run the node on mainnet looks like this:
 
@@ -367,7 +367,7 @@ The Cole genesis generation operations will create a directory that contains:
 
 * ``delegation-cert.*.json``:
   Delegation certificates. Affected by: ``--n-delegate-addresses``.
-tbco
+
 * ``genesis-keys.*.key``:
   Genesis stake private keys. Affected by: ``--n-delegate-addresses``, ``--total-balance``.
 
@@ -385,7 +385,7 @@ illustrates available options.
 
 Key operations
 ==============
-tbco
+
 Note that key operations do not support password-protected keys.
 
 Signing key generation & verification key extraction

@@ -2,7 +2,7 @@ name:                  tx-generator
 version:               1.29
 description:           The transaction generator for bcc node
 author:                TBCO
-maintainer:            operations@tbcokchain-company.io
+maintainer:            operations@blockchain-company.io
 license:               Apache-2.0
 license-files:
   LICENSE
@@ -84,7 +84,7 @@ library
                      , io-classes
                      , tbco-monitoring
                      , ixset-typed
-                     , tbcoork
+                     , network
                      , network-mux
                      , optparse-applicative-fork
                      , shardagnostic-consensus

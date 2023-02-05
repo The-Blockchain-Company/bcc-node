@@ -9,7 +9,7 @@ bug-reports:            https://github.com/The-Blockchain-Company/bcc-node/issue
 license:                Apache-2.0
 license-file:           LICENSE
 author:                 TBCO Engineering Team
-maintainer:             operations@tbcokchain-company.io
+maintainer:             operations@blockchain-company.io
 copyright:              (c)2021 TBCO
 category:               Language
 build-type:             Simple
@@ -28,7 +28,7 @@ common bcc-crypto-class            { build-depends: bcc-crypto-class            
 common bcc-ledger-cole          { build-depends: bcc-ledger-cole              >= 0.1.0.0                  }
 common formatting                   { build-depends: formatting                       >= 6.3.7                    }
 common http-media                   { build-depends: http-media                       >= 0.8.0.0                  }
-common tbco-monitoring          { build-depends: tbcotbcoitoring              >= 0.1.10.1                 }
+common tbco-monitoring          { build-depends: tbco-monitoring              >= 0.1.10.1                 }
 common mtl                          { build-depends: mtl                              >= 2.2.2                    }
 common network                      { build-depends: network                          >= 3.1.2.1                  }
 common optparse-applicative-fork    { build-depends: optparse-applicative-fork        >= 0.16.1.0                 }
