@@ -66,8 +66,8 @@ import qualified Shardagnostic.Network.Block as Consensus
 import qualified Bcc.Chain.Block as Cole
 import qualified Bcc.Chain.UTxO as Cole
 import qualified Bcc.Ledger.Era as Ledger
-import qualified Bcc.Protocol.TOptimum.BHeader as TOptimum
-import qualified Bcc.Ledger.Block as Ledger
+import qualified Bcc.Protocol.TOptimum.BHeader as Optimum
+import qualified Sophie.Spec.Ledger.BlockChain as Ledger
 
 import           Bcc.Api.Eras
 import           Bcc.Api.HasTypeProxy
@@ -154,7 +154,7 @@ getSophieBlockTxs :: forall era ledgerera.
                       ledgerera ~ SophieLedgerEra era
                    => Consensus.SophieBasedEra ledgerera
                    => SophieBasedEra era
-                   -> Ledger.Block TOptimum.BHeader ledgerera
+                   -> Ledger.Block ledgerera
                    -> [Tx era]
 getSophieBlockTxs era (Ledger.Block _header txs) =
   [ SophieTx era txinblock
@@ -257,7 +257,7 @@ getBlockHeader (SophieBlock sophieEra block) = case sophieEra of
       where
         Consensus.HeaderFields {
             Consensus.headerFieldHash
-              = Consensus.SophieHash (TOptimum.HashHeader (Bcc.Crypto.Hash.Class.UnsafeHash hashSBS)),
+              = Consensus.SophieHash (Optimum.HashHeader (Bcc.Crypto.Hash.Class.UnsafeHash hashSBS)),
             Consensus.headerFieldSlot,
             Consensus.headerFieldBlockNo
           } = Consensus.getHeaderFields block
