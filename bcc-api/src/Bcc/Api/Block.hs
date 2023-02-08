@@ -38,6 +38,10 @@ module Bcc.Api.Block (
 
     -- * Data family instances
     Hash(..),
+
+    chainPointToHeaderHash,
+    chainPointToSlotNo,
+    makeChainTip,
   ) where
 
 import           Prelude
@@ -49,7 +53,7 @@ import qualified Data.ByteString.Short as SBS
 import           Data.Foldable (Foldable (toList))
 
 import           Bcc.Slotting.Block (BlockNo)
-import           Bcc.Slotting.Slot (EpochNo, SlotNo)
+import           Bcc.Slotting.Slot (EpochNo, SlotNo, WithOrigin (..))
 
 import qualified Bcc.Crypto.Hash.Class
 import qualified Bcc.Crypto.Hashing
@@ -67,7 +71,7 @@ import qualified Bcc.Chain.Block as Cole
 import qualified Bcc.Chain.UTxO as Cole
 import qualified Bcc.Ledger.Era as Ledger
 import qualified Bcc.Protocol.TOptimum.BHeader as TOptimum
-import qualified Sophie.Spec.Ledger.BlockChain as Ledger
+import qualified Bcc.Ledger.Block as Ledger
 
 import           Bcc.Api.Eras
 import           Bcc.Api.HasTypeProxy
@@ -343,6 +347,14 @@ fromConsensusPoint (Consensus.BlockPoint slot h) =
     proxy :: Proxy (Consensus.SophieBlock ledgerera)
     proxy = Proxy
 
+chainPointToSlotNo :: ChainPoint -> Maybe SlotNo
+chainPointToSlotNo ChainPointAtGenesis = Nothing
+chainPointToSlotNo (ChainPoint slotNo _) = Just slotNo
+
+chainPointToHeaderHash :: ChainPoint -> Maybe (Hash BlockHeader)
+chainPointToHeaderHash ChainPointAtGenesis = Nothing
+chainPointToHeaderHash (ChainPoint _ blockHeader) = Just blockHeader
+
 
 -- ----------------------------------------------------------------------------
 -- Chain tips
@@ -369,6 +381,12 @@ chainTipToChainPoint :: ChainTip -> ChainPoint
 chainTipToChainPoint ChainTipAtGenesis = ChainPointAtGenesis
 chainTipToChainPoint (ChainTip s h _)  = ChainPoint s h
 
+makeChainTip :: WithOrigin BlockNo -> ChainPoint -> ChainTip
+makeChainTip woBlockNo chainPoint = case woBlockNo of
+  Origin -> ChainTipAtGenesis
+  At blockNo -> case chainPoint of
+    ChainPointAtGenesis -> ChainTipAtGenesis
+    ChainPoint slotNo headerHash -> ChainTip slotNo headerHash blockNo
 
 fromConsensusTip  :: ConsensusBlockForMode mode ~ block
                   => ConsensusMode mode
@@ -416,4 +434,3 @@ fromConsensusTip =
     conv TipGenesis                      = ChainTipAtGenesis
     conv (Tip slot (OneEraHash h) block) = ChainTip slot (HeaderHash h) block
 -}
-
