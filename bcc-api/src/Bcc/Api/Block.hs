@@ -70,7 +70,7 @@ import qualified Shardagnostic.Network.Block as Consensus
 import qualified Bcc.Chain.Block as Cole
 import qualified Bcc.Chain.UTxO as Cole
 import qualified Bcc.Ledger.Era as Ledger
-import qualified Bcc.Protocol.TOptimum.BHeader as Optimum
+import qualified Bcc.Protocol.TOptimum.BHeader as TOptimum
 import qualified Sophie.Spec.Ledger.BlockChain as Ledger
 
 import           Bcc.Api.Eras
