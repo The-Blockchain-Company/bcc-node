@@ -158,7 +158,7 @@ getSophieBlockTxs :: forall era ledgerera.
                       ledgerera ~ SophieLedgerEra era
                    => Consensus.SophieBasedEra ledgerera
                    => SophieBasedEra era
-                   -> Ledger.Block (TOptimum.BHeader ([Ledger.Crypto ledgerera)) ledgerera
+                   -> Ledger.Block (TOptimum.BHeader (Ledger.Crypto ledgerera)) ledgerera
                    -> [Tx era]
 getSophieBlockTxs era (Ledger.Block _header txs) =
   [ SophieTx era txinblock
