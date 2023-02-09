@@ -51,6 +51,7 @@ import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Short as SBS
 import           Data.Foldable (Foldable (toList))
+import           Data.String (IsString)
 
 import           Bcc.Slotting.Block (BlockNo)
 import           Bcc.Slotting.Slot (EpochNo, SlotNo, WithOrigin (..))
@@ -237,6 +238,8 @@ data BlockHeader = BlockHeader !SlotNo
 -- representation.
 newtype instance Hash BlockHeader = HeaderHash SBS.ShortByteString
   deriving (Eq, Ord, Show)
+  deriving (ToJSON, FromJSON) via UsingRawBytesHex (Hash BlockHeader)
+  deriving IsString via UsingRawBytesHex (Hash BlockHeader)
 
 instance SerialiseAsRawBytes (Hash BlockHeader) where
     serialiseToRawBytes (HeaderHash bs) = SBS.fromShort bs
