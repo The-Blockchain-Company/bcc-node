@@ -84,6 +84,7 @@ sed -i ${ROOT}/configuration.yaml \
     -e 's/RequiresNoMagic/RequiresMagic/' \
     -e 's/LastKnownBlockVersion-Major: 0/LastKnownBlockVersion-Major: 1/' \
     -e 's/LastKnownBlockVersion-Sentry: 2/LastKnownBlockVersion-Sentry: 0/'
+    -e 's/"vestMutliple": 1/"vestMultiple": 1/' \
 # Options for making it easier to trigger the transition to Sophie
 # If neither of those are used, we have to
 # - post an update proposal + votes to go to protocol version 1
@@ -92,7 +93,7 @@ sed -i ${ROOT}/configuration.yaml \
 # - post another proposal + vote to go to protocol version 2
 
 #uncomment this for an automatic transition after the first epoch
-echo "TestSophieHardForkAtEpoch: 1" >> ${ROOT}/configuration.yaml
+#echo "TestSophieHardForkAtEpoch: 1" >> ${ROOT}/configuration.yaml
 #uncomment this to trigger the hardfork with protocol version 1
 #echo "TestSophieHardForkAtVersion: 1"  >> ${ROOT}/configuration.yaml
 
