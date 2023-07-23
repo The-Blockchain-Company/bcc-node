@@ -52,13 +52,9 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   backend and explorer backend are separate components that run in separate
   external processes that communicate with the node via local IPC.
 
-<<<<<<< HEAD
+
 Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR A DEMO SEE HTTPS://HYDRA.QUANTUMONE.NETWORK 
 =================================================
-=======
-Network Configuration, Genesis and Topology Files - THIS LINK IS NOT YET VALID.
-================================================
->>>>>>> eaa39abee18c5573d89f685f2ee441d5e33ed680
 
 The latest supported networks can be found at `<https://hydra.quantumone.network/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
 
