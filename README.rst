@@ -1,4 +1,5 @@
 
+
 .. raw:: html
 
   <p align="center">
@@ -16,8 +17,11 @@
     </tr>
   </table>
 
-============
-THIS IS NOT A PRODUCTION BUILD, THIS IS A WORK IN PROGRESS AND A DEVELOPMENT TOOL FOR QUANTUM ONE DAO. THE QUANTUMONE.NETWORK DOMAIN HAS CHANGED TO QUANTUMONE.IO. EXISTING REFERENCES TO QUANTUMONE.NETWORK ARE STILL IN THE PROCESS OF BEING CLEANED UP. 
+=================
+**IMPORTANT**
+=================
+
+THIS IS NOT A PRODUCTION BUILD, THIS IS A WORK IN PROGRESS AND A DEVELOPMENT TOOL FOR QUANTUM ONE DAO. THE QUANTUMONE.NETWORK DOMAIN HAS CHANGED TO QUANTUMONE.IO. EXISTING REFERENCES TO QUANTUMONE.NETWORK ARE STILL IN THE PROCESS OF BEING CLEANED UP. PLEASE KEEP IN MIND THAT BCC CHAIN AND ECOSYSTEM DEMO WAS BUILT BY ONE PERSON - GITHUB USER RMOUREY26 - AND LARGELY UNCHANGED SINCE JANUARY 2022.  
 
 PRESENTLY THE BCC CHAIN IS COMPRISED OF ROUGHLY 7K OF 'NEW' HASKELL BLOCKCHAIN CODE AND INTEGRATED WITH A MODIFIED FORK OF CARDANO INCLUDING BYRON THROUGH ALONZO ERAS. ADDITIONAL FEATURES INCLUDE
 - VESTED AND VESTED DELEGATE KEY ROLES AND OPTIONAL GENESIS PARAMETERS
@@ -33,7 +37,8 @@ WHAT WORKS?
 -- Transaction 4 throws an error which seems to he due to the need for additional logic handling the reduction in the number of protocols down to 2. 
 
 WHATS THE GOAL?
-- THIS ALL BEGAN AS A REQUIREMENT FROM A CLIENT WHO WANTED A FORK OF CARDANO. AND 5 MONTHS LATER, THIS IS WHAT I EMDED UP CREATING OUTSIDE OF THE REQUIREMENT. I WONDERED IF IT WAS POSSIBLE TO SIGNIFICANTLY MODIFY CARDANO AND CREATE A NEW CHAIN AND OR PRIVATE VERSIONS OF CARDANO ITSELF. THIS EXPERIENCE AND DEMO ECOSYSTEM WILL BE USED DURING THE DEVELOPMENT OF QUANTUM ONE. QUANTUM ONE WILL NOT BECOME A FORK OF CARDANO.  
+- THIS ALL BEGAN AS A REQUIREMENT FROM A CLIENT WHO WANTED A FORK OF CARDANO. AND 5 MONTHS LATER, THIS IS WHAT I EMDED UP CREATING OUTSIDE OF THE REQUIREMENT. I WONDERED IF IT WAS POSSIBLE TO SIGNIFICANTLY MODIFY CARDANO AND CREATE A NEW CHAIN AND OR PRIVATE VERSIONS OF CARDANO ITSELF. THIS EXPERIENCE AND DEMO ECOSYSTEM WILL BE USED DURING THE DEVELOPMENT OF QUANTUM ONE. QUANTUM ONE WILL NOT BECOME A FORK OF CARDANO.
+
 =================
 API Documentation
 =================
@@ -46,7 +51,7 @@ open `haddocks/index.html` in the browser.
 *************************
 ``bcc-node`` Overview
 *************************
-**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. Hydra is now enabled at hydra.quantumone.network in prepapration for Quantum One Ecosystem public testnet. The Quick Build shown below is the quickest way to build and run Bcc-Node & Bcc-CLI. The Bcc-Chain is now the basis for the Quantum One DAO LLC's Quantum One Ecosystem. Hydra is running for demonstration purposes and is not a production version. When we are ready to launch public test net, hydra will be converted to a production instance. Learn more at https://github.com/Quantum-One-DLT  ****
+**** Compile, build and, run bcc-node and BCC ecosystem using Cabal and GHC on  Nixos, Linux or WSL2. The quick build method using Ubuntu 20.04 is the most efficient way to test the Bcc-Chain. NixOs and other Linux distros may require some tinkering.   ****
 
 Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger-specs>`_, `consensus <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-consensus>`_,
 `networking <https://github.com/The-Blockchain-Company/shardagnostic-network/tree/master/shardagnostic-network>`_ and
@@ -64,7 +69,7 @@ Integration of the `ledger <https://github.com/The-Blockchain-Company/bcc-ledger
   external processes that communicate with the node via local IPC.
 
 
-Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. FOR A DEMO SEE HTTPS://HYDRA.QUANTUMONE.NETWORK 
+Network Configuration, Genesis and Topology Files - THIS LINK IS NOT VALID. 
 =================================================
 
 The latest supported networks can be found at `<https://hydra.quantumone.network/job/Bcc/bcc-node/bcc-deployment/latest-finished/download/1/index.html>`_
