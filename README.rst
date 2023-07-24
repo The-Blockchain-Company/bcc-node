@@ -27,6 +27,8 @@ PRESENTLY THE BCC CHAIN IS COMPRISED OF ROUGHLY 7K OF 'NEW' HASKELL BLOCKCHAIN C
 - 2ND METADATA POINTER
 - REDUCED NUMBER OF PROTOCOL VERSIONS TO 2 
 
+Why? The original idea was to create an alternative reward structure where genesis delegates and vested delegates could co-exist and receive different reward %. Vested Delegates could be anything from bond holders, angel investors, to charity groups, and more. The Sentry protocol version could further secure and differentiate Vested Delegate reward mechanisms from Genesis and traditional staking delegates, VestedMultiples, and or other functional representation of chain time via changing and entropic chain data. Additional logic must be implemented in order to realize alternate reward payouts. 
+
 WHAT WORKS? 
 - Testchain Initiation 
 - Cole to Aurum era transition voting transactions 1-3. 
